@@ -46,3 +46,7 @@ android {
         minSdk = 24
     }
 }
+
+dependencies {
+    implementation(project(":interactor"))
+}

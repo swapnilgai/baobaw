@@ -11,7 +11,6 @@ class BuildPlugin : Plugin<Project> {
     }
 }
 
-
 fun Project.addComposeDependencies() {
     dependencies {
         implementation(Dependencies.Compose.foundation)
