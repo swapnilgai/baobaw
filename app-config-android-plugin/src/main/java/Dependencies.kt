@@ -9,10 +9,6 @@ object Dependencies {
     const val material = "com.google.android.material:material:${Version.material}"
     const val koinAndroid = "io.insert-koin:koin-android:${Version.koinVersion}"
     const val koinTest = "io.insert-koin:koin-android-test:${Version.koinVersion}"
-    const val retrofit = "com.squareup.retrofit2:retrofit:${Version.retrofit}"
-    const val retrofitGson = "com.squareup.retrofit2:converter-gson:${Version.retrofit}"
-    const val okHttp = "com.squareup.okhttp3:okhttp:${Version.okHttp}"
-    const val okHttpLogger = "com.squareup.okhttp3:logging-interceptor:${Version.okHttp}"
     const val androidCoreKtx = "androidx.core:core-ktx:${Version.androidktxCore}"
     const val androidKotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Version.kotlinVersion}"
     object Compose {
@@ -25,5 +21,54 @@ object Dependencies {
         const val toolingUi = "androidx.compose.ui:ui-tooling-preview:${Version.compose}"
         const val material = "androidx.compose.material:material:${Version.compose}"
         const val activity = "androidx.activity:activity-compose:${Version.composeActivity}"
+    }
+
+    object Shared {
+
+        val commonMain = listOf(
+            "org.jetbrains.kotlinx:kotlinx-serialization-core:${Version.serialization}",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Version.coroutines}",
+            "io.ktor:ktor-client-core:${Version.ktor}",
+            "io.ktor:ktor-client-content-negotiation:${Version.ktor}",
+            "io.ktor:ktor-serialization-kotlinx-json:${Version.ktor}",
+            "io.ktor:ktor-client-logging:${Version.ktor}",
+            "io.insert-koin:koin-core:${Version.koin}",
+            "co.touchlab:kermit:${Version.kermit}",
+        )
+
+        val commonTest = listOf(
+            "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Version.coroutines}",
+            "io.ktor:ktor-client-mock:${Version.ktor}",
+            "io.insert-koin:koin-test:${Version.koin}",
+            "io.mockk:mockk-common:${Version.mockkCommon}",
+            "app.cash.turbine:turbine:${Version.turbine}"
+        )
+
+        val commonKotlin = listOf(
+            "stdlib-common"
+        )
+
+        val commonKotlinTest = listOf(
+            "test-common",
+            "test-annotations-common"
+        )
+
+        val androidMain = listOf(
+            "io.ktor:ktor-client-okhttp:${Version.ktor}"
+        )
+
+        val androidKotlinTest = listOf(
+            "test-junit"
+        )
+
+        val androidTest = listOf(
+            "junit:junit:4.13.2",
+            "io.mockk:mockk:${Version.mockk}",
+            "app.cash.turbine:turbine:${Version.turbine}"
+        )
+
+        val iosMain = listOf(
+            "io.ktor:ktor-client-darwin:${Version.ktor}"
+        )
     }
 }

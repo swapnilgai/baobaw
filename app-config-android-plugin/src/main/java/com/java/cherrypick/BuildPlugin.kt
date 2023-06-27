@@ -25,4 +25,19 @@ fun Project.addComposeDependencies() {
     }
 }
 
+
+fun Project.addKtorDependencies() {
+    dependencies {
+        implementation(Dependencies.Compose.foundation)
+        implementation(Dependencies.Compose.compiler)
+        implementation(Dependencies.Compose.runtime)
+        implementation(Dependencies.Compose.ui)
+        implementation(Dependencies.Compose.tooling)
+        implementation(Dependencies.Compose.constraintLayout)
+        implementation(Dependencies.Compose.toolingUi)
+        implementation(Dependencies.Compose.material)
+        implementation(Dependencies.Compose.activity)
+    }
+}
+
 fun DependencyHandlerScope.implementation(dependency: Any) = add("implementation", dependency)
