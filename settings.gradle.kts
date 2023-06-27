@@ -14,5 +14,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "cherrypick"
+includeBuild("app-config-android-plugin")
 include(":androidApp")
 include(":shared")
