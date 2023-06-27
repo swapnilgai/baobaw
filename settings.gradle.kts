@@ -17,3 +17,4 @@ rootProject.name = "cherrypick"
 includeBuild("app-config-android-plugin")
 include(":androidApp")
 include(":shared")
+include(":interactor")
