@@ -1,0 +1,17 @@
+object Version {
+    const val androidXCore = "1.8.0"
+    const val appcompat = "1.4.1"
+    const val junit = "4.13.2"
+    const val junitTestExt = "1.1.3"
+    const val espresso = "3.4.0"
+    const val material = "1.5.0"
+    const val koinVersion = "3.4.2"
+    const val retrofit = "2.9.0"
+    const val okHttp = "4.1.0"
+    const val androidktxCore= "1.9.0"
+    const val kotlinVersion = "1.8.10"
+    const val compose = "1.4.2"
+    const val composeConstraintLayout = "1.0.1"
+    const val kotlinCompilerVersion = "1.6.21"
+    const val composeActivity = "1.7.1"
+}
