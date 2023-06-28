@@ -9,7 +9,6 @@ object Dependencies {
     const val material = "com.google.android.material:material:${Version.material}"
     const val koinAndroid = "io.insert-koin:koin-android:${Version.koinVersion}"
     const val koinTest = "io.insert-koin:koin-android-test:${Version.koinVersion}"
-    const val androidCoreKtx = "androidx.core:core-ktx:${Version.androidktxCore}"
     const val androidKotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Version.kotlinVersion}"
     object Compose {
         const val compiler = "androidx.compose.compiler:compiler:${Version.compose}"
@@ -55,6 +54,12 @@ object Dependencies {
 
         val androidMain = listOf(
             "io.ktor:ktor-client-okhttp:${Version.ktor}"
+        )
+
+        val androidMainApi = listOf(
+            "androidx.activity:activity-compose:${Version.composeActivity}",
+            "androidx.appcompat:appcompat:${Version.appcompat}",
+            "androidx.core:core-ktx:${Version.androidktxCore}"
         )
 
         val androidKotlinTest = listOf(
