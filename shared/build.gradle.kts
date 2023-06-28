@@ -26,16 +26,48 @@ kotlin {
     }
 
     sourceSets {
+
+        all {
+            languageSettings.apply {
+                optIn("kotlin.RequiresOptIn")
+            }
+        }
+
         val commonMain by getting {
             dependencies {
-                // put your multiplatform dependencies here
+                Dependencies.Shared.commonMain.forEach {
+                    implementation(it)
+                }
+                Dependencies.Shared.commonKotlin.forEach {
+                    implementation(kotlin(it))
+                }
             }
         }
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                Dependencies.Shared.commonTest.forEach {
+                    implementation(it)
+                }
+                Dependencies.Shared.commonKotlinTest.forEach {
+                    implementation(kotlin(it))
+                }
             }
         }
+        val androidMain by getting {
+            dependencies {
+                Dependencies.Shared.androidMain.forEach {
+                    implementation(it)
+                }
+            }
+        }
+        val iosMain by getting {
+            dependencies {
+                Dependencies.Shared.iosMain.forEach {
+                    implementation(it)
+                }
+            }
+        }
+        val iosTest by getting
     }
 }
 
@@ -45,8 +77,4 @@ android {
     defaultConfig {
         minSdk = 24
     }
-}
-
-dependencies {
-    implementation(project(":interactor"))
 }

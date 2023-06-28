@@ -1,6 +1,7 @@
 package com.java.cherrypick.interactor
 
-import java.net.HttpRetryException
+import io.ktor.client.plugins.HttpRequestTimeoutException
+
 
 sealed class InteracroeException : Exception() {
     abstract override val message: String
@@ -15,7 +16,7 @@ sealed class InteracroeException : Exception() {
 //TODO update exception handling
 fun Exception.toInteractorException(): InteracroeException {
     return when(this){
-        is HttpRetryException -> toInteractorException(this.responseCode())
+        is HttpRequestTimeoutException -> toInteractorException(500)
         else -> InteracroeException.Generic(message = this.message?: "Something wen wrong")
     }
 }
