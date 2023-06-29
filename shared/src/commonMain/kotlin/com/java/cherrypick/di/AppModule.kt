@@ -6,7 +6,7 @@ import com.java.cherrypick.model.ProductionEnvironment
 import com.java.cherrypick.model.ProjectEnvironment
 import org.koin.dsl.module
 
-val module = module {
+val appModule = module {
     single<ProjectEnvironment> {
        if(BuildKonfig.environment == "dev")
           DevelopmentEnvironment()
