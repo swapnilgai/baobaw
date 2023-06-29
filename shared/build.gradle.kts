@@ -1,7 +1,8 @@
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
-    id("com.codingfeline.buildkonfig") version "0.13.3"
+    id("com.codingfeline.buildkonfig") version Version.buildkonfig
+    kotlin("plugin.serialization") version Version.kotlinVersion
 }
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
@@ -37,6 +38,9 @@ kotlin {
                 Dependencies.Shared.commonKotlin.forEach {
                     implementation(kotlin(it))
                 }
+                Dependencies.Shared.supabase.forEach {
+                    implementation(it)
+                }
             }
         }
         val commonTest by getting {
@@ -49,6 +53,7 @@ kotlin {
                 }
             }
         }
+
         val androidMain by getting {
             dependencies {
                 Dependencies.Shared.androidMain.forEach {
@@ -84,8 +89,7 @@ buildkonfig {
     defaultConfigs {
     }
 
-    defaultConfigs("prod") {
-        val apiKey = extra["api.key"] as String
+    defaultConfigs("prod") { val apiKey = extra["api.key"] as String
         val apiUrl = extra["api.url"] as String
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
@@ -99,5 +103,4 @@ buildkonfig {
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "dev")
     }
-
 }

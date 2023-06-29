@@ -1,7 +1,10 @@
 package com.java.cherrypick.network
 
 import com.java.cherrypick.model.ProductionEnvironment
-import io.ktor.client.*
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.gotrue.GoTrue
+import io.github.jan.supabase.postgrest.Postgrest
+import io.ktor.client.HttpClient
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -38,5 +41,14 @@ class ApiClient(productionEnvironment: ProductionEnvironment) {
                 ignoreUnknownKeys = true
             })
         }
+    }
+
+    val supabaseClient = createSupabaseClient(
+        supabaseUrl = productionEnvironment.url,
+        supabaseKey = productionEnvironment.apiKey
+    ) {
+        install(GoTrue)
+        install(Postgrest)
+        //install other modules
     }
 }
