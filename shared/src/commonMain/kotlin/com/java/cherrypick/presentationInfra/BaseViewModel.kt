@@ -6,7 +6,7 @@ import kotlinx.coroutines.SupervisorJob
 
 abstract class BaseViewModel<ContentT>(contentT : ContentT) {
 
-    private val viewModelScope = CoroutineScope( SupervisorJob() + Dispatchers.Main )
+    val viewModelScope = CoroutineScope( SupervisorJob() + Dispatchers.Main )
     val uiChannel = UiChannelImpl<ContentT>(initialContent = contentT)
 
     fun setContent(contentT: ContentT){

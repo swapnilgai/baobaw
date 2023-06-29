@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
-    implementation(Dependencies.koin)
     implementation(project(":shared"))
+    Dependencies.Shared.android.forEach {
+        implementation(it)
+    }
 }

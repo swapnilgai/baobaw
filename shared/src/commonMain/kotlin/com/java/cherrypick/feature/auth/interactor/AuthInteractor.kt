@@ -15,7 +15,6 @@ interface AuthInteractor: Interactor {
 }
 
 class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
-
     override suspend fun signUp(signUpData: SignUpData): Email.Result? {
        return withInteractorContext {
             supabaseClient.gotrue.signUpWith(Email) {
