@@ -70,5 +70,14 @@ object Dependencies {
         val iosMain = listOf(
             "io.ktor:ktor-client-darwin:${Version.ktor}"
         )
+
+        val supabase = listOf(
+            "io.github.jan-tennert.supabase:gotrue-kt:${Version.supabase}",
+            "io.github.jan-tennert.supabase:postgrest-kt:${Version.supabase}",
+            "io.github.jan-tennert.supabase:realtime-kt:${Version.supabase}"
+        )
+
+        val supabasePlatform = "io.github.jan-tennert.supabase:bom:${Version.supabase}"
     }
+
 }
