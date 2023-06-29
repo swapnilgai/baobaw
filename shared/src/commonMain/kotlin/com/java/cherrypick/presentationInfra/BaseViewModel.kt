@@ -1,4 +1,4 @@
-package com.java.cherrypick.presentation
+package com.java.cherrypick.presentationInfra
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -40,8 +40,7 @@ android {
     }
 }
 
-addComposeDependencies()
-
 dependencies {
+    implementation(Dependencies.koin)
     implementation(project(":shared"))
 }

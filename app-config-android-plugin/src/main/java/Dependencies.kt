@@ -11,6 +11,7 @@ object Dependencies {
     const val koinTest = "io.insert-koin:koin-android-test:${Version.koinVersion}"
     const val androidCoreKtx = "androidx.core:core-ktx:${Version.androidktxCore}"
     const val androidKotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Version.kotlinVersion}"
+    const val koin = "io.insert-koin:koin-core:${Version.koin}",
     object Compose {
         const val compiler = "androidx.compose.compiler:compiler:${Version.compose}"
         const val runtime = "androidx.compose.runtime:runtime:${Version.compose}"
@@ -32,7 +33,7 @@ object Dependencies {
             "io.ktor:ktor-client-content-negotiation:${Version.ktor}",
             "io.ktor:ktor-serialization-kotlinx-json:${Version.ktor}",
             "io.ktor:ktor-client-logging:${Version.ktor}",
-            "io.insert-koin:koin-core:${Version.koin}",
+             koin,
             "co.touchlab:kermit:${Version.kermit}",
         )
 

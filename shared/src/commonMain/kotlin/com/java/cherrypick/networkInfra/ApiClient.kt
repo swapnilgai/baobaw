@@ -1,4 +1,4 @@
-package com.java.cherrypick.network
+package com.java.cherrypick.networkInfra
 
 import com.java.cherrypick.model.ProductionEnvironment
 import io.github.jan.supabase.createSupabaseClient
