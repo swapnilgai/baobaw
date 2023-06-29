@@ -1,4 +1,4 @@
-import com.java.cherrypick.addComposeDependencies
+
 
 plugins {
     id("com.android.application")
