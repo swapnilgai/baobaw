@@ -1,6 +1,6 @@
-package com.java.cherrypick.network
+package com.java.cherrypick.networkInfra
 
-import com.java.cherrypick.model.ProductionEnvironment
+import com.java.cherrypick.model.ProjectEnvironment
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.GoTrue
 import io.github.jan.supabase.postgrest.Postgrest
@@ -16,13 +16,13 @@ import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-class ApiClient(productionEnvironment: ProductionEnvironment) {
+class ApiClient(projectEnvironment: ProjectEnvironment) {
 
     val client = HttpClient {
         defaultRequest {
             url {
-                 takeFrom(productionEnvironment.url)
-                 parameters.append("api_key", productionEnvironment.apiKey)
+                 takeFrom(projectEnvironment.url)
+                 parameters.append("api_key", projectEnvironment.apiKey)
             }
         }
         expectSuccess = true
@@ -44,8 +44,8 @@ class ApiClient(productionEnvironment: ProductionEnvironment) {
     }
 
     val supabaseClient = createSupabaseClient(
-        supabaseUrl = productionEnvironment.url,
-        supabaseKey = productionEnvironment.apiKey
+        supabaseUrl = projectEnvironment.url,
+        supabaseKey = projectEnvironment.apiKey
     ) {
         install(GoTrue)
         install(Postgrest)

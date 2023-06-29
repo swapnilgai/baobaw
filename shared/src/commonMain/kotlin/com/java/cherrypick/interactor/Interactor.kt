@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 
 interface Interactor
 
-suspend fun <T> Interactor.withInteractorContext(
+suspend fun <T>Interactor.withInteractorContext(
     block: suspend CoroutineScope.() -> T
 ) : T? {
     val context = InteractorDispatcherProvider.dispatcher

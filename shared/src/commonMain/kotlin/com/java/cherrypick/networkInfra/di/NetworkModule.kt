@@ -1,6 +1,6 @@
-package com.java.cherrypick.network.di
+package com.java.cherrypick.networkInfra.di
 
-import com.java.cherrypick.network.ApiClient
+import com.java.cherrypick.networkInfra.ApiClient
 import io.github.jan.supabase.SupabaseClient
 import io.ktor.client.HttpClient
 import org.koin.dsl.module

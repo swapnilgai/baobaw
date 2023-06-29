@@ -1,4 +1,4 @@
-import com.java.cherrypick.addComposeDependencies
+
 
 plugins {
     id("com.android.application")
@@ -40,8 +40,9 @@ android {
     }
 }
 
-addComposeDependencies()
-
 dependencies {
     implementation(project(":shared"))
+    Dependencies.Shared.android.forEach {
+        implementation(it)
+    }
 }

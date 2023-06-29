@@ -11,6 +11,7 @@ object Dependencies {
     const val koinTest = "io.insert-koin:koin-android-test:${Version.koinVersion}"
     const val androidCoreKtx = "androidx.core:core-ktx:${Version.androidktxCore}"
     const val androidKotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Version.kotlinVersion}"
+    const val koin = "io.insert-koin:koin-core:${Version.koin}"
     object Compose {
         const val compiler = "androidx.compose.compiler:compiler:${Version.compose}"
         const val runtime = "androidx.compose.runtime:runtime:${Version.compose}"
@@ -32,7 +33,7 @@ object Dependencies {
             "io.ktor:ktor-client-content-negotiation:${Version.ktor}",
             "io.ktor:ktor-serialization-kotlinx-json:${Version.ktor}",
             "io.ktor:ktor-client-logging:${Version.ktor}",
-            "io.insert-koin:koin-core:${Version.koin}",
+             koin,
             "co.touchlab:kermit:${Version.kermit}",
         )
 
@@ -78,6 +79,25 @@ object Dependencies {
         )
 
         val supabasePlatform = "io.github.jan-tennert.supabase:bom:${Version.supabase}"
+
+        val android = listOf(
+            "androidx.compose.ui:ui:${Version.compose}",
+            "androidx.compose.ui:ui-tooling:${Version.compose}",
+            "androidx.compose.ui:ui-tooling-preview:${Version.compose}",
+            "androidx.compose.foundation:foundation:${Version.compose}",
+            "androidx.compose.material:material:${Version.compose}",
+            "androidx.compose.material3:material3:${Version.material3}",
+            "androidx.activity:activity-compose:${Version.activity}",
+            "androidx.navigation:navigation-compose:${Version.navigation}",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Version.coroutines}",
+            "io.insert-koin:koin-android:${Version.koinVersion}",
+            "io.insert-koin:koin-androidx-compose:${Version.koinCompose}",
+            "io.coil-kt:coil-compose:${Version.coil}",
+            "androidx.lifecycle:lifecycle-viewmodel-ktx:${Version.lifecycle}",
+            "androidx.lifecycle:lifecycle-runtime-ktx:${Version.lifecycle}",
+            "androidx.lifecycle:lifecycle-viewmodel-compose:${Version.lifecycle}",
+            "androidx.lifecycle:lifecycle-livedata-ktx:${Version.lifecycle}"
+        )
     }
 
 }

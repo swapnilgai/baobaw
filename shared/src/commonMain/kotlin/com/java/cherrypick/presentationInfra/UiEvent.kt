@@ -1,4 +1,4 @@
-package com.java.cherrypick.presentation
+package com.java.cherrypick.presentationInfra
 
 sealed class UiEvent<ContentT>{
     data class Content<ContentT>(
