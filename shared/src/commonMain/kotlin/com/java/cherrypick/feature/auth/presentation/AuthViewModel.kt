@@ -10,9 +10,9 @@ class AuthViewModel(val authInteractor: AuthInteractor): BaseViewModel<AuthConte
         viewModelScope.launch {
             authInteractor.signUp(
                 signUpData = SignUpData(
-                    firstName = "fname",
-                    lastName = "lname",
-                    email = "ss@yaho.com",
+                    firstName = "fname ios",
+                    lastName = "lname ios",
+                    email = "ios@yaho.com",
                     age = "22",
                     password = "test@532514111",
                     phone = "7174049049"
