@@ -1,12 +1,11 @@
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
+    id("com.codingfeline.buildkonfig") version "0.13.3"
 }
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
-    targetHierarchy.default()
-
     android {
         compilations.all {
             kotlinOptions {
@@ -14,14 +13,11 @@ kotlin {
             }
         }
     }
-
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
-            baseName = "shared"
+    ios {
+        binaries {
+            framework {
+                baseName = "shared"
+            }
         }
     }
 
@@ -68,6 +64,10 @@ kotlin {
             }
         }
         val iosTest by getting
+
+        val appMain by creating {
+            dependsOn(commonMain)
+        }
     }
 }
 
@@ -76,5 +76,13 @@ android {
     compileSdk = 33
     defaultConfig {
         minSdk = 24
+    }
+}
+
+buildkonfig {
+    packageName = "com.java.cherrypick"
+    defaultConfigs {
+        val apiKey = extra["api.key"] as String
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
     }
 }
