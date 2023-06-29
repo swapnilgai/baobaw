@@ -82,7 +82,22 @@ android {
 buildkonfig {
     packageName = "com.java.cherrypick"
     defaultConfigs {
-        val apiKey = extra["api.key"] as String
-        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
     }
+
+    defaultConfigs("prod") {
+        val apiKey = extra["api.key"] as String
+        val apiUrl = extra["api.url"] as String
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "prod")
+    }
+
+    defaultConfigs("dev") {
+        val apiKey = extra["dev.api.key"] as String
+        val apiUrl = extra["dev.api.url"] as String
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "dev")
+    }
+
 }
