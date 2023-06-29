@@ -15,3 +15,4 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
         )
     }
 
+fun initKoin() = initKoin {}
