@@ -1,23 +1,18 @@
 package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
-import com.java.cherrypick.feature.auth.model.SignUpData
 import com.java.cherrypick.presentationInfra.BaseViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AuthViewModel(val authInteractor: AuthInteractor): BaseViewModel<AuthContent>(contentT = AuthContent(shoeContent = false)) {
-    fun onSignUpClick(){
+class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthContent>(contentT = AuthContent()) {
+    fun onSignUpClick(phoneNumber: String){
         viewModelScope.launch {
-            authInteractor.signUp(
-                signUpData = SignUpData(
-                    firstName = "fname ios",
-                    lastName = "lname ios",
-                    email = "ios@yaho.com",
-                    age = "22",
-                    password = "test@532514111",
-                    phone = "7174049049"
-                )
-            )
+            setLoading()
+            delay(5000)
+            authInteractor.signUp(phoneNumber)?.let {
+                setContent(it)
+            }
         }
     }
 }

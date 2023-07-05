@@ -41,15 +41,15 @@ class UiChannelImpl<ContentT>(initialContent: ContentT): UiChannel<ContentT> {
     }
 
     override fun setContent(content: ContentT) {
-        contentChannel.trySend(UiEvent.Content(content))
+        contentChannel.trySend(UiEvent.Content(content)).isSuccess
     }
     override fun getContent(): ContentT = contentChannel.value.value
 
     override fun setLoading() {
-        loadingChannel.trySend(UiEvent.Loading)
+        loadingChannel.trySend(UiEvent.Loading).isSuccess
     }
 
     override fun showDialog(message: String) {
-        errorChannel.trySend(UiEvent.Error(message))
+        errorChannel.trySend(UiEvent.Error(message)).isSuccess
     }
 }
