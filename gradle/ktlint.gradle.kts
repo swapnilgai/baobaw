@@ -1,7 +1,7 @@
 val ktlint by configurations.creating
 
 dependencies {
-    ktlint("com.pinterest:ktlint:0.36.0")
+    ktlint("com.pinterest:ktlint:0.50.0")
 }
 
 val inputFile = fileTree(mapOf("dir" to rootDir, "include" to "**/*.kt"))
@@ -30,6 +30,6 @@ val testAllUnitTests by tasks.register("testAllUnitTests") {
     group = "verification"
     description = "Run all tests"
     dependsOn(
-        "testDebugUnitTest"
+        "testDebugUnitTest",
     )
 }

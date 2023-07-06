@@ -43,7 +43,6 @@ import com.java.cherrypick.feature.auth.presentation.AuthState
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.UiEvent
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 @Composable
