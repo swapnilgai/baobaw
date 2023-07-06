@@ -1,5 +1,13 @@
 package com.java.cherrypick.feature.auth.presentation
 
-data class AuthContent(
-    val shoeContent: Boolean
+import com.java.cherrypick.model.ErrorMessage
+
+data class AuthState(
+    val content: AuthContent? = null,
+    val showLoading: Boolean = false,
+    val errorMessage: ErrorMessage? = null
 )
+
+data class AuthContent( val id: String = "",
+                        val phone: String = "",
+                        val confirmationMessage: String = "")

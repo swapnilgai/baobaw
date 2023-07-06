@@ -42,6 +42,7 @@ android {
 
 dependencies {
     implementation(project(":shared"))
+    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.7")
     Dependencies.Shared.android.forEach {
         implementation(it)
     }
