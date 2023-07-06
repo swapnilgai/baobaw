@@ -2,10 +2,12 @@ package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.model.ErrorMessage
 
-data class AuthContent(
-    val id: String = "",
-    val phone: String = "",
-    val confirmationMessage: String = "",
+data class AuthState(
+    val content: AuthContent? = null,
     val showLoading: Boolean = false,
     val errorMessage: ErrorMessage? = null
 )
+
+data class AuthContent( val id: String = "",
+                        val phone: String = "",
+                        val confirmationMessage: String = "")

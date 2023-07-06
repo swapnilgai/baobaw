@@ -2,16 +2,20 @@ package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthContent>(contentT = AuthContent()) {
+class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(state = AuthState()) {
     fun onSignUpClick(phoneNumber: String, password: String){
         viewModelScope.launch {
             setLoading()
-            delay(500)
-            authInteractor.signUp(phoneNumber, password)?.let {
-                setContent(it)
+            authInteractor.signUp(phoneNumber, password)?.let { authContent ->
+                setContent(
+                    getContent().copy(
+                        content = authContent,
+                        showLoading = false,
+                        errorMessage = null
+                    )
+                )
             }
         }
     }
@@ -20,7 +24,6 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
         viewModelScope.launch {
             setLoading()
             authInteractor.sendOptp(phoneNumber)
-            delay(500)
             setContent(getContent())
         }
     }
@@ -34,5 +37,10 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
             else
                 setError("")
         }
+    }
+    fun onDismissClicked(){
+        setContent(
+            getContent().copy( showLoading = false, errorMessage = null)
+        )
     }
 }

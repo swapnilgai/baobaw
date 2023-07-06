@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,16 +39,20 @@ import com.java.cherrypick.android.compose.ccp.component.getOnlyPhoneNumber
 import com.java.cherrypick.android.compose.ccp.component.isPhoneNumber
 import com.java.cherrypick.android.compose.passwordinput.PasswordInputField
 import com.java.cherrypick.feature.auth.presentation.AuthContent
+import com.java.cherrypick.feature.auth.presentation.AuthState
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.UiEvent
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
 @Composable
 fun EnterPhoneScreen(authViewModel: AuthViewModel) {
     BaseView(viewModel = authViewModel){
-
-        val authContent = remember { mutableStateOf(AuthContent()) }
-
+        val authContent = remember { mutableStateOf(AuthState()) }
+        val scope = rememberCoroutineScope()
+        val onSignUpClick :  (String, String) -> Unit =  {  phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) }}
+        val onDismissClicked :  () -> Unit =  { scope.launch { authViewModel.onDismissClicked() }}
         LaunchedEffect(authContent){
                 for (event in authViewModel.uiChannel.observe(this)) {
                     when(event) {
@@ -61,14 +66,11 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel) {
                 }
         }
 
-    fun onDismissClicked(){
-        authContent.value = authContent.value.copy( showLoading = false, errorMessage = null)
-    }
+        CountryCodeView( onSignUpClick = onSignUpClick )
 
-    CountryCodeView { phone, password -> authViewModel.onSignUpClick(phone, password) }
-        if(authContent.value.showLoading)
-        LoadingView { onDismissClicked() }
-    authContent.value.errorMessage?.message?.let { ErrorDialog(onDismiss = { onDismissClicked() }, it) }
+        if(authContent.value.showLoading) LoadingView(onDismiss = onDismissClicked)
+
+        authContent.value.errorMessage?.message?.let { ErrorDialog(onDismiss =  onDismissClicked , it) }
     }
 }
 
@@ -154,10 +156,6 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
         }
     }
 }
-
-
-
-
 
 
 @Preview(showBackground = true)

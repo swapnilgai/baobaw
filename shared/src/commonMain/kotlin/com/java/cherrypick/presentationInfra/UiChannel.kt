@@ -11,21 +11,21 @@ import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.selects.select
 
-interface UiChannel<ContentT> {
-    suspend fun observe(scope: CoroutineScope): ReceiveChannel<UiEvent<out ContentT>>
-    fun setContent(content: ContentT)
-    fun getContent(): ContentT
+interface UiChannel<State> {
+    suspend fun observe(scope: CoroutineScope): ReceiveChannel<UiEvent<out State>>
+    fun setContent(content: State)
+    fun getContent(): State
     fun setLoading()
     fun showDialog(message: String)
 }
 
-class UiChannelImpl<ContentT>(initialContent: ContentT): UiChannel<ContentT> {
+class UiChannelImpl<State>(initialState: State): UiChannel<State> {
     private val loadingChannel = Channel<UiEvent.Loading>(capacity = CONFLATED)
     private val errorChannel = Channel<UiEvent.Error>(capacity = CONFLATED)
     private val contentChannel = ConflatedBroadcastChannel(
-        UiEvent.Content(value = initialContent)
+        UiEvent.Content(value = initialState)
     )
-    override suspend fun observe(scope: CoroutineScope): ReceiveChannel<UiEvent<out ContentT>> {
+    override suspend fun observe(scope: CoroutineScope): ReceiveChannel<UiEvent<out State>> {
         return scope.produce(Dispatchers.Main, capacity = UNLIMITED ) {
             val contentChannelSub = contentChannel.openSubscription()
             invokeOnClose { contentChannelSub.cancel() }
@@ -40,10 +40,10 @@ class UiChannelImpl<ContentT>(initialContent: ContentT): UiChannel<ContentT> {
         }
     }
 
-    override fun setContent(content: ContentT) {
+    override fun setContent(content: State) {
         contentChannel.trySend(UiEvent.Content(content)).isSuccess
     }
-    override fun getContent(): ContentT = contentChannel.value.value
+    override fun getContent(): State = contentChannel.value.value
 
     override fun setLoading() {
         loadingChannel.trySend(UiEvent.Loading).isSuccess
