@@ -19,6 +19,8 @@ abstract class BaseViewModel<ContentT>(contentT : ContentT) {
         uiChannel.setContent(contentT)
     }
 
+    fun getContent() = uiChannel.getContent()
+
     fun setError(error: String){
         uiChannel.showDialog(error)
     }

@@ -31,25 +31,11 @@ import com.java.cherrypick.presentationInfra.BaseViewModel
 fun <ContentT>BaseView(viewModel: BaseViewModel<ContentT>,
                        content: @Composable () -> Unit) {
     content.invoke()
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle) {
-        val observer = LifecycleEventObserver { _, event ->
-            when(event){
-                Lifecycle.Event.ON_STOP,Lifecycle.Event.ON_DESTROY  -> {
-                    viewModel.clear()
-                }
-                Lifecycle.Event.ON_CREATE ->{
-                }
-                else -> {}
-            }
-        }
-        lifecycle.addObserver(observer)
+    DisposableEffect(Unit) {
         onDispose {
-            lifecycle.removeObserver(observer)
             viewModel.clear()
         }
     }
-
 }
 
 

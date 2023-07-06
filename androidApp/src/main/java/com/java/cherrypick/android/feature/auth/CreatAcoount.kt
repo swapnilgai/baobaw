@@ -1,6 +1,5 @@
 package com.java.cherrypick.android.feature.auth
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,12 +36,11 @@ import com.java.cherrypick.android.compose.ccp.component.getErrorStatus
 import com.java.cherrypick.android.compose.ccp.component.getFullPhoneNumber
 import com.java.cherrypick.android.compose.ccp.component.getOnlyPhoneNumber
 import com.java.cherrypick.android.compose.ccp.component.isPhoneNumber
+import com.java.cherrypick.android.compose.passwordinput.PasswordInputField
 import com.java.cherrypick.feature.auth.presentation.AuthContent
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.UiEvent
-
-
 
 @Composable
 fun EnterPhoneScreen(authViewModel: AuthViewModel) {
@@ -68,8 +65,8 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel) {
         authContent.value = authContent.value.copy( showLoading = false, errorMessage = null)
     }
 
-    CountryCodeView(onSignUpClick = { phone -> authViewModel.onSignUpClick(phone) })
-    if(authContent.value.showLoading)
+    CountryCodeView { phone, password -> authViewModel.onSignUpClick(phone, password) }
+        if(authContent.value.showLoading)
         LoadingView { onDismissClicked() }
     authContent.value.errorMessage?.message?.let { ErrorDialog(onDismiss = { onDismissClicked() }, it) }
     }
@@ -77,7 +74,7 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel) {
 
 
 @Composable
-fun CountryCodeView(onSignUpClick: (String) -> Unit){
+fun CountryCodeView(onSignUpClick: (String, String) -> Unit){
     Column(
         Modifier
             .padding(24.dp)
@@ -98,7 +95,7 @@ fun CountryCodeView(onSignUpClick: (String) -> Unit){
 
 
 @Composable
-fun CountryCodePick(onSignUpClick: (String) -> Unit) {
+fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -110,6 +107,8 @@ fun CountryCodePick(onSignUpClick: (String) -> Unit) {
         val phoneNumber = rememberSaveable { mutableStateOf("") }
         val fullPhoneNumber = rememberSaveable { mutableStateOf("") }
         val onlyPhoneNumber = rememberSaveable { mutableStateOf("") }
+        val password = rememberSaveable { mutableStateOf("") }
+        val confirmPassword = rememberSaveable { mutableStateOf("") }
 
         CountryCodePicker(
             text = phoneNumber.value,
@@ -118,6 +117,7 @@ fun CountryCodePick(onSignUpClick: (String) -> Unit) {
             shape = RoundedCornerShape(1.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
+
 
         if (getErrorStatus() && isPhoneNumber()) Text(
             text = stringResource(id = R.string.invalid_number),
@@ -130,13 +130,19 @@ fun CountryCodePick(onSignUpClick: (String) -> Unit) {
             textAlign = TextAlign.Center
         )
 
+        PasswordInputField(onValueChange = {it -> password.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        PasswordInputField(onValueChange = {it -> confirmPassword.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
             if (isPhoneNumber()) {
                 fullPhoneNumber.value = getFullPhoneNumber()
                 onlyPhoneNumber.value = getOnlyPhoneNumber()
-                onSignUpClick(fullPhoneNumber.value)
+                onSignUpClick(fullPhoneNumber.value, password.value)
             } else {
                 fullPhoneNumber.value = "Error"
                 onlyPhoneNumber.value = "Error"
@@ -148,6 +154,8 @@ fun CountryCodePick(onSignUpClick: (String) -> Unit) {
         }
     }
 }
+
+
 
 
 
