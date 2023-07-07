@@ -4,7 +4,7 @@ import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(initialState = AuthState()) {
+class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(initialContent = AuthState()) {
 
     fun onSignUpClick(phoneNumber: String, password: String){
         viewModelScope.launch {
