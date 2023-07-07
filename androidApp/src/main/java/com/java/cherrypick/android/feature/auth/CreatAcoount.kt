@@ -16,6 +16,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,27 +44,17 @@ import com.java.cherrypick.feature.auth.presentation.AuthState
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.UiEvent
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 
 @Composable
 fun EnterPhoneScreen(authViewModel: AuthViewModel) {
     BaseView(viewModel = authViewModel){
-        val authContent = remember { mutableStateOf(AuthState()) }
+        val authContent = authViewModel.state.collectAsState()
+
         val scope = rememberCoroutineScope()
         val onSignUpClick :  (String, String) -> Unit =  {  phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) }}
         val onDismissClicked :  () -> Unit =  { scope.launch { authViewModel.onDismissClicked() }}
-        LaunchedEffect(authContent){
-                for (event in authViewModel.uiChannel.observe(this)) {
-                    when(event) {
-                        is UiEvent.Content -> {
-                            authContent.value = event.value
-                        }
-                        is UiEvent.Loading -> { authContent.value = authContent.value.copy(showLoading =  true) }
-                        is UiEvent.Error -> { authContent.value = authContent.value.copy(showLoading =  false, errorMessage = ErrorMessage(message = event.message)) }
-                        else -> {}
-                    }
-                }
-        }
 
         CountryCodeView( onSignUpClick = onSignUpClick )
 
