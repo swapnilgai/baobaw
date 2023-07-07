@@ -56,11 +56,21 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel) {
         val onSignUpClick :  (String, String) -> Unit =  {  phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) }}
         val onDismissClicked :  () -> Unit =  { scope.launch { authViewModel.onDismissClicked() }}
 
-        CountryCodeView( onSignUpClick = onSignUpClick )
 
-        if(authContent.value.showLoading) LoadingView(onDismiss = onDismissClicked)
-
-        authContent.value.errorMessage?.message?.let { ErrorDialog(onDismiss =  onDismissClicked , it) }
+        when(authContent.value){
+            is UiEvent.Content -> CountryCodeView( onSignUpClick = onSignUpClick )
+            is UiEvent.Error -> {
+                ErrorDialog(
+                    onDismiss = onDismissClicked,
+                    (authContent.value as UiEvent.Error).message
+                )
+                CountryCodeView( onSignUpClick = onSignUpClick )
+            }
+            is UiEvent.Loading -> {
+                LoadingView(onDismiss = onDismissClicked)
+                CountryCodeView( onSignUpClick = onSignUpClick )
+            }
+        }
     }
 }
 

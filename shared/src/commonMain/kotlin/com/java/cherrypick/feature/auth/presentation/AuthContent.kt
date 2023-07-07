@@ -4,8 +4,6 @@ import com.java.cherrypick.model.ErrorMessage
 
 data class AuthState(
     val content: AuthContent? = null,
-    val showLoading: Boolean = false,
-    val errorMessage: ErrorMessage? = null
 )
 
 data class AuthContent( val id: String = "",

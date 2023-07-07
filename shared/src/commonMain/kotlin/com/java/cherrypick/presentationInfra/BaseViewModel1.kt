@@ -10,38 +10,42 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-abstract class BaseViewModel<State>(initialState : State): KoinComponent {
+abstract class BaseViewModel1<State>(state : State): KoinComponent {
 
     private val mainDispatcher: MainDispatcher by inject()
-    private var currentState: State = initialState
+
+    abstract var error: (String) -> Unit
+
+    abstract var loading: () -> Unit
+    private var currentState: State
+        get() = if(state.value is UiEvent.Content<out State>) (state.value as UiEvent.Content<out State>).value else currentState
+
+    init {
+        currentState = state
+    }
+
 
     //TODO find common folder for strings.xml
     private val coroutineExceptionHandler = CoroutineExceptionHandler{ _, exception ->
-        setError(exception.message?: "")
+        error.invoke(exception.message?: "")
     }
     val viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
 
-    private val _state = MutableStateFlow<UiEvent<out State>>(UiEvent.Content(initialState))
+    private val _state = MutableStateFlow<UiEvent<out State>>(UiEvent.Content(state))
     val state = _state.asStateFlow()
 
     protected fun setState(reduce: State.() -> State) {
-        currentState = currentState.reduce()
-        _state.value = UiEvent.Content(currentState)
+        val newState = currentState.reduce()
+        _state.value = UiEvent.Content(newState)
     }
 
     fun getContent() = currentState
 
-    fun setLoading(){
-        _state.value = UiEvent.Loading
-    }
     fun clear(){
         viewModelScope.cancel()
     }
 
     fun navigate(route: String){
-        _state.value = UiEvent.Error("Navigation")
-    }
-    fun setError(error: String){
-        _state.value = UiEvent.Error(error)
+        _state.value = UiEvent.Error("Test error message")
     }
 }
