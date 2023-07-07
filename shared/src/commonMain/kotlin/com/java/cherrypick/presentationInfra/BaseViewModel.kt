@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-abstract class BaseViewModel<State>(initialState : State): KoinComponent {
+abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent {
 
     private val mainDispatcher: MainDispatcher by inject()
-    private var currentState: State = initialState
+    private var currentState: ContentT = initialContent
 
     //TODO find common folder for strings.xml
     private val coroutineExceptionHandler = CoroutineExceptionHandler{ _, exception ->
@@ -21,10 +21,10 @@ abstract class BaseViewModel<State>(initialState : State): KoinComponent {
     }
     val viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
 
-    private val _state = MutableStateFlow<UiEvent<out State>>(UiEvent.Content(initialState))
+    private val _state = MutableStateFlow<UiEvent<out ContentT>>(UiEvent.Content(initialContent))
     val state = _state.asStateFlow()
 
-    protected fun setState(reduce: State.() -> State) {
+    protected fun setContent(reduce: ContentT.() -> ContentT) {
         currentState = currentState.reduce()
         _state.value = UiEvent.Content(currentState)
     }
@@ -39,7 +39,7 @@ abstract class BaseViewModel<State>(initialState : State): KoinComponent {
     }
 
     fun navigate(route: String){
-        _state.value = UiEvent.Error("Navigation")
+        _state.value = UiEvent.Navigation(route)
     }
     fun setError(error: String){
         _state.value = UiEvent.Error(error)

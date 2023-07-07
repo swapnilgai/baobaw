@@ -31,7 +31,7 @@ struct ContentView: View {
     
     private func observeState() {
         authViewModel.state.collect(
-               collector: Collector<AuthState> { state in onStateReceived(state: state) }
+            collector: Collector<UiEvent> { state in onStateReceived(state: state) }
            ) { error in
                print("Error ocurred during state collection")
            }

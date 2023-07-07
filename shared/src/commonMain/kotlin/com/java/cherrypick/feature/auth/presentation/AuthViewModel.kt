@@ -10,7 +10,7 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
         viewModelScope.launch {
             setLoading()
             authInteractor.signUp(phoneNumber, password)?.let { authContent ->
-                setState {
+                setContent {
                     copy(
                         content = authContent
                     )
@@ -33,7 +33,7 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
         }
     }
     fun onDismissClicked(){
-        setState {
+        setContent {
             getContent()
         }
     }
