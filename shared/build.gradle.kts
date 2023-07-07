@@ -90,8 +90,6 @@ buildkonfig {
     }
 
     defaultConfigs("prod") {
-        //val apiKey by extra("api.key")
-        //val apiUrl by extra("api.url")
         val apiKey = extra["api.key"] as String
         val apiUrl = extra["api.url"] as String
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
@@ -100,8 +98,6 @@ buildkonfig {
     }
 
     defaultConfigs("dev") {
-        //val apiKey by extra("dev.api.key")
-        //val apiUrl by extra("dev.api.url")
         val apiKey = extra["dev.api.key"] as String
         val apiUrl = extra["dev.api.url"] as String
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
