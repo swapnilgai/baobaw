@@ -11,8 +11,8 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,8 +56,8 @@ fun PasswordInputField(onValueChange: (String) -> Unit,
         }),
         trailingIcon = {
             val image = if (passwordVisible)
-                Icons.Filled.Clear
-            else Icons.Filled.Add
+                Icons.Filled.Visibility
+            else Icons.Filled.VisibilityOff
 
             // Please provide localized description for accessibility services
             val description = if (passwordVisible) "Hide password" else "Show password"
