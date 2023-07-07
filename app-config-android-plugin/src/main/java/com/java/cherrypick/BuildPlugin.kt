@@ -22,6 +22,7 @@ fun Project.addComposeDependencies() {
         implementation(Dependencies.Compose.toolingUi)
         implementation(Dependencies.Compose.material)
         implementation(Dependencies.Compose.activity)
+        implementation(Dependencies.Compose.materialIconExtended)
     }
 }
 
@@ -37,6 +38,7 @@ fun Project.addKtorDependencies() {
         implementation(Dependencies.Compose.toolingUi)
         implementation(Dependencies.Compose.material)
         implementation(Dependencies.Compose.activity)
+        implementation(Dependencies.Compose.materialIconExtended)
     }
 }
 

@@ -22,6 +22,7 @@ object Dependencies {
         const val toolingUi = "androidx.compose.ui:ui-tooling-preview:${Version.compose}"
         const val material = "androidx.compose.material:material:${Version.compose}"
         const val activity = "androidx.activity:activity-compose:${Version.composeActivity}"
+        const val materialIconExtended = "androidx.compose.material:material-icons-extended:${Version.compose}"
     }
 
     object Shared {
@@ -86,6 +87,7 @@ object Dependencies {
             "androidx.compose.ui:ui-tooling-preview:${Version.compose}",
             "androidx.compose.foundation:foundation:${Version.compose}",
             "androidx.compose.material:material:${Version.compose}",
+            "androidx.compose.material:material-icons-extended:${Version.compose}",
             "androidx.compose.material3:material3:${Version.material3}",
             "androidx.activity:activity-compose:${Version.activity}",
             "androidx.navigation:navigation-compose:${Version.navigation}",
