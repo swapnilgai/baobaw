@@ -2,17 +2,22 @@ package com.java.cherrypick.presentationInfra
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.selects.select
 
 interface UiChannel<State> {
-    suspend fun observe(scope: CoroutineScope): ReceiveChannel<UiEvent<out State>>
+    suspend fun observeAsFlow(): Flow<UiEvent<out State>>
+    suspend fun observe(scope: CoroutineScope ?= MainScope()): ReceiveChannel<UiEvent<out State>>
     fun setContent(content: State)
     fun getContent(): State
     fun setLoading()
@@ -25,8 +30,13 @@ class UiChannelImpl<State>(initialState: State): UiChannel<State> {
     private val contentChannel = ConflatedBroadcastChannel(
         UiEvent.Content(value = initialState)
     )
-    override suspend fun observe(scope: CoroutineScope): ReceiveChannel<UiEvent<out State>> {
-        return scope.produce(Dispatchers.Main, capacity = UNLIMITED ) {
+
+    override suspend fun observeAsFlow(): Flow<UiEvent<out State>> {
+        return observe(MainScope()).receiveAsFlow()
+    }
+
+    override suspend fun observe(scope: CoroutineScope?): ReceiveChannel<UiEvent<out State>> {
+        return scope!!.produce(Dispatchers.Main, capacity = UNLIMITED ) {
             val contentChannelSub = contentChannel.openSubscription()
             invokeOnClose { contentChannelSub.cancel() }
             while(isActive){
