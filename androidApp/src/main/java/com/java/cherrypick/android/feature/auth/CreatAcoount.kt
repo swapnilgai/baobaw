@@ -39,16 +39,16 @@ import com.java.cherrypick.android.compose.ccp.component.getFullPhoneNumber
 import com.java.cherrypick.android.compose.ccp.component.getOnlyPhoneNumber
 import com.java.cherrypick.android.compose.ccp.component.isPhoneNumber
 import com.java.cherrypick.android.compose.passwordinput.PasswordInputField
-import com.java.cherrypick.feature.auth.presentation.AuthContent
 import com.java.cherrypick.feature.auth.presentation.AuthState
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.UiEvent
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.get
 
 @Composable
-fun EnterPhoneScreen(authViewModel: AuthViewModel) {
+fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
     BaseView(viewModel = authViewModel){
         val authContent = authViewModel.state.collectAsState()
 
