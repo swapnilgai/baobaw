@@ -3,6 +3,7 @@ plugins {
     id("com.android.library")
     id("com.codingfeline.buildkonfig") version Version.buildkonfig
     kotlin("plugin.serialization") version Version.kotlinVersion
+    id("dev.icerock.moko.kswift")
 }
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
@@ -104,4 +105,8 @@ buildkonfig {
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "dev")
     }
+}
+
+kswift {
+    install(dev.icerock.moko.kswift.plugin.feature.SealedToSwiftEnumFeature)
 }
