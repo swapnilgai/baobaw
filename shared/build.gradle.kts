@@ -1,3 +1,4 @@
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -108,5 +109,7 @@ buildkonfig {
 }
 
 kswift {
-    install(dev.icerock.moko.kswift.plugin.feature.SealedToSwiftEnumFeature)
+    install(dev.icerock.moko.kswift.plugin.feature.SealedToSwiftEnumFeature) {
+        filter = includeFilter("ClassContext/cherrypick:shared/com/java/cherrypick/presentationInfra/UiEvent")
+    }
 }

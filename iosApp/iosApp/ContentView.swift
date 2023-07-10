@@ -16,7 +16,7 @@ struct ContentView: View {
             .background(Color.gray.opacity(0.3).cornerRadius(10))
 
         Button(action: {
-            authViewModel.onSignUpClick(phoneNumber: textFieldText, password: "Strin123g")
+            authViewModel.onSignUpClick(phoneNumber: textFieldText, password: "test")
         },
                label: {
             Text( "Send".uppercased())
@@ -39,15 +39,15 @@ struct ContentView: View {
 
 
     public func onStateReceived(state: UiEvent<AuthState>) {
-     print("in state ", state)
-//         switch UiEventKs(state){
-//         case .content(let obj):
-//             print("Phone ", obj.value?.content?.phone)
-//         case .error(let obj):
-//             print("Error ", obj)
-//         case .loading:
-//             print("Loading")
-//         }
+          switch UiEventKs(state){
+          case .content(let obj):
+              print("Phone ", obj.value?.content?.phone)
+          case .error(let obj):
+              print("Error ", obj)
+          case .loading:
+              print("Loading")
+          default: print("Default")
+          }
     }
 }
 

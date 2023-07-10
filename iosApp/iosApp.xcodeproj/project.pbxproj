@@ -12,6 +12,7 @@
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 		B1BB2DB72A57BD2700593BB0 /* Collector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1BB2DB62A57BD2700593BB0 /* Collector.swift */; };
+		B1D8B58F2A5C981500FAAE5D /* cherrypick_shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D8B58E2A5C981500FAAE5D /* cherrypick_shared.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,6 +36,7 @@
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B1BB2DB62A57BD2700593BB0 /* Collector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collector.swift; sourceTree = "<group>"; };
+		B1D8B58E2A5C981500FAAE5D /* cherrypick_shared.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = cherrypick_shared.swift; path = sharedSwift/cherrypick_shared.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +61,7 @@
 		7555FF72242A565900829871 = {
 			isa = PBXGroup;
 			children = (
+				B1D8B58E2A5C981500FAAE5D /* cherrypick_shared.swift */,
 				7555FF7D242A565900829871 /* iosApp */,
 				7555FF7C242A565900829871 /* Products */,
 				7555FFB0242A642200829871 /* Frameworks */,
@@ -185,6 +188,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1D8B58F2A5C981500FAAE5D /* cherrypick_shared.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
 				B1BB2DB72A57BD2700593BB0 /* Collector.swift in Sources */,
