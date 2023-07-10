@@ -1,24 +1,18 @@
 package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
-import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(state = AuthState()) {
-
-    override var error: (String) -> Unit = {err-> setState { copy(errorMessage = ErrorMessage(err)) }}
-    override var loading: () -> Unit = { setState{ copy(showLoading = true) } }
+class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(initialContent = AuthState()) {
 
     fun onSignUpClick(phoneNumber: String, password: String){
         viewModelScope.launch {
-            loading.invoke()
+            setLoading()
             authInteractor.signUp(phoneNumber, password)?.let { authContent ->
-                setState {
+                setContent {
                     copy(
-                        content = authContent,
-                        showLoading = false,
-                        errorMessage = null
+                        content = authContent
                     )
                 }
             }
@@ -27,19 +21,20 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
 
     fun sendOpt(phoneNumber: String){
         viewModelScope.launch {
-            loading.invoke()
+            setLoading()
             authInteractor.sendOptp(phoneNumber)
         }
     }
 
     fun verifyOpt(phoneNumber: String, opt: String) {
         viewModelScope.launch {
-            loading.invoke()
+            setLoading()
             val result = authInteractor.verifyOpt(phoneNumber, opt)
         }
     }
     fun onDismissClicked(){
-        setState { copy(showLoading = false, errorMessage = null) }
+        setContent {
+            getContent()
+        }
     }
-
 }

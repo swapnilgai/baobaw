@@ -58,9 +58,18 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
 
         CountryCodeView( onSignUpClick = onSignUpClick )
 
-        if(authContent.value.showLoading) LoadingView(onDismiss = onDismissClicked)
-
-        authContent.value.errorMessage?.message?.let { ErrorDialog(onDismiss =  onDismissClicked , it) }
+        when(authContent.value){
+            is UiEvent.Error -> {
+                ErrorDialog(
+                    onDismiss = onDismissClicked,
+                    (authContent.value as UiEvent.Error).message
+                )
+            }
+            is UiEvent.Loading -> {
+                LoadingView(onDismiss = onDismissClicked)
+            }
+            else -> {}
+        }
     }
 }
 
