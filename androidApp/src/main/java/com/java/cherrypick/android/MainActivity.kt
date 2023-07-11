@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.java.cherrypick.android.feature.auth.EnterPhoneScreen
+import com.java.cherrypick.android.navigation.NavigationGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = colorResource(id = R.color.cream_white)
                 ) {
-                    EnterPhoneScreen()
+                    NavigationGraph()
                 }
             }
         }
@@ -30,6 +30,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
     MyApplicationTheme {
-        //EnterPhoneScreen()
+        NavigationGraph()
     }
 }

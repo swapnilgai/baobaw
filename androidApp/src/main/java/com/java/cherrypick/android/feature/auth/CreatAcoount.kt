@@ -160,5 +160,5 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    //EnterPhoneScreen()
+    EnterPhoneScreen(get())
 }
