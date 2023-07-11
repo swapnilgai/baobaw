@@ -2,21 +2,21 @@ import SwiftUI
 import shared
 
 struct ContentView: View {
-	let greet = Greeting().greet()
+   let greet = Greeting().greet()
     var authViewModel = AuthKoinViewModelModule().authViewModel
     @State var textFieldText: String = ""
 
-    
+
 
     init() {
         observeState()
     }
-	var body: some View {
+   var body: some View {
         TextField("enter number", text: $textFieldText).padding()
             .background(Color.gray.opacity(0.3).cornerRadius(10))
-        
+
         Button(action: {
-            authViewModel.onSignUpClick(phoneNumber: textFieldText, password: "Strin123g")
+            authViewModel.onSignUpClick(phoneNumber: textFieldText, password: "test")
         },
                label: {
             Text( "Send".uppercased())
@@ -25,33 +25,38 @@ struct ContentView: View {
                 .background(Color.blue.cornerRadius(10))
                 .foregroundColor(.white)
                 .font(.headline)
-            
+
         })
-	}
-    
+   }
+
     private func observeState() {
         authViewModel.state.collect(
-            collector: Collector<UiEvent> { state in onStateReceived(state: state) }
+            collector: Collector<UiEvent<AuthState>> { state in onStateReceived(state: state) }
            ) { error in
                print("Error ocurred during state collection")
            }
        }
-    
-    private func onStateReceived(state: AuthState) {
-        print("id is: ")
-        print(state.content?.id)
-        print("phone is: ")
-        print(state.content?.phone)
-      }
 
+
+    public func onStateReceived(state: UiEvent<AuthState>) {
+          switch UiEventKs(state){
+          case .content(let obj):
+              print("Phone ", obj.value?.content?.phone)
+          case .error(let obj):
+              print("Error ", obj)
+          case .loading:
+              print("Loading")
+          default: print("Default")
+          }
+    }
 }
 
 
 struct ContentView_Previews: PreviewProvider {
 
-	static var previews: some View {
-		ContentView()
-	}
+   static var previews: some View {
+      ContentView()
+   }
 }
 
 
