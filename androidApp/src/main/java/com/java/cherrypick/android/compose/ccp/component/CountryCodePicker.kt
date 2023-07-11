@@ -9,16 +9,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Surface
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.Text
 import androidx.compose.material.IconButton
 import androidx.compose.material.Icon
 import com.java.cherrypick.android.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,35 +29,26 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.java.cherrypick.android.compose.ccp.data.utils.checkPhoneNumber
 import com.java.cherrypick.android.compose.ccp.data.utils.getDefaultLangCode
 import com.java.cherrypick.android.compose.ccp.data.utils.getDefaultPhoneCode
 import com.java.cherrypick.android.compose.ccp.data.utils.getLibCountries
 import com.java.cherrypick.android.compose.ccp.transformation.PhoneNumberTransformation
 
 
-private var fullNumberState: String by mutableStateOf("")
-private var checkNumberState: Boolean by mutableStateOf(false)
-private var phoneNumberState: String by mutableStateOf("")
-private var countryCodeState: String by mutableStateOf("")
-
-
 @Composable
 fun CountryCodePicker(
     modifier: Modifier = Modifier,
-    text: String,
+    text: MutableState<String>,
+    countryCodeState: MutableState<String>,
     onValueChange: (String) -> Unit,
+    onCountryValueChange: (String) -> Unit,
     shape: Shape = RoundedCornerShape(24.dp),
     showCountryCode: Boolean = true,
     bottomStyle: Boolean = false
 ) {
     val context = LocalContext.current
-    var textFieldValue by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalTextInputService.current
     var phoneCode by rememberSaveable {
         mutableStateOf(
@@ -73,9 +63,7 @@ fun CountryCodePicker(
         )
     }
 
-    fullNumberState = phoneCode + textFieldValue
-    phoneNumberState = textFieldValue
-    countryCodeState = defaultLang
+    countryCodeState.value = phoneCode
 
     Surface(color = colorResource(id = R.color.cream_white)) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
@@ -84,6 +72,7 @@ fun CountryCodePicker(
                     pickedCountry = {
                         phoneCode = it.countryPhoneCode
                         defaultLang = it.countryCode
+                        onCountryValueChange(it.countryPhoneCode)
                     },
                     defaultSelectedCountry = getLibCountries.single { it.countryCode == defaultLang },
                     showCountryCode = showCountryCode,
@@ -95,10 +84,9 @@ fun CountryCodePicker(
             ) {
                 OutlinedTextField(modifier = modifier.fillMaxWidth(),
                     shape = shape,
-                    value = textFieldValue,
+                    value = text.value,
                     onValueChange = {
-                        if (text != it && it.length  <= 10) {
-                            textFieldValue = it
+                        if (text.value != it && it.length  <= 10) {
                             onValueChange(it)
                         }
                     },
@@ -124,6 +112,7 @@ fun CountryCodePicker(
                                         pickedCountry = {
                                             phoneCode = it.countryPhoneCode
                                             defaultLang = it.countryCode
+                                            onCountryValueChange(it.countryPhoneCode)
                                         },
                                         defaultSelectedCountry = getLibCountries.single { it.countryCode == defaultLang },
                                         showCountryCode = showCountryCode,
@@ -133,7 +122,6 @@ fun CountryCodePicker(
                     },
                     trailingIcon = {
                         IconButton(onClick = {
-                            textFieldValue = ""
                             onValueChange("")
                         }) {
                             Icon(
@@ -147,24 +135,4 @@ fun CountryCodePicker(
             }
         }
     }
-}
-
-fun getFullPhoneNumber(): String {
-    return fullNumberState
-}
-
-fun getOnlyPhoneNumber(): String {
-    return phoneNumberState
-}
-
-fun getErrorStatus(): Boolean {
-    return !checkNumberState
-}
-
-fun isPhoneNumber(): Boolean {
-    val check = checkPhoneNumber(
-        phone = phoneNumberState, fullPhoneNumber = fullNumberState, countryCode = countryCodeState
-    )
-    checkNumberState = check
-    return check
 }

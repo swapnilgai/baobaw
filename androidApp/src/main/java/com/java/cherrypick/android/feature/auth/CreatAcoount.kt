@@ -15,10 +15,9 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -34,29 +33,27 @@ import com.java.cherrypick.android.ErrorDialog
 import com.java.cherrypick.android.LoadingView
 import com.java.cherrypick.android.R
 import com.java.cherrypick.android.compose.ccp.component.CountryCodePicker
-import com.java.cherrypick.android.compose.ccp.component.getErrorStatus
-import com.java.cherrypick.android.compose.ccp.component.getFullPhoneNumber
-import com.java.cherrypick.android.compose.ccp.component.getOnlyPhoneNumber
-import com.java.cherrypick.android.compose.ccp.component.isPhoneNumber
+import com.java.cherrypick.android.compose.ccp.data.utils.checkPhoneNumber
 import com.java.cherrypick.android.compose.passwordinput.PasswordInputField
-import com.java.cherrypick.feature.auth.presentation.AuthState
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
-import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.UiEvent
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
 @Composable
 fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
+    val phoneNumber = rememberSaveable { mutableStateOf("") }
+    val fullPhoneNumber = rememberSaveable { mutableStateOf("") }
+    val countryCodeNumber = rememberSaveable { mutableStateOf("") }
+    val password = rememberSaveable { mutableStateOf("") }
+    val confirmPassword = rememberSaveable { mutableStateOf("") }
+    val checkNumberState = rememberSaveable { mutableStateOf(false) }
+
     BaseView(viewModel = authViewModel){
         val authContent = authViewModel.state.collectAsState()
 
         val scope = rememberCoroutineScope()
-        val onSignUpClick :  (String, String) -> Unit =  {  phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) }}
         val onDismissClicked :  () -> Unit =  { scope.launch { authViewModel.onDismissClicked() }}
-
-        CountryCodeView( onSignUpClick = onSignUpClick )
 
         when(authContent.value){
             is UiEvent.Error -> {
@@ -68,14 +65,33 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
             is UiEvent.Loading -> {
                 LoadingView(onDismiss = onDismissClicked)
             }
-            else -> {}
+            else -> {
+                // in case a value changes, we modify here to recompose that part only
+            }
         }
     }
+
+    CountryCodeView(
+        phoneNumber,
+        fullPhoneNumber,
+        countryCodeNumber,
+        password,
+        confirmPassword,
+        checkNumberState,
+        onSignUpClick = authViewModel::onSignUpClick )
 }
 
 
 @Composable
-fun CountryCodeView(onSignUpClick: (String, String) -> Unit){
+fun CountryCodeView(
+    phoneNumber: MutableState<String>,
+    fullPhoneNumber: MutableState<String>,
+    countryCodeNumber: MutableState<String>,
+    password: MutableState<String>,
+    confirmPassword: MutableState<String>,
+    checkNumberState: MutableState<Boolean>,
+    onSignUpClick: (String, String) -> Unit
+){
     Column(
         Modifier
             .padding(24.dp)
@@ -90,13 +106,27 @@ fun CountryCodeView(onSignUpClick: (String, String) -> Unit){
             text = stringResource(id = R.string.enter_phone_number),
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
         )
-        CountryCodePick(onSignUpClick)
+        CountryCodePick(phoneNumber,
+            fullPhoneNumber,
+            countryCodeNumber,
+            password,
+            confirmPassword,
+            checkNumberState,
+            onSignUpClick)
     }
 }
 
 
 @Composable
-fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
+fun CountryCodePick(
+    phoneNumber: MutableState<String>,
+    fullPhoneNumber: MutableState<String>,
+    countryCodeNumber: MutableState<String>,
+    password: MutableState<String>,
+    confirmPassword: MutableState<String>,
+    checkNumberState: MutableState<Boolean>,
+    onSignUpClick: (String, String) -> Unit
+) {
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -105,22 +135,26 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        val phoneNumber = rememberSaveable { mutableStateOf("") }
-        val fullPhoneNumber = rememberSaveable { mutableStateOf("") }
-        val onlyPhoneNumber = rememberSaveable { mutableStateOf("") }
-        val password = rememberSaveable { mutableStateOf("") }
-        val confirmPassword = rememberSaveable { mutableStateOf("") }
-
         CountryCodePicker(
-            text = phoneNumber.value,
-            onValueChange = { phoneNumber.value = it },
+            text = phoneNumber,
+            countryCodeState = countryCodeNumber,
+            onValueChange = {
+                phoneNumber.value = it
+                fullPhoneNumber.value = countryCodeNumber.value + it
+                            },
+            onCountryValueChange = {
+                countryCodeNumber.value = it
+                fullPhoneNumber.value = it + phoneNumber.value
+            },
             bottomStyle = false,
             shape = RoundedCornerShape(1.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
 
 
-        if (getErrorStatus() && isPhoneNumber()) Text(
+        if (checkNumberState.value && checkPhoneNumber(
+                phone = phoneNumber.value, fullPhoneNumber = fullPhoneNumber.value, countryCode = countryCodeNumber.value
+            )) Text(
             text = stringResource(id = R.string.invalid_number),
             color = MaterialTheme.colors.error,
             style = MaterialTheme.typography.caption,
@@ -140,13 +174,13 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            if (isPhoneNumber()) {
-                fullPhoneNumber.value = getFullPhoneNumber()
-                onlyPhoneNumber.value = getOnlyPhoneNumber()
+            if (checkPhoneNumber(
+                    phone = phoneNumber.value, fullPhoneNumber = fullPhoneNumber.value, countryCode = countryCodeNumber.value
+                )
+            ) {
                 onSignUpClick(fullPhoneNumber.value, password.value)
             } else {
-                fullPhoneNumber.value = "Error"
-                onlyPhoneNumber.value = "Error"
+                checkNumberState.value = true
             }
         },
             colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
