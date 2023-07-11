@@ -1,5 +1,6 @@
 package com.java.cherrypick.android.feature.auth
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,10 +16,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -29,6 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.ErrorDialog
 import com.java.cherrypick.android.LoadingView
@@ -39,36 +40,48 @@ import com.java.cherrypick.android.compose.ccp.component.getFullPhoneNumber
 import com.java.cherrypick.android.compose.ccp.component.getOnlyPhoneNumber
 import com.java.cherrypick.android.compose.ccp.component.isPhoneNumber
 import com.java.cherrypick.android.compose.passwordinput.PasswordInputField
-import com.java.cherrypick.feature.auth.presentation.AuthState
+import com.java.cherrypick.android.navigation.navigateToScreen
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
-import com.java.cherrypick.model.ErrorMessage
 import com.java.cherrypick.presentationInfra.UiEvent
-import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
 @Composable
-fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
-    BaseView(viewModel = authViewModel){
-        val authContent = authViewModel.state.collectAsState()
+fun EnterPhoneScreen(authViewModel: AuthViewModel = get(),
+                     navController: NavController,
+                     scope: CoroutineScope = rememberCoroutineScope()) {
 
-        val scope = rememberCoroutineScope()
-        val onSignUpClick :  (String, String) -> Unit =  {  phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) }}
-        val onDismissClicked :  () -> Unit =  { scope.launch { authViewModel.onDismissClicked() }}
+    BaseView(viewModel = authViewModel) {
 
-        CountryCodeView( onSignUpClick = onSignUpClick )
+        val authContent = authViewModel.state.collectAsStateWithLifecycle()
 
-        when(authContent.value){
+        val onSignUpClick: (String, String) -> Unit =
+            { phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) } }
+        val onDismissClicked: () -> Unit = { scope.launch { authViewModel.onDismissClicked() } }
+
+        CountryCodeView(onSignUpClick = onSignUpClick)
+        when (authContent.value) {
             is UiEvent.Error -> {
                 ErrorDialog(
                     onDismiss = onDismissClicked,
                     (authContent.value as UiEvent.Error).message
                 )
             }
+
             is UiEvent.Loading -> {
                 LoadingView(onDismiss = onDismissClicked)
             }
-            else -> {}
+
+            is UiEvent.Cancled -> {
+            }
+
+            is UiEvent.Navigation -> {
+                navigateToScreen(navController, (authContent.value as UiEvent.Navigation).route)
+            }
+
+            else -> {
+            }
         }
     }
 }
@@ -160,5 +173,5 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    EnterPhoneScreen(get())
+    EnterPhoneScreen(get(), rememberNavController())
 }

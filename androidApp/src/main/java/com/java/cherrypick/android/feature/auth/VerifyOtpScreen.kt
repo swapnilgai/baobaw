@@ -10,48 +10,63 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.java.cherrypick.AppConstants.Auth.otpCount
+import com.java.cherrypick.android.BaseView
+import com.java.cherrypick.feature.auth.presentation.AuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun VerifyOtpScreen(
     modifier: Modifier = Modifier,
-    otpText: String,
-    otpCount: Int = 6,
-    onOtpTextChange: (String, Boolean) -> Unit
+    authViewModel: AuthViewModel,
+    phoneNumber: String
 ) {
-    LaunchedEffect(Unit) {
-        if (otpText.length > otpCount) {
-            throw IllegalArgumentException("Otp text value must not have more than otpCount: $otpCount characters")
-        }
-    }
 
-    BasicTextField(
-        modifier = modifier,
-        value = TextFieldValue(otpText, selection = TextRange(otpText.length)),
-        onValueChange = {
-            if (it.text.length <= otpCount) {
-                onOtpTextChange.invoke(it.text, it.text.length == otpCount)
+    BaseView(viewModel = authViewModel) {
+
+        val otpText = rememberSaveable { mutableStateOf(phoneNumber) }
+        val scope = rememberCoroutineScope()
+        val onOptClicked: (String, String) -> Unit = { phone, opt ->
+            scope.launch {
+                authViewModel.verifyOpt(
+                    phoneNumber = phone,
+                    opt = opt
+                )
             }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-        decorationBox = {
-            Row(horizontalArrangement = Arrangement.Center) {
-                repeat(otpCount) { index ->
-                    CharView(
-                        index = index,
-                        text = otpText
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+        }
+
+        BasicTextField(
+            modifier = modifier,
+            value = TextFieldValue(otpText.value, selection = TextRange(otpText.value.length)),
+            onValueChange = {
+                otpText.value = it.text
+                if (it.text.length == otpCount) {
+                    onOptClicked(it.text, phoneNumber)
+                }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            decorationBox = {
+                Row(horizontalArrangement = Arrangement.Center) {
+                    repeat(otpCount) { index ->
+                        CharView(
+                            index = index,
+                            text = otpText.value
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                 }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable

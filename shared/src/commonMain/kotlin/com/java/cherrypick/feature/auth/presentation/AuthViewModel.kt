@@ -1,7 +1,10 @@
 package com.java.cherrypick.feature.auth.presentation
 
+import com.java.cherrypick.AppConstants
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
+import com.java.cherrypick.util.getNavigationUrl
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(initialContent = AuthState()) {
@@ -16,6 +19,7 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
                     )
                 }
             }
+            navigate(getNavigationUrl(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber)))
         }
     }
 

@@ -1,7 +1,5 @@
 package com.java.cherrypick.feature.auth.presentation
 
-import com.java.cherrypick.model.ErrorMessage
-
 data class AuthState(
     val content: AuthContent? = null,
 )
