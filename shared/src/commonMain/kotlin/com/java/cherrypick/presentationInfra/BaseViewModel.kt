@@ -21,7 +21,7 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         setError(exception.message?: "")
     }
 
-    lateinit var viewModelScope: CoroutineScope
+    var viewModelScope: CoroutineScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
 
     private val _state = MutableStateFlow<UiEvent<out ContentT>>(UiEvent.Content(initialContent))
 
