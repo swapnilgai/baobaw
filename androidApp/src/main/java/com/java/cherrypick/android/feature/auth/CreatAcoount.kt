@@ -40,15 +40,26 @@ import com.java.cherrypick.presentationInfra.UiEvent
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
+lateinit var phoneNumber: MutableState<String>
+lateinit var fullPhoneNumber: MutableState<String>
+lateinit var countryCodeNumber: MutableState<String>
+lateinit var password: MutableState<String>
+lateinit var confirmPassword: MutableState<String>
+lateinit var checkNumberState: MutableState<Boolean>
+@Composable
+fun AuthViewModel.createVariables() {
+    phoneNumber = rememberSaveable { mutableStateOf("") }
+    fullPhoneNumber = rememberSaveable { mutableStateOf("") }
+    countryCodeNumber = rememberSaveable { mutableStateOf("") }
+    password = rememberSaveable { mutableStateOf("") }
+    confirmPassword = rememberSaveable { mutableStateOf("") }
+    checkNumberState = rememberSaveable { mutableStateOf(false) }
+}
+
 @Composable
 fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
-    val phoneNumber = rememberSaveable { mutableStateOf("") }
-    val fullPhoneNumber = rememberSaveable { mutableStateOf("") }
-    val countryCodeNumber = rememberSaveable { mutableStateOf("") }
-    val password = rememberSaveable { mutableStateOf("") }
-    val confirmPassword = rememberSaveable { mutableStateOf("") }
-    val checkNumberState = rememberSaveable { mutableStateOf(false) }
 
+    authViewModel.createVariables()
     BaseView(viewModel = authViewModel){
         val authContent = authViewModel.state.collectAsState()
 
@@ -72,24 +83,12 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
     }
 
     CountryCodeView(
-        phoneNumber,
-        fullPhoneNumber,
-        countryCodeNumber,
-        password,
-        confirmPassword,
-        checkNumberState,
         onSignUpClick = authViewModel::onSignUpClick )
 }
 
 
 @Composable
 fun CountryCodeView(
-    phoneNumber: MutableState<String>,
-    fullPhoneNumber: MutableState<String>,
-    countryCodeNumber: MutableState<String>,
-    password: MutableState<String>,
-    confirmPassword: MutableState<String>,
-    checkNumberState: MutableState<Boolean>,
     onSignUpClick: (String, String) -> Unit
 ){
     Column(
@@ -106,12 +105,7 @@ fun CountryCodeView(
             text = stringResource(id = R.string.enter_phone_number),
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
         )
-        CountryCodePick(phoneNumber,
-            fullPhoneNumber,
-            countryCodeNumber,
-            password,
-            confirmPassword,
-            checkNumberState,
+        CountryCodePick(
             onSignUpClick)
     }
 }
@@ -119,12 +113,6 @@ fun CountryCodeView(
 
 @Composable
 fun CountryCodePick(
-    phoneNumber: MutableState<String>,
-    fullPhoneNumber: MutableState<String>,
-    countryCodeNumber: MutableState<String>,
-    password: MutableState<String>,
-    confirmPassword: MutableState<String>,
-    checkNumberState: MutableState<Boolean>,
     onSignUpClick: (String, String) -> Unit
 ) {
     Column(

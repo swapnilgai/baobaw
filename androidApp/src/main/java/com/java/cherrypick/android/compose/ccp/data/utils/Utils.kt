@@ -31,8 +31,8 @@ fun checkPhoneNumber(phone: String, fullPhoneNumber: String, countryCode: String
             )
             PhoneNumberUtil.getInstance().isValidNumberForRegion(number, countryCode.uppercase())
         } catch (ex: Exception) {
-            false
+            true
         }
     }
-    return false
+    return true
 }
