@@ -16,7 +16,7 @@ object Version {
     const val composeActivity = "1.7.1"
 
     const val activity      = "1.5.1"
-    const val ktor          = "2.2.3"
+    const val ktor          = "2.3.2"
     const val serialization = "1.4.1"
     const val koin          = "3.3.2"
     const val koinCompose   = "3.4.1"
@@ -31,5 +31,5 @@ object Version {
     const val coroutines    = "1.6.4"
     const val supabase      = "1.0.3"
     const val buildkonfig   = "0.13.3"
-
+    const val kswift        = "0.6.1"
 }

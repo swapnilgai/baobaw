@@ -1,5 +1,23 @@
 apply(from = "gradle/ktlint.gradle.kts")
 
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("dev.icerock.moko:kswift-gradle-plugin:0.6.1")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
 plugins {
     // trick: for the same plugin versions in all sub-modules
     id("app-config-android-plugin").apply(false)
