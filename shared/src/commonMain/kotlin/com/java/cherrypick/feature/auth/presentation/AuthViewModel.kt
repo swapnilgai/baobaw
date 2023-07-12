@@ -34,17 +34,17 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
     fun verifyOpt(phoneNumber: String, opt: String) {
         viewModelScope.launch {
             setLoading()
-            authInteractor.logOut()
-
             authInteractor.verifyOpt(phoneNumber = phoneNumber, opt = opt)
             val result = authInteractor.getCurrentSession()
 
-            setContent {
-                copy(
-                    content = content?.copy(
-                        id = result?.accessToken ?: ""
+            if(result!=null){
+                setContent {
+                    copy(
+                        content = content?.copy(
+                            id = result?.accessToken ?: ""
+                        )
                     )
-                )
+                }
             }
         }
     }

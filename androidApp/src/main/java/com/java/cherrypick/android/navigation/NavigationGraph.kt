@@ -26,7 +26,7 @@ fun NavigationGraph(navController: NavHostController) {
             }
         )){ navBackStackEntry ->
             val phoneNumber = navBackStackEntry.arguments?.getString(AppConstants.NavigationParam.phoneNumber)?: ""
-            VerifyOtpScreen(authViewModel = get(), phoneNumber = phoneNumber)
+            VerifyOtpScreen(authViewModel = get(), phoneNumber = phoneNumber, navController = navController)
         }
     }
 }
