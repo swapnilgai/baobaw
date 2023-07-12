@@ -2,11 +2,11 @@ package com.java.cherrypick.android.feature.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -40,33 +40,34 @@ import com.java.cherrypick.presentationInfra.UiEvent
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
-lateinit var phoneNumber: MutableState<String>
-lateinit var fullPhoneNumber: MutableState<String>
-lateinit var countryCodeNumber: MutableState<String>
-lateinit var password: MutableState<String>
-lateinit var confirmPassword: MutableState<String>
-lateinit var checkNumberState: MutableState<Boolean>
-@Composable
-fun AuthViewModel.createVariables() {
-    phoneNumber = rememberSaveable { mutableStateOf("") }
-    fullPhoneNumber = rememberSaveable { mutableStateOf("") }
-    countryCodeNumber = rememberSaveable { mutableStateOf("") }
-    password = rememberSaveable { mutableStateOf("") }
-    confirmPassword = rememberSaveable { mutableStateOf("") }
-    checkNumberState = rememberSaveable { mutableStateOf(false) }
-}
+data class EnterPhoneScreenData(
+    val phoneNumber: MutableState<String>,
+    val fullPhoneNumber: MutableState<String>,
+    val countryCodeNumber: MutableState<String>,
+    val password: MutableState<String>,
+    val confirmPassword: MutableState<String>,
+    val checkNumberState: MutableState<Boolean>,
+)
 
 @Composable
 fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
 
-    authViewModel.createVariables()
-    BaseView(viewModel = authViewModel){
+    val authValues = EnterPhoneScreenData(
+        rememberSaveable { mutableStateOf("") },
+        rememberSaveable { mutableStateOf("") },
+        rememberSaveable { mutableStateOf("") },
+        rememberSaveable { mutableStateOf("") },
+        rememberSaveable { mutableStateOf("") },
+        rememberSaveable { mutableStateOf(false) }
+    )
+
+    BaseView(viewModel = authViewModel) {
         val authContent = authViewModel.state.collectAsState()
 
         val scope = rememberCoroutineScope()
-        val onDismissClicked :  () -> Unit =  { scope.launch { authViewModel.onDismissClicked() }}
+        val onDismissClicked: () -> Unit = { scope.launch { authViewModel.onDismissClicked() } }
 
-        when(authContent.value){
+        when (authContent.value) {
             is UiEvent.Error -> {
                 ErrorDialog(
                     onDismiss = onDismissClicked,
@@ -83,12 +84,15 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get()) {
     }
 
     CountryCodeView(
-        onSignUpClick = authViewModel::onSignUpClick )
+        authValues,
+        onSignUpClick = authViewModel::onSignUpClick
+    )
 }
 
 
 @Composable
 fun CountryCodeView(
+    authValues: EnterPhoneScreenData,
     onSignUpClick: (String, String) -> Unit
 ){
     Column(
@@ -106,13 +110,16 @@ fun CountryCodeView(
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
         )
         CountryCodePick(
-            onSignUpClick)
+            authValues,
+            onSignUpClick
+        )
     }
 }
 
 
 @Composable
 fun CountryCodePick(
+    authValues: EnterPhoneScreenData,
     onSignUpClick: (String, String) -> Unit
 ) {
     Column(
@@ -124,15 +131,15 @@ fun CountryCodePick(
     ) {
 
         CountryCodePicker(
-            text = phoneNumber,
-            countryCodeState = countryCodeNumber,
+            text = authValues.phoneNumber,
+            countryCodeState = authValues.countryCodeNumber,
             onValueChange = {
-                phoneNumber.value = it
-                fullPhoneNumber.value = countryCodeNumber.value + it
-                            },
+                authValues.phoneNumber.value = it
+                authValues.fullPhoneNumber.value = authValues.countryCodeNumber.value + it
+            },
             onCountryValueChange = {
-                countryCodeNumber.value = it
-                fullPhoneNumber.value = it + phoneNumber.value
+                authValues.countryCodeNumber.value = it
+                authValues.fullPhoneNumber.value = it + authValues.phoneNumber.value
             },
             bottomStyle = false,
             shape = RoundedCornerShape(1.dp)
@@ -140,9 +147,12 @@ fun CountryCodePick(
         Spacer(modifier = Modifier.height(16.dp))
 
 
-        if (checkNumberState.value && checkPhoneNumber(
-                phone = phoneNumber.value, fullPhoneNumber = fullPhoneNumber.value, countryCode = countryCodeNumber.value
-            )) Text(
+        if (authValues.checkNumberState.value && checkPhoneNumber(
+                phone = authValues.phoneNumber.value,
+                fullPhoneNumber = authValues.fullPhoneNumber.value,
+                countryCode = authValues.countryCodeNumber.value
+            )
+        ) Text(
             text = stringResource(id = R.string.invalid_number),
             color = MaterialTheme.colors.error,
             style = MaterialTheme.typography.caption,
@@ -153,22 +163,30 @@ fun CountryCodePick(
             textAlign = TextAlign.Center
         )
 
-        PasswordInputField(onValueChange = {it -> password.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+        PasswordInputField(
+            onValueChange = { it -> authValues.password.value = it },
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PasswordInputField(onValueChange = {it -> confirmPassword.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+        PasswordInputField(
+            onValueChange = { it -> authValues.confirmPassword.value = it },
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
             if (checkPhoneNumber(
-                    phone = phoneNumber.value, fullPhoneNumber = fullPhoneNumber.value, countryCode = countryCodeNumber.value
+                    phone = authValues.phoneNumber.value,
+                    fullPhoneNumber = authValues.fullPhoneNumber.value,
+                    countryCode = authValues.countryCodeNumber.value
                 )
             ) {
-                onSignUpClick(fullPhoneNumber.value, password.value)
+                onSignUpClick(authValues.fullPhoneNumber.value, authValues.password.value)
             } else {
-                checkNumberState.value = true
+                authValues.checkNumberState.value = true
             }
         },
             colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
