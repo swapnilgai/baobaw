@@ -61,4 +61,9 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
                 _state.tryEmit(UiEvent.Error(error))
             }
     }
+    fun onDismiss(){
+        setContent {
+            getContent()
+        }
+    }
 }

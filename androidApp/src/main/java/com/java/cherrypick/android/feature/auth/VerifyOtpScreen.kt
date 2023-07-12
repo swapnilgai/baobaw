@@ -32,14 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.java.cherrypick.android.BaseView
-import com.java.cherrypick.android.ErrorDialog
-import com.java.cherrypick.android.LoadingView
 import com.java.cherrypick.android.R
-import com.java.cherrypick.android.navigation.navigateToScreen
-import com.java.cherrypick.presentationInfra.UiEvent
+import com.java.cherrypick.feature.auth.presentation.AuthState
 import kotlinx.coroutines.launch
 
 
@@ -50,41 +46,24 @@ fun VerifyOtpScreen(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController){
 
-    BaseView(viewModel = authViewModel) {
+    var authState by remember { mutableStateOf<AuthState?>(null) }
 
-        val authContent = authViewModel.state.collectAsStateWithLifecycle()
+    fun setAuthState(state: AuthState){
+        authState = state
+    }
 
-        val onDismissClicked: () -> Unit = { scope.launch { authViewModel.onDismissClicked() } }
-
+    BaseView(viewModel = authViewModel, navController = navController, setContentT = { authState -> setAuthState(authState)}) {
         VerifyOtpView(phoneNumber = phoneNumber,
-            onSendClicked = { phoneNumber, opt -> authViewModel.verifyOpt(phoneNumber, opt) })
-
-        when (authContent.value) {
-            is UiEvent.Error -> {
-                ErrorDialog(
-                    onDismiss = onDismissClicked,
-                    (authContent.value as UiEvent.Error).message
-                )
-            }
-
-            is UiEvent.Loading -> {
-                LoadingView(onDismiss = onDismissClicked)
-            }
-
-            is UiEvent.Navigation -> {
-                navigateToScreen(navController, (authContent.value as UiEvent.Navigation).route)
-            }
-
-            else -> {
-            }
-        }
+            onSendClicked = { phoneNumber, opt -> authViewModel.verifyOpt(phoneNumber, opt) },
+            scope = scope
+        )
     }
 }
 
 @Composable
 fun VerifyOtpView(
     phoneNumber: String,
-    scope: CoroutineScope = rememberCoroutineScope(),
+    scope: CoroutineScope,
     onSendClicked: (String, String) -> Unit
 ){
         var otpValue by remember { mutableStateOf("") }
