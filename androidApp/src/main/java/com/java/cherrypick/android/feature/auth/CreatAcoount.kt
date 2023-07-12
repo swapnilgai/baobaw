@@ -1,6 +1,5 @@
 package com.java.cherrypick.android.feature.auth
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,7 +59,6 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get(),
             { phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) } }
         val onDismissClicked: () -> Unit = { scope.launch { authViewModel.onDismissClicked() } }
 
-        Log.i("UiEvent: ", authContent.toString())
         CountryCodeView(onSignUpClick = onSignUpClick)
         when (authContent.value) {
             is UiEvent.Error -> {
@@ -74,7 +72,7 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get(),
                 LoadingView(onDismiss = onDismissClicked)
             }
 
-            is UiEvent.Cancled -> {
+            is UiEvent.Nothing -> {
             }
 
             is UiEvent.Navigation -> {

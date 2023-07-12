@@ -42,9 +42,9 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         _state.value = UiEvent.Loading
     }
     fun clear(){
-        if(_state.value!=UiEvent.Cancled) {
+        if(_state.value!=UiEvent.Nothing) {
             viewModelScope.cancel()
-            _state.tryEmit(UiEvent.Cancled)
+            _state.tryEmit(UiEvent.Nothing)
         }
     }
 

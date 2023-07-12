@@ -7,7 +7,6 @@ sealed class UiEvent<ContentT>{
     object Loading : UiEvent<Nothing>()
     data class Error(val message: String): UiEvent<Nothing>()
     data class Navigation(val route: String, val navigateToScreen: Boolean = false): UiEvent<Nothing>()
-
-    object Cancled : UiEvent<Nothing>()
+    object Nothing : UiEvent<Nothing>()
 }
 
