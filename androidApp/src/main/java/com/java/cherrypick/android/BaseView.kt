@@ -36,7 +36,7 @@ fun <ContentT>BaseView(viewModel: BaseViewModel<ContentT>,
     content.invoke()
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_CREATE) {
+            if (event == Lifecycle.Event.ON_START) {
                 viewModel.onStart()
             } else if (event == Lifecycle.Event.ON_PAUSE) {
                 viewModel.clear()

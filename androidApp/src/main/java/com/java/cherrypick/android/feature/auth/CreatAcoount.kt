@@ -60,6 +60,7 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get(),
             { phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password) } }
         val onDismissClicked: () -> Unit = { scope.launch { authViewModel.onDismissClicked() } }
 
+        Log.i("UiEvent: ", authContent.toString())
         CountryCodeView(onSignUpClick = onSignUpClick)
         when (authContent.value) {
             is UiEvent.Error -> {
