@@ -5,6 +5,7 @@ object AppConstants {
     object RoutIds{
         const val signUp = "signUp"
         const val verifyOpt = "verifyOpt"
+        const val userInput = "userInput"
     }
 
     object Auth{

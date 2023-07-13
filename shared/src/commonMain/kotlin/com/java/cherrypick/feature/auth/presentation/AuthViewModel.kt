@@ -23,34 +23,4 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
             )
         }
     }
-
-    fun sendOpt(phoneNumber: String){
-        viewModelScope.launch {
-            setLoading()
-            authInteractor.sendOptp(phoneNumber)
-        }
-    }
-
-    fun verifyOpt(phoneNumber: String, opt: String) {
-        viewModelScope.launch {
-            setLoading()
-            authInteractor.verifyOpt(phoneNumber = phoneNumber, opt = opt)
-            val result = authInteractor.getCurrentSession()
-
-            if(result!=null){
-                setContent {
-                    copy(
-                        content = content?.copy(
-                            id = result?.accessToken ?: ""
-                        )
-                    )
-                }
-            }
-        }
-    }
-    fun onDismissClicked(){
-        setContent {
-            getContent()
-        }
-    }
 }

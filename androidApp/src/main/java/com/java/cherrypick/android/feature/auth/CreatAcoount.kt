@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
 @Composable
-fun EnterPhoneScreen(authViewModel: AuthViewModel = get(),
+fun EnterPhoneScreen(authViewModel: AuthViewModel,
                      navController: NavController,
                      scope: CoroutineScope = rememberCoroutineScope()) {
 
@@ -58,7 +58,7 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel = get(),
         authContent = state.content
     }
 
-    BaseView(viewModel = authViewModel, navController = navController, setContentT = { authState -> setAuthState(authState)}) {
+    BaseView(viewModel = authViewModel, navController = navController, setContentT = { state -> setAuthState(state)}) {
         CountryCodeView(
             onSignUpClick =  { phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password)}},
         )
