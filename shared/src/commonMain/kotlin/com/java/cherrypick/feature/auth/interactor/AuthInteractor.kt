@@ -10,6 +10,7 @@ import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.gotrue.providers.builtin.Phone
 import io.github.jan.supabase.gotrue.user.UserSession
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -17,8 +18,10 @@ interface AuthInteractor: Interactor {
     suspend fun signUp(signUpData: SignUpData): Email.Result?
     suspend fun signUp(phoneNumber: String, password: String): AuthContent?
     suspend fun login(userName: String, password: String)
-    suspend fun verifyOpt(opt: String, phoneNumber: String): UserSession?
+    suspend fun verifyOpt(opt: String, phoneNumber: String)
     suspend fun sendOptp(phoneNumber: String): Unit
+    suspend fun getCurrentSession() : UserSession?
+    suspend fun logOut()
 
 }
 
@@ -64,14 +67,25 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
         }
     }
 
-    override suspend fun verifyOpt(opt: String, phoneNumber: String) : UserSession? {
-       return withInteractorContext {
+    override suspend fun verifyOpt(opt: String, phoneNumber: String)  {
+        withInteractorContext {
             supabaseClient.gotrue.verifyPhoneOtp(
                 type = OtpType.Phone.SMS,
                 phoneNumber = phoneNumber,
                 token = opt
             )
+        }
+    }
+
+    override suspend fun getCurrentSession() : UserSession? {
+        return withInteractorContext {
             supabaseClient.gotrue.currentSessionOrNull()
+        }
+    }
+
+    override suspend fun logOut() {
+         withInteractorContext {
+            supabaseClient.gotrue.logout()
         }
     }
 }

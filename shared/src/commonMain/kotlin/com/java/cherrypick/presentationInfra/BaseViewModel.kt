@@ -7,6 +7,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -19,29 +20,50 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
     private val coroutineExceptionHandler = CoroutineExceptionHandler{ _, exception ->
         setError(exception.message?: "")
     }
-    val viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
+
+    var viewModelScope: CoroutineScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
 
     private val _state = MutableStateFlow<UiEvent<out ContentT>>(UiEvent.Content(initialContent))
+
     val state = _state.asStateFlow()
+    //stateIn(viewModelScope, SharingStarted.WhileSubscribed(1000), initialContent)
 
     protected fun setContent(reduce: ContentT.() -> ContentT) {
         currentState = currentState.reduce()
-        _state.value = UiEvent.Content(currentState)
+        UiEvent.Content(currentState).let {
+                newValue ->  if(_state.value != newValue) _state.tryEmit(UiEvent.Content(currentState))
+        }
     }
 
     fun getContent() = currentState
 
     fun setLoading(){
+        if(_state.value != UiEvent.Loading)
         _state.value = UiEvent.Loading
     }
     fun clear(){
-        viewModelScope.cancel()
+        if(_state.value!=UiEvent.Cancled) {
+            viewModelScope.cancel()
+            _state.tryEmit(UiEvent.Cancled)
+        }
     }
 
+    fun onStart(){
+        if(!viewModelScope.isActive) viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
+    }
     fun navigate(route: String){
-        _state.value = UiEvent.Navigation(route)
+        UiEvent.Navigation(route).let {
+                newValue ->  if(_state.value != newValue) _state.tryEmit(UiEvent.Navigation(route))
+        }
     }
     fun setError(error: String){
-        _state.value = UiEvent.Error(error)
+            UiEvent.Error(error).let {
+                _state.tryEmit(UiEvent.Error(error))
+            }
+    }
+    fun onDismiss(){
+        setContent {
+            getContent()
+        }
     }
 }

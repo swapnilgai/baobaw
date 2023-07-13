@@ -1,7 +1,9 @@
 package com.java.cherrypick.feature.auth.presentation
 
+import com.java.cherrypick.AppConstants
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
+import com.java.cherrypick.util.getNavigationUrlWithoutBrackets
 import kotlinx.coroutines.launch
 
 class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(initialContent = AuthState()) {
@@ -16,6 +18,9 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
                     )
                 }
             }
+            navigate(
+                getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber))
+            )
         }
     }
 
@@ -29,7 +34,18 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
     fun verifyOpt(phoneNumber: String, opt: String) {
         viewModelScope.launch {
             setLoading()
-            val result = authInteractor.verifyOpt(phoneNumber, opt)
+            authInteractor.verifyOpt(phoneNumber = phoneNumber, opt = opt)
+            val result = authInteractor.getCurrentSession()
+
+            if(result!=null){
+                setContent {
+                    copy(
+                        content = content?.copy(
+                            id = result?.accessToken ?: ""
+                        )
+                    )
+                }
+            }
         }
     }
     fun onDismissClicked(){

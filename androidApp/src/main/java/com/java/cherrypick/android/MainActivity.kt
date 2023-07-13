@@ -9,27 +9,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.java.cherrypick.android.feature.auth.EnterPhoneScreen
+import androidx.navigation.compose.rememberNavController
+import com.java.cherrypick.android.navigation.NavigationGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
+            val navController = rememberNavController()
             MyApplicationTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = colorResource(id = R.color.cream_white)
                 ) {
-                    EnterPhoneScreen()
+                    NavigationGraph(navController = navController)
                 }
             }
         }
     }
 }
+
 @Preview
 @Composable
 fun DefaultPreview() {
     MyApplicationTheme {
-        //EnterPhoneScreen()
+        NavigationGraph(rememberNavController())
     }
 }

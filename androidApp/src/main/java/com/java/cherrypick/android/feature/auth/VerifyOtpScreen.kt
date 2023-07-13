@@ -1,25 +1,95 @@
 package com.java.cherrypick.android.feature.auth
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.java.cherrypick.feature.auth.presentation.AuthViewModel
+import kotlinx.coroutines.CoroutineScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavController
+import com.java.cherrypick.android.BaseView
+import com.java.cherrypick.android.R
+import com.java.cherrypick.feature.auth.presentation.AuthState
+import kotlinx.coroutines.launch
+
 
 @Composable
 fun VerifyOtpScreen(
+    authViewModel: AuthViewModel,
+    phoneNumber: String,
+    scope: CoroutineScope = rememberCoroutineScope(),
+    navController: NavController){
+
+    var authState by remember { mutableStateOf<AuthState?>(null) }
+
+    fun setAuthState(state: AuthState){
+        authState = state
+    }
+
+    BaseView(viewModel = authViewModel, navController = navController, setContentT = { authState -> setAuthState(authState)}) {
+        VerifyOtpView(phoneNumber = phoneNumber,
+            onSendClicked = { phoneNumber, opt -> authViewModel.verifyOpt(phoneNumber, opt) },
+            scope = scope
+        )
+    }
+}
+
+@Composable
+fun VerifyOtpView(
+    phoneNumber: String,
+    scope: CoroutineScope,
+    onSendClicked: (String, String) -> Unit
+){
+        var otpValue by remember { mutableStateOf("") }
+        Column {
+            OtpTextField(
+                otpText = otpValue,
+                onOtpTextChange = { value, otpInputFilled ->
+                    otpValue = value
+                }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    scope.launch {
+                        onSendClicked.invoke(phoneNumber, otpValue)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
+            ) {
+                Text(text = stringResource(id = R.string.send))
+            }
+        }
+}
+
+@Composable
+fun OtpTextField(
     modifier: Modifier = Modifier,
     otpText: String,
     otpCount: Int = 6,
@@ -61,16 +131,27 @@ private fun CharView(
 ) {
     val isFocused = text.length == index
     val char = when {
-        index == text.length -> "0"
+        index == text.length -> ""
         index > text.length -> ""
         else -> text[index].toString()
     }
     Text(
         modifier = Modifier
             .width(40.dp)
+            .border(
+                1.dp, when {
+                    isFocused -> colorResource(id = R.color.cherry)
+                    else -> colorResource(id = R.color.cherry)
+                }, RoundedCornerShape(8.dp)
+            )
             .padding(2.dp),
         text = char,
         style = MaterialTheme.typography.h4,
+        color = if (isFocused) {
+            colorResource(id = R.color.cherry)
+        } else {
+            colorResource(id = R.color.cherry)
+        },
         textAlign = TextAlign.Center
     )
 }
