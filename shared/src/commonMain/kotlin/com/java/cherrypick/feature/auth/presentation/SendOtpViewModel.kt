@@ -6,18 +6,12 @@ import com.java.cherrypick.presentationInfra.BaseViewModel
 import com.java.cherrypick.util.getNavigationUrlWithoutBrackets
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(initialContent = AuthState()) {
+class SendOtpViewModel(private val authInteractor: AuthInteractor): BaseViewModel<AuthState>(initialContent = AuthState()) {
 
-    fun onSignUpClick(phoneNumber: String, password: String){
+    fun sendOtpTo(phoneNumber: String){
         viewModelScope.launch {
             setLoading()
-            authInteractor.signUp(phoneNumber, password)?.let { authContent ->
-                setContent {
-                    copy(
-                        content = authContent
-                    )
-                }
-            }
+            authInteractor.sendOtpTo(phoneNumber)
             navigate(
                 getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber))
             )

@@ -7,12 +7,6 @@ import kotlinx.coroutines.launch
 
 class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewModel<VerifyUserState>(initialContent = VerifyUserState()) {
 
-    fun sendOpt(phoneNumber: String){
-        viewModelScope.launch {
-            setLoading()
-            authInteractor.sendOptp(phoneNumber)
-        }
-    }
 
     fun verifyOpt(phoneNumber: String, opt: String) {
         viewModelScope.launch {

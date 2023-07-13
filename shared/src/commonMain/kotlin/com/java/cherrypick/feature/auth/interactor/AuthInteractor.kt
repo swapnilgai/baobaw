@@ -10,7 +10,6 @@ import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.gotrue.providers.builtin.Phone
 import io.github.jan.supabase.gotrue.user.UserSession
-import kotlinx.coroutines.delay
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -19,7 +18,7 @@ interface AuthInteractor: Interactor {
     suspend fun signUp(phoneNumber: String, password: String): AuthContent?
     suspend fun login(userName: String, password: String)
     suspend fun verifyOpt(opt: String, phoneNumber: String)
-    suspend fun sendOptp(phoneNumber: String): Unit
+    suspend fun sendOtpTo(phoneNumber: String): Unit
     suspend fun getCurrentSession() : UserSession?
     suspend fun logOut()
 
@@ -59,9 +58,9 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
 
-    override suspend fun sendOptp(phoneNumber: String): Unit {
+    override suspend fun sendOtpTo(phoneNumber: String): Unit {
         withInteractorContext {
-            supabaseClient.gotrue.sendOtpTo(Phone) {
+            supabaseClient.gotrue.sendOtpTo(Phone, createUser = true) {
                 this.phoneNumber = phoneNumber
             }
         }

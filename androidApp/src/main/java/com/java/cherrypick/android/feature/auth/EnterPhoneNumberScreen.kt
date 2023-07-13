@@ -1,6 +1,5 @@
 package com.java.cherrypick.android.feature.auth
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,13 +41,13 @@ import com.java.cherrypick.android.compose.ccp.component.isPhoneNumber
 import com.java.cherrypick.android.compose.passwordinput.PasswordInputField
 import com.java.cherrypick.feature.auth.presentation.AuthContent
 import com.java.cherrypick.feature.auth.presentation.AuthState
-import com.java.cherrypick.feature.auth.presentation.AuthViewModel
+import com.java.cherrypick.feature.auth.presentation.SendOtpViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
 @Composable
-fun EnterPhoneScreen(authViewModel: AuthViewModel,
+fun EnterPhoneScreen(sendOtpViewModel: SendOtpViewModel,
                      navController: NavController,
                      scope: CoroutineScope = rememberCoroutineScope()) {
 
@@ -58,16 +57,16 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel,
         authContent = state.content
     }
 
-    BaseView(viewModel = authViewModel, navController = navController, setContentT = { state -> setAuthState(state)}) {
+    BaseView(viewModel = sendOtpViewModel, navController = navController, setContentT = { state -> setAuthState(state)}) {
         CountryCodeView(
-            onSignUpClick =  { phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password)}},
+            sendOtpTo =  { phone -> scope.launch { sendOtpViewModel.sendOtpTo(phone)}}
         )
     }
 }
 
 
 @Composable
-fun CountryCodeView(onSignUpClick: (String, String) -> Unit){
+fun CountryCodeView(sendOtpTo: (String) -> Unit){
     Column(
         Modifier
             .padding(24.dp)
@@ -82,13 +81,13 @@ fun CountryCodeView(onSignUpClick: (String, String) -> Unit){
             text = stringResource(id = R.string.enter_phone_number),
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
         )
-        CountryCodePick(onSignUpClick)
+        CountryCodePick(sendOtpTo)
     }
 }
 
 
 @Composable
-fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
+fun CountryCodePick(sendOtpTo: (String) -> Unit) {
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -100,8 +99,6 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
         val phoneNumber = rememberSaveable { mutableStateOf("") }
         val fullPhoneNumber = rememberSaveable { mutableStateOf("") }
         val onlyPhoneNumber = rememberSaveable { mutableStateOf("") }
-        val password = rememberSaveable { mutableStateOf("") }
-        val confirmPassword = rememberSaveable { mutableStateOf("") }
 
         CountryCodePicker(
             text = phoneNumber.value,
@@ -123,19 +120,13 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
             textAlign = TextAlign.Center
         )
 
-        PasswordInputField(onValueChange = {it -> password.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PasswordInputField(onValueChange = {it -> confirmPassword.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
             if (isPhoneNumber()) {
                 fullPhoneNumber.value = getFullPhoneNumber()
                 onlyPhoneNumber.value = getOnlyPhoneNumber()
-                onSignUpClick(fullPhoneNumber.value, password.value)
+                sendOtpTo(fullPhoneNumber.value)
             } else {
                 fullPhoneNumber.value = "Error"
                 onlyPhoneNumber.value = "Error"

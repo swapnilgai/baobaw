@@ -19,7 +19,7 @@ import org.koin.androidx.compose.get
 fun NavigationGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screens.SignUp.route) {
         composable(route = Screens.SignUp.route){
-            EnterPhoneScreen(authViewModel = get(), navController)
+            EnterPhoneScreen(sendOtpViewModel = get(), navController)
         }
         composable(route = getNavigationUrl(baseRoute = Screens.VerifyOpt.route, listOf(AppConstants.NavigationParam.phoneNumber)),
                 arguments = listOf( navArgument(AppConstants.NavigationParam.phoneNumber){
