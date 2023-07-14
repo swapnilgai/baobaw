@@ -3,6 +3,7 @@ package com.java.cherrypick.feature.auth.di
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.feature.auth.interactor.AuthInteractorImple
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
+import com.java.cherrypick.feature.auth.presentation.VerifyUserViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.dsl.module
@@ -15,4 +16,5 @@ class AuthKoinViewModelModule : KoinComponent {
 val authModule = module {
     single<AuthInteractor> { AuthInteractorImple(get()) }
     single<AuthViewModel> { AuthViewModel(get()) }
+    single<VerifyUserViewModel> { VerifyUserViewModel(get()) }
 }

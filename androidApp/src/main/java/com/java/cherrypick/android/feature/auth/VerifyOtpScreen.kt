@@ -20,7 +20,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
@@ -35,26 +34,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
-import com.java.cherrypick.feature.auth.presentation.AuthState
+import com.java.cherrypick.feature.auth.presentation.VerifyUserState
+import com.java.cherrypick.feature.auth.presentation.VerifyUserViewModel
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun VerifyOtpScreen(
-    authViewModel: AuthViewModel,
+    verifyUserViewModel: VerifyUserViewModel,
     phoneNumber: String,
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController){
 
-    var authState by remember { mutableStateOf<AuthState?>(null) }
+    var authState by remember { mutableStateOf<VerifyUserState?>(null) }
 
-    fun setAuthState(state: AuthState){
+    fun setAuthState(state: VerifyUserState){
         authState = state
     }
 
-    BaseView(viewModel = authViewModel, navController = navController, setContentT = { authState -> setAuthState(authState)}) {
+    BaseView(viewModel = verifyUserViewModel, navController = navController, setContentT = { state -> setAuthState(state)}) {
         VerifyOtpView(phoneNumber = phoneNumber,
-            onSendClicked = { phoneNumber, opt -> authViewModel.verifyOpt(phoneNumber, opt) },
+            onSendClicked = { phoneNumber, opt -> verifyUserViewModel.verifyOpt(phoneNumber, opt) },
             scope = scope
         )
     }
@@ -70,7 +69,7 @@ fun VerifyOtpView(
         Column {
             OtpTextField(
                 otpText = otpValue,
-                onOtpTextChange = { value, otpInputFilled ->
+                onOtpTextChange = { value, _ ->
                     otpValue = value
                 }
             )

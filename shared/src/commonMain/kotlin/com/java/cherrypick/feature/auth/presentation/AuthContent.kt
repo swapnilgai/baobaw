@@ -7,3 +7,7 @@ data class AuthState(
 data class AuthContent( val id: String = "",
                         val phone: String = "",
                         val confirmationMessage: String = "")
+
+data class VerifyUserState(
+    val optSend: Boolean = false
+)

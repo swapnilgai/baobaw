@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import com.java.cherrypick.AppConstants
 import com.java.cherrypick.android.feature.auth.EnterPhoneScreen
 import com.java.cherrypick.android.feature.auth.VerifyOtpScreen
+import com.java.cherrypick.android.feature.userinput.UserInputScreen
 import com.java.cherrypick.util.getNavigationUrl
 import org.koin.androidx.compose.get
 
@@ -26,7 +27,10 @@ fun NavigationGraph(navController: NavHostController) {
             }
         )){ navBackStackEntry ->
             val phoneNumber = navBackStackEntry.arguments?.getString(AppConstants.NavigationParam.phoneNumber)?: ""
-            VerifyOtpScreen(authViewModel = get(), phoneNumber = phoneNumber, navController = navController)
+            VerifyOtpScreen(verifyUserViewModel = get(), phoneNumber = phoneNumber, navController = navController)
+        }
+        composable(route = Screens.UserInput.route){
+            UserInputScreen()
         }
     }
 }
