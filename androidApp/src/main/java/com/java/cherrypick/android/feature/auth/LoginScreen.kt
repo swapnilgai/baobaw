@@ -41,7 +41,7 @@ fun LoginScreen(loginViewModel: LoginViewModel,
             Modifier
                 .padding(24.dp)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
+            verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val phoneNumber = remember { mutableStateOf("") }
@@ -54,7 +54,7 @@ fun LoginScreen(loginViewModel: LoginViewModel,
                 shape = RoundedCornerShape(1.dp)
             )
 
-            Spacer(modifier = Modifier.padding(16.dp))
+            Spacer(modifier = Modifier.padding(8.dp))
 
             PasswordInputField(
                 onValueChange = { it -> password.value = it },
