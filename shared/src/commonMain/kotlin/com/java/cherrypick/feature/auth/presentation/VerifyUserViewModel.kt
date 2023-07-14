@@ -21,7 +21,7 @@ class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewM
             val result = authInteractor.getCurrentSession()
             if(result?.user != null){
                 navigate(
-                    AppConstants.RoutIds.verifyOpt
+                    AppConstants.RoutIds.userInput
                 )
             }else setError("Invalid Opt or expired opt")
             //TODO add error messages to app constant inorder to map from android and ios to support localization

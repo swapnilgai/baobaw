@@ -6,6 +6,8 @@
     <string name="ok">Ok</string>
     <string name="error">Error</string>
     <string name="send">Send</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="sign_up">Sign Up</string>
 
     <string-array name="CountryCodes" >
         <item>93,AF</item>

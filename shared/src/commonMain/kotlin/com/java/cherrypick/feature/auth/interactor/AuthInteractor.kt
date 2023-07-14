@@ -22,7 +22,7 @@ interface AuthInteractor: Interactor {
     suspend fun sendOptp(phoneNumber: String): Unit
     suspend fun getCurrentSession() : UserSession?
     suspend fun logOut()
-
+    suspend fun signIn(phoneNumber: String, password: String)
 }
 
 class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
@@ -58,7 +58,6 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
         TODO("Not yet implemented")
     }
 
-
     override suspend fun sendOptp(phoneNumber: String): Unit {
         withInteractorContext {
             supabaseClient.gotrue.sendOtpTo(Phone) {
@@ -86,6 +85,15 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     override suspend fun logOut() {
          withInteractorContext {
             supabaseClient.gotrue.logout()
+        }
+    }
+
+    override suspend fun signIn(phoneNumber: String, password: String) {
+        withInteractorContext {
+            supabaseClient.gotrue.loginWith(Phone) {
+                this.phoneNumber = phoneNumber
+                this.password = password
+            }
         }
     }
 }

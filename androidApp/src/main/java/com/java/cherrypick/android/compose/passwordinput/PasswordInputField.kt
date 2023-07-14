@@ -48,7 +48,7 @@ fun PasswordInputField(onValueChange: (String) -> Unit,
             unfocusedBorderColor = colorResource(id = R.color.cherry),
         ),
 
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),        keyboardOptions = KeyboardOptions.Default.copy(
+        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(), keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Password
         ),
         keyboardActions = KeyboardActions(onDone = {

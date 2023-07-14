@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.java.cherrypick.AppConstants
 import com.java.cherrypick.android.feature.auth.EnterPhoneScreen
+import com.java.cherrypick.android.feature.auth.LoginScreen
 import com.java.cherrypick.android.feature.auth.VerifyOtpScreen
 import com.java.cherrypick.android.feature.userinput.UserInputScreen
 import com.java.cherrypick.util.getNavigationUrl
@@ -17,7 +18,10 @@ import org.koin.androidx.compose.get
 
 @Composable
 fun NavigationGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Screens.SignUp.route) {
+    NavHost(navController = navController, startDestination = Screens.Login.route) {
+        composable(route = Screens.Login.route){
+            LoginScreen(loginViewModel = get(), navController = navController)
+        }
         composable(route = Screens.SignUp.route){
             EnterPhoneScreen(authViewModel = get(), navController)
         }

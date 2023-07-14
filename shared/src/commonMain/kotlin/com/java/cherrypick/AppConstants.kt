@@ -6,6 +6,7 @@ object AppConstants {
         const val signUp = "signUp"
         const val verifyOpt = "verifyOpt"
         const val userInput = "userInput"
+        const val login = "login"
     }
 
     object Auth{
