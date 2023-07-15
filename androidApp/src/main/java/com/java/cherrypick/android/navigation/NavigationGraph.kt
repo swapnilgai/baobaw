@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import com.java.cherrypick.AppConstants
 import com.java.cherrypick.android.feature.auth.EnterPhoneScreen
 import com.java.cherrypick.android.feature.auth.LoginScreen
+import com.java.cherrypick.android.feature.auth.ResetPasswordScreen
 import com.java.cherrypick.android.feature.auth.VerifyOtpScreen
 import com.java.cherrypick.android.feature.userinput.UserInputScreen
 import com.java.cherrypick.util.getNavigationUrl
@@ -35,6 +36,9 @@ fun NavigationGraph(navController: NavHostController) {
         }
         composable(route = Screens.UserInput.route){
             UserInputScreen()
+        }
+        composable(route = Screens.ResetPassword.route){
+            ResetPasswordScreen(resetPasswordViewModel = get(), navController = navController)
         }
     }
 }

@@ -10,7 +10,10 @@ import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.gotrue.providers.builtin.Phone
 import io.github.jan.supabase.gotrue.user.UserSession
-import kotlinx.coroutines.delay
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -23,6 +26,8 @@ interface AuthInteractor: Interactor {
     suspend fun getCurrentSession() : UserSession?
     suspend fun logOut()
     suspend fun signIn(phoneNumber: String, password: String)
+    suspend fun phoneExists(phoneNumber: String): Boolean?
+
 }
 
 class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
@@ -96,4 +101,14 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
             }
         }
     }
+
+    override suspend fun phoneExists(phoneNumber: String): Boolean? {
+       return withInteractorContext {
+           //TODO remove trim function and get values without +
+           val newPhone = phoneNumber.trim('+')
+           val result =  supabaseClient.postgrest.rpc("user_exist_with_phone", newPhone.toPhoneExist())
+           true
+       }
+    }
 }
+

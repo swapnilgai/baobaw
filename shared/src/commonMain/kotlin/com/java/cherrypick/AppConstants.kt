@@ -7,6 +7,7 @@ object AppConstants {
         const val verifyOpt = "verifyOpt"
         const val userInput = "userInput"
         const val login = "login"
+        const val resetPassword = "resetPassword"
     }
 
     object Auth{

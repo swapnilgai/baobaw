@@ -11,3 +11,7 @@ data class AuthContent( val id: String = "",
 data class VerifyUserState(
     val optSend: Boolean = false
 )
+
+data class UserExist(
+    val isUserExist: Boolean = false
+)

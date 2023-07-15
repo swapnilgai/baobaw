@@ -25,4 +25,10 @@ class LoginViewModel(private val authInteractor: AuthInteractor): BaseViewModel<
             navigate(AppConstants.RoutIds.signUp)
         }
     }
+
+    fun onResetPasswordClicked(){
+        viewModelScope.launch {
+            navigate(AppConstants.RoutIds.resetPassword)
+        }
+    }
 }
