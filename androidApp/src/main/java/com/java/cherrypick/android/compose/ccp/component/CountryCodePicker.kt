@@ -78,7 +78,7 @@ fun CountryCodePicker(
     countryCodeState = defaultLang
 
     Surface(color = colorResource(id = R.color.cream_white)) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+        Column(modifier = modifier) {
             if (bottomStyle) {
                 CodeDialog(
                     pickedCountry = {

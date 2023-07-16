@@ -1,6 +1,5 @@
 package com.java.cherrypick.android.feature.auth
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -90,7 +89,7 @@ fun CountryCodeView(onSignUpClick: (String, String) -> Unit){
 @Composable
 fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
     Column(
-        modifier = Modifier
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
             .verticalScroll(rememberScrollState())
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -123,11 +122,11 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
             textAlign = TextAlign.Center
         )
 
-        PasswordInputField(onValueChange = {it -> password.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+        PasswordInputField(onValueChange = {it -> password.value = it })
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PasswordInputField(onValueChange = {it -> confirmPassword.value = it }, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+        PasswordInputField(onValueChange = {it -> confirmPassword.value = it })
 
         Spacer(modifier = Modifier.height(16.dp))
 
