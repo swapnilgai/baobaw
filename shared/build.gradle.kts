@@ -43,6 +43,7 @@ kotlin {
                 Dependencies.Shared.supabase.forEach {
                     implementation(it)
                 }
+//                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Version.kotlinVersion}")
             }
         }
         val commonTest by getting {

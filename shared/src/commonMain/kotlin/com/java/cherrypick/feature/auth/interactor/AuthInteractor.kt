@@ -1,5 +1,6 @@
 package com.java.cherrypick.feature.auth.interactor
 
+import com.java.cherrypick.AppConstants
 import com.java.cherrypick.feature.auth.model.SignUpData
 import com.java.cherrypick.feature.auth.presentation.AuthContent
 import com.java.cherrypick.interactor.Interactor
@@ -14,7 +15,10 @@ import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 interface AuthInteractor: Interactor {
@@ -104,10 +108,8 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
 
     override suspend fun phoneExists(phoneNumber: String): Boolean? {
        return withInteractorContext {
-           //TODO remove trim function and get values without +
-           val newPhone = phoneNumber.trim('+')
-           val result =  supabaseClient.postgrest.rpc("user_exist_with_phone", newPhone.toPhoneExist())
-           true
+           val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
+           (result as JsonElement).jsonPrimitive.content.toBoolean()
        }
     }
 }
