@@ -5,6 +5,7 @@ plugins {
     id("com.codingfeline.buildkonfig") version Version.buildkonfig
     kotlin("plugin.serialization") version Version.kotlinVersion
     id("dev.icerock.moko.kswift")
+    id("dev.icerock.mobile.multiplatform-resources")
 }
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
@@ -16,10 +17,33 @@ kotlin {
             }
         }
     }
+
+//    iosX64 {
+//        binaries {
+//            framework {
+//                baseName = "shared"
+//                export("dev.icerock.moko:resources:${Version.mokoResourcesGenerator}")
+//                export("dev.icerock.moko:graphics:${Version.mokoGraphics}")
+//            }
+//        }
+//    }
+//
+//    iosArm64 {
+//        binaries {
+//            framework {
+//                baseName = "shared"
+//                export("dev.icerock.moko:resources:${Version.mokoResourcesGenerator}")
+//                export("dev.icerock.moko:graphics:${Version.mokoGraphics}")
+//            }
+//        }
+//    }
+
     ios {
         binaries {
             framework {
                 baseName = "shared"
+                export("dev.icerock.moko:resources:${Version.mokoResourcesGenerator}")
+                export("dev.icerock.moko:graphics:${Version.mokoGraphics}")
             }
         }
     }
@@ -43,7 +67,9 @@ kotlin {
                 Dependencies.Shared.supabase.forEach {
                     implementation(it)
                 }
-//                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Version.kotlinVersion}")
+                Dependencies.Shared.iceRock.forEach {
+                    api(it)
+                }
             }
         }
         val commonTest by getting {
@@ -113,4 +139,9 @@ kswift {
     install(dev.icerock.moko.kswift.plugin.feature.SealedToSwiftEnumFeature) {
         filter = includeFilter("ClassContext/cherrypick:shared/com/java/cherrypick/presentationInfra/UiEvent")
     }
+}
+
+multiplatformResources {
+    multiplatformResourcesPackage = "com.java.cherrypick"
+    multiplatformResourcesClassName = "SharedRes"
 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -19,10 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
 import com.java.cherrypick.android.compose.ccp.component.CountryCodePicker
@@ -31,6 +29,7 @@ import com.java.cherrypick.feature.auth.presentation.ResetPasswordViewModel
 import com.java.cherrypick.feature.auth.presentation.UserExist
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.java.cherrypick.android.util.stringResource
 
 
 @Composable
@@ -67,7 +66,7 @@ fun ResetPasswordScreen(resetPasswordViewModel: ResetPasswordViewModel,
             Button(onClick = { scope.launch { resetPasswordViewModel.phoneExists(phoneNumber = getFullPhoneNumber()) }},
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
             ) {
-                Text(text = stringResource(id = R.string.search))
+                Text(text = stringResource(id = SharedRes.strings.search))
             }
 
             Spacer(modifier = Modifier.padding(16.dp))

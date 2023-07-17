@@ -24,13 +24,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
 import com.java.cherrypick.android.compose.ccp.component.CountryCodePicker
@@ -45,6 +45,8 @@ import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
+import com.java.cherrypick.android.util.stringResource
+
 
 @Composable
 fun EnterPhoneScreen(authViewModel: AuthViewModel,
@@ -78,7 +80,7 @@ fun CountryCodeView(onSignUpClick: (String, String) -> Unit){
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(id = R.string.enter_phone_number),
+            text = stringResource(id = SharedRes.strings.phone_number),
             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
         )
         CountryCodePick(onSignUpClick)
@@ -112,7 +114,7 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
 
 
         if (getErrorStatus() && isPhoneNumber()) Text(
-            text = stringResource(id = R.string.invalid_number),
+            text = stringResource(id = SharedRes.strings.invalid_number),
             color = MaterialTheme.colors.error,
             style = MaterialTheme.typography.caption,
             fontWeight = FontWeight.Bold,
@@ -142,7 +144,7 @@ fun CountryCodePick(onSignUpClick: (String, String) -> Unit) {
         },
             colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
         ) {
-            Text(text = stringResource(id = R.string.send))
+            Text(text = stringResource(id = SharedRes.strings.send))
         }
     }
 }

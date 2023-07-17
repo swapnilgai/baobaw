@@ -37,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,10 +45,12 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.R
 import com.java.cherrypick.android.compose.ccp.data.CountryData
 import com.java.cherrypick.android.compose.ccp.data.utils.getLibCountries
 import com.java.cherrypick.android.compose.ccp.data.utils.searchCountry
+import com.java.cherrypick.android.util.stringResource
 
 
 @Composable
@@ -188,7 +189,7 @@ private fun SearchTextField(
     value: String,
     textColor: Color = Color.Black,
     onValueChange: (String) -> Unit,
-    hint: String = stringResource(id = R.string.search),
+    hint: String = stringResource(id = SharedRes.strings.search),
     fontSize: TextUnit = MaterialTheme.typography.body2.fontSize
 ) {
     BasicTextField(modifier = modifier

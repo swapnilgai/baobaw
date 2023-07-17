@@ -18,10 +18,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
 import com.java.cherrypick.android.compose.ccp.component.CountryCodePicker
@@ -30,6 +30,7 @@ import com.java.cherrypick.android.compose.passwordinput.PasswordInputField
 import com.java.cherrypick.feature.auth.presentation.LoginViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.java.cherrypick.android.util.stringResource
 
 @Composable
 fun LoginScreen(loginViewModel: LoginViewModel,
@@ -64,16 +65,16 @@ fun LoginScreen(loginViewModel: LoginViewModel,
             Button(onClick = { scope.launch { loginViewModel.signIn(phoneNumber = getFullPhoneNumber(), password = password.value) }},
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
             ) {
-                Text(text = stringResource(id = R.string.search))
+                Text(text = stringResource(id = SharedRes.strings.search))
             }
 
             Spacer(modifier = Modifier.padding(16.dp))
 
-            ClickableText(text = AnnotatedString(stringResource(id = R.string.sign_up)), onClick = { scope.launch { loginViewModel.onSignUpClicked() } })
+            ClickableText(text = AnnotatedString(stringResource(id = SharedRes.strings.sign_up)), onClick = { scope.launch { loginViewModel.onSignUpClicked() } })
 
             Spacer(modifier = Modifier.padding(16.dp))
 
-            ClickableText(text = AnnotatedString(stringResource(id = R.string.reset_password)), onClick = {scope.launch { loginViewModel.onResetPasswordClicked() }})
+            ClickableText(text = AnnotatedString(stringResource(id = SharedRes.strings.reset_password)), onClick = {scope.launch { loginViewModel.onResetPasswordClicked() }})
         }
     }
 }

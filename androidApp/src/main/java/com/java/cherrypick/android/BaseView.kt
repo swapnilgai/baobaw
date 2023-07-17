@@ -1,7 +1,5 @@
 package com.java.cherrypick.android
 
-import android.util.Log
-import androidx.compose.foundation.ScrollState.Companion.Saver
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -13,17 +11,13 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
@@ -31,9 +25,11 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.navigation.navigateToScreen
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import com.java.cherrypick.presentationInfra.UiEvent
+import com.java.cherrypick.android.util.stringResource
 
 
 @Composable
@@ -116,9 +112,9 @@ fun ErrorDialog(onDismiss:() -> Unit , message: String) {
         onDismissRequest = { },
         confirmButton = {
             TextButton(onClick = onDismiss)
-            { Text(text = stringResource(id = R.string.ok)) }
+            { Text(text = stringResource(id = SharedRes.strings.ok)) }
         },
-        title = { Text(text = stringResource(id = R.string.error)) },
+        title = { Text(text = stringResource(id = SharedRes.strings.error)) },
         text = { Text(text = message) }
     )
 }

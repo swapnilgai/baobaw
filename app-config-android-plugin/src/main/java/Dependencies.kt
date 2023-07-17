@@ -1,5 +1,3 @@
-import Version.koinVersion
-
 object Dependencies {
     const val androidXCore = "androidx.core:core-ktx:${Version.androidXCore}"
     const val appcompat = "androidx.appcompat:appcompat:${Version.appcompat}"
@@ -101,6 +99,9 @@ object Dependencies {
             "androidx.lifecycle:lifecycle-viewmodel-compose:${Version.lifecycle}",
             "androidx.lifecycle:lifecycle-livedata-ktx:${Version.lifecycle}"
         )
-    }
 
+        val iceRock = listOf(
+            "dev.icerock.moko:resources:${Version.mokoResourcesGenerator}"
+        )
+    }
 }
