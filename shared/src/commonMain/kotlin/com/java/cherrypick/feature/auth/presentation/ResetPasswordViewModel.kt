@@ -1,8 +1,8 @@
 package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.AppConstants
+import com.java.cherrypick.SharedRes
 import kotlinx.coroutines.launch
-
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import com.java.cherrypick.util.getNavigationUrlWithoutBrackets
@@ -13,12 +13,10 @@ class ResetPasswordViewModel(private val authInteractor: AuthInteractor): BaseVi
         viewModelScope.launch {
             setLoading()
             val phoneExists = authInteractor.phoneExists(phoneNumber) ?: false
-            if(phoneExists)
-                setError("User already exist")
-            else
-                navigate(
-                    getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber))
-                )
+            if(!phoneExists)
+                setError(message = SharedRes.strings.user_does_not_exist_please_sign_up)
+            else navigate(getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber)))
+
         }
     }
 }

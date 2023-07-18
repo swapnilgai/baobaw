@@ -65,7 +65,7 @@ fun <ContentT>BaseView(
         is UiEvent.Error -> {
             ErrorDialog(
                 onDismiss = { viewModel.onDismiss() },
-                (viewState.value as UiEvent.Error).message
+                stringResource((viewState.value as UiEvent.Error).message)
             )
         }
         is UiEvent.Loading -> {

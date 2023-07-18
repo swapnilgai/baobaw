@@ -1,6 +1,7 @@
 package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.AppConstants
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import kotlinx.coroutines.launch
@@ -16,7 +17,8 @@ class LoginViewModel(private val authInteractor: AuthInteractor): BaseViewModel<
                 navigate(
                     AppConstants.RoutIds.userInput
                 )
-            }else setError("Invalid username and password")
+            }
+            else setError(message = SharedRes.strings.invalid_login_credentials)
         }
     }
 
