@@ -32,4 +32,6 @@ object Version {
     const val supabase      = "1.0.3"
     const val buildkonfig   = "0.13.3"
     const val kswift        = "0.6.1"
+    const val mokoResourcesGenerator = "0.23.0"
+    const val mokoGraphics = "0.9.0"
 }

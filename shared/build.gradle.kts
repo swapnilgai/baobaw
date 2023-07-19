@@ -5,6 +5,7 @@ plugins {
     id("com.codingfeline.buildkonfig") version Version.buildkonfig
     kotlin("plugin.serialization") version Version.kotlinVersion
     id("dev.icerock.moko.kswift")
+    id("dev.icerock.mobile.multiplatform-resources")
 }
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
@@ -16,11 +17,16 @@ kotlin {
             }
         }
     }
-    ios {
-        binaries {
-            framework {
-                baseName = "shared"
-            }
+
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach {
+        it.binaries.framework {
+            baseName = "shared"
+            export("dev.icerock.moko:resources:${Version.mokoResourcesGenerator}")
+            export("dev.icerock.moko:graphics:${Version.mokoGraphics}")
         }
     }
 
@@ -43,6 +49,9 @@ kotlin {
                 Dependencies.Shared.supabase.forEach {
                     implementation(it)
                 }
+                Dependencies.Shared.iceRock.forEach {
+                    api(it)
+                }
             }
         }
         val commonTest by getting {
@@ -63,14 +72,33 @@ kotlin {
                 }
             }
         }
-        val iosMain by getting {
+
+        val iosX64Main by getting
+        val iosArm64Main by getting
+        val iosSimulatorArm64Main by getting
+
+        val iosMain by creating {
             dependencies {
                 Dependencies.Shared.iosMain.forEach {
                     implementation(it)
                 }
             }
+            dependsOn(commonMain)
+            iosX64Main.dependsOn(this)
+            iosArm64Main.dependsOn(this)
+            iosSimulatorArm64Main.dependsOn(this)
         }
-        val iosTest by getting
+
+        val iosX64Test by getting
+        val iosArm64Test by getting
+        val iosSimulatorArm64Test by getting
+
+        val iosTest by creating {
+            dependsOn(commonTest)
+            iosX64Test.dependsOn(this)
+            iosArm64Test.dependsOn(this)
+            iosSimulatorArm64Test.dependsOn(this)
+        }
 
         val appMain by creating {
             dependsOn(commonMain)
@@ -112,4 +140,9 @@ kswift {
     install(dev.icerock.moko.kswift.plugin.feature.SealedToSwiftEnumFeature) {
         filter = includeFilter("ClassContext/cherrypick:shared/com/java/cherrypick/presentationInfra/UiEvent")
     }
+}
+
+multiplatformResources {
+    multiplatformResourcesPackage = "com.java.cherrypick"
+    multiplatformResourcesClassName = "SharedRes"
 }

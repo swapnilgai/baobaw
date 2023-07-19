@@ -1,6 +1,9 @@
 package com.java.cherrypick.presentationInfra
 
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.executor.MainDispatcher
+import com.java.cherrypick.interactor.InteracroeException
+import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -18,7 +21,9 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
 
     //TODO find common folder for strings.xml
     private val coroutineExceptionHandler = CoroutineExceptionHandler{ _, exception ->
-        setError(exception.message?: "")
+        when(exception){
+            is InteracroeException -> setError(message = exception.messageRes)
+        }
     }
 
     var viewModelScope: CoroutineScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
@@ -53,13 +58,14 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
     }
     fun navigate(route: String){
         UiEvent.Navigation(route).let {
-                newValue ->  if(_state.value != newValue) _state.tryEmit(UiEvent.Navigation(route))
+                newValue ->  if(_state.value != newValue) _state.tryEmit(newValue)
         }
     }
-    fun setError(error: String){
-            UiEvent.Error(error).let {
-                _state.tryEmit(UiEvent.Error(error))
-            }
+
+    fun setError(title: StringResource = SharedRes.strings.error, message: StringResource){
+        UiEvent.Error(title = title, message = message).let {
+            _state.tryEmit(it)
+        }
     }
     fun onDismiss(){
         setContent {

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="enter_phone_number">Enter your phone number</string>
+    <string name="invalid_number">Invalid number</string>
+    <string name="search">Search</string>
+    <string name="ok">Ok</string>
+    <string name="error">Error</string>
+    <string name="send">Send</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="re_send_opt">Re Send Opt</string>
+    <string name="user_does_not_exist">User does not exist, Please create account first</string>
+
+    <string name="to_signup_please_provide_your_email">To signup, please provide your email</string>
+    <string name="signup_requires_a_valid_password">Signup requires a valid password</string>
+    <string name="user_already_registered">User already registered</string>
+    <string name="only_an_email_address_or_phone_number_should_be_provided_on_signup">Only an email address or phone number should be provided on signup.</string>
+    <string name="signups_not_allowed_for_this_instance">Signups not allowed for this instance</string>
+    <string name="email_signups_are_disabled">Email signups are disabled</string>
+    <string name="email_link_is_invalid_or_has_expired">Email link is invalid or has expired</string>
+    <string name="token_has_expired_or_is_invalid">Token has expired or is invalid</string>
+    <string name="the_new_email_address_provided_is_invalid">The new email address provided is invalid</string>
+    <string name="password_should_be_at_least_six_characters">Password should be at least 6 characters</string>
+    <string name="invalid_login_credentials">Invalid login credentials</string>
+    <string name="unexpected_error">Unexpected Error</string>
+    <string name="user_does_not_exist_please_sign_up">User does not exist please, please sign up to first</string>
+
+</resources>

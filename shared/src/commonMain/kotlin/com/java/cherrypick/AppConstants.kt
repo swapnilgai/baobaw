@@ -7,6 +7,7 @@ object AppConstants {
         const val verifyOpt = "verifyOpt"
         const val userInput = "userInput"
         const val login = "login"
+        const val resetPassword = "resetPassword"
     }
 
     object Auth{
@@ -15,5 +16,9 @@ object AppConstants {
 
     object NavigationParam{
         const val phoneNumber = "phoneNumber"
+    }
+
+    object Queries{
+        val userExistWithPhone  = "user_exist_with_phone"
     }
 }

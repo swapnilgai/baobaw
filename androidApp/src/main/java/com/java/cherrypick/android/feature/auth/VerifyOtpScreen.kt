@@ -30,13 +30,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
 import com.java.cherrypick.feature.auth.presentation.VerifyUserState
 import com.java.cherrypick.feature.auth.presentation.VerifyUserViewModel
 import kotlinx.coroutines.launch
+import com.java.cherrypick.android.util.stringResource
 
 @Composable
 fun VerifyOtpScreen(
@@ -82,7 +83,7 @@ fun VerifyOtpView(
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
             ) {
-                Text(text = stringResource(id = R.string.send))
+                Text(text = stringResource(id =  SharedRes.strings.send))
             }
         }
 }

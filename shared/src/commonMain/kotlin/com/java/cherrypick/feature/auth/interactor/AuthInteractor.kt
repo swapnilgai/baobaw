@@ -1,5 +1,6 @@
 package com.java.cherrypick.feature.auth.interactor
 
+import com.java.cherrypick.AppConstants
 import com.java.cherrypick.feature.auth.model.SignUpData
 import com.java.cherrypick.feature.auth.presentation.AuthContent
 import com.java.cherrypick.interactor.Interactor
@@ -10,8 +11,14 @@ import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.gotrue.providers.builtin.Phone
 import io.github.jan.supabase.gotrue.user.UserSession
-import kotlinx.coroutines.delay
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 interface AuthInteractor: Interactor {
@@ -23,6 +30,8 @@ interface AuthInteractor: Interactor {
     suspend fun getCurrentSession() : UserSession?
     suspend fun logOut()
     suspend fun signIn(phoneNumber: String, password: String)
+    suspend fun phoneExists(phoneNumber: String): Boolean?
+
 }
 
 class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
@@ -96,4 +105,12 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
             }
         }
     }
+
+    override suspend fun phoneExists(phoneNumber: String): Boolean? {
+       return withInteractorContext {
+           val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
+           (result as JsonElement).jsonPrimitive.content.toBoolean()
+       }
+    }
 }
+

@@ -1,6 +1,7 @@
 package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.AppConstants
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import kotlinx.coroutines.launch
@@ -23,8 +24,8 @@ class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewM
                 navigate(
                     AppConstants.RoutIds.userInput
                 )
-            }else setError("Invalid Opt or expired opt")
-            //TODO add error messages to app constant inorder to map from android and ios to support localization
+            }
+            else setError(message = SharedRes.strings.token_has_expired_or_is_invalid)
         }
     }
 }
