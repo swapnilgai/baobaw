@@ -53,5 +53,6 @@ fun String?.supabaseToInteractorException(): StringResource = when(this?.lowerca
         "the new email address provided is invalid" -> SharedRes.strings.the_new_email_address_provided_is_invalid
         "password should be at least 6 characters" -> SharedRes.strings.password_should_be_at_least_six_characters
         "invalid login credentials" -> SharedRes.strings.invalid_login_credentials
+        "verify requires either a token or a token hash" -> SharedRes.strings.verify_requires_either_a_token_or_a_token_hash
         else -> { SharedRes.strings.unexpected_error }
 }
