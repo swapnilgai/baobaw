@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,13 +37,21 @@ import com.java.cherrypick.feature.auth.presentation.VerifyUserState
 import com.java.cherrypick.feature.auth.presentation.VerifyUserViewModel
 import kotlinx.coroutines.launch
 import com.java.cherrypick.android.util.stringResource
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun VerifyOtpScreen(
     verifyUserViewModel: VerifyUserViewModel,
     phoneNumber: String,
+    sendOpt: Boolean = false,
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController){
+
+    LaunchedEffect(Unit) {
+        if(sendOpt) {
+            scope.launch { verifyUserViewModel.sendOpt(phoneNumber) }
+        }
+    }
 
     var authState by remember { mutableStateOf<VerifyUserState?>(null) }
 

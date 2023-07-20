@@ -16,6 +16,7 @@ object AppConstants {
 
     object NavigationParam{
         const val phoneNumber = "phoneNumber"
+        const val sendOpt = "sendOpt"
     }
 
     object Queries{

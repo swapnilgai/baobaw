@@ -26,13 +26,16 @@ fun NavigationGraph(navController: NavHostController) {
         composable(route = Screens.SignUp.route){
             EnterPhoneScreen(authViewModel = get(), navController)
         }
-        composable(route = getNavigationUrl(baseRoute = Screens.VerifyOpt.route, listOf(AppConstants.NavigationParam.phoneNumber)),
-                arguments = listOf( navArgument(AppConstants.NavigationParam.phoneNumber){
+        composable(route = getNavigationUrl(baseRoute = Screens.VerifyOpt.route, listOf(AppConstants.NavigationParam.phoneNumber, AppConstants.NavigationParam.sendOpt)),
+                arguments = listOf(navArgument(AppConstants.NavigationParam.phoneNumber){
                 type = NavType.StringType
-            }
+            }, navArgument(AppConstants.NavigationParam.sendOpt){
+                    type = NavType.BoolType
+                }
         )){ navBackStackEntry ->
             val phoneNumber = navBackStackEntry.arguments?.getString(AppConstants.NavigationParam.phoneNumber)?: ""
-            VerifyOtpScreen(verifyUserViewModel = get(), phoneNumber = phoneNumber, navController = navController)
+            val sendOpt = navBackStackEntry.arguments?.getBoolean(AppConstants.NavigationParam.sendOpt)?: false
+            VerifyOtpScreen(verifyUserViewModel = get(), phoneNumber = phoneNumber, sendOpt = sendOpt, navController = navController)
         }
         composable(route = Screens.UserInput.route){
             UserInputScreen()
