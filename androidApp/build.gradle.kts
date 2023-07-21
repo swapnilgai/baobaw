@@ -29,7 +29,6 @@ android {
 
     buildTypes {
         release {
-            signingConfig = null
             isDebuggable = false
             isMinifyEnabled = true
             isShrinkResources = true
@@ -40,7 +39,6 @@ android {
         }
         debug {
             isDebuggable = true
-            signingConfig = null
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(

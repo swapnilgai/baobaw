@@ -15,7 +15,7 @@ class ResetPasswordViewModel(private val authInteractor: AuthInteractor): BaseVi
             val phoneExists = authInteractor.phoneExists(phoneNumber) ?: false
             if(!phoneExists)
                 setError(message = SharedRes.strings.user_does_not_exist_please_sign_up)
-            else navigate(getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber)))
+            else navigate(getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber, true)))
 
         }
     }

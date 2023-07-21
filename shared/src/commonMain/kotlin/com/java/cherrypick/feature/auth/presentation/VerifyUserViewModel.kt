@@ -4,6 +4,7 @@ import com.java.cherrypick.AppConstants
 import com.java.cherrypick.SharedRes
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewModel<VerifyUserState>(initialContent = VerifyUserState()) {
@@ -12,6 +13,8 @@ class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewM
         viewModelScope.launch {
             setLoading()
             authInteractor.sendOptp(phoneNumber)
+            delay(100)
+            setContent { getContent() }
         }
     }
 
