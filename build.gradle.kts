@@ -9,6 +9,7 @@ buildscript {
     dependencies {
         classpath("dev.icerock.moko:kswift-gradle-plugin:0.6.1")
         classpath("dev.icerock.moko:resources-generator:0.23.0")
+        classpath("com.google.gms:google-services:4.3.14")
     }
 }
 

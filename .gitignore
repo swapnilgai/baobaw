@@ -37,3 +37,4 @@ build/
 
 # Backup files
 *~.nib
+androidApp/google-services.json
