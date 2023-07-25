@@ -2,6 +2,8 @@ package com.java.cherrypick.android.notification
 
 import android.content.res.Resources
 import androidx.annotation.StringRes
+import com.google.firebase.messaging.RemoteMessage
+import java.util.Locale
 
 
 sealed class NotificationModel {
@@ -24,6 +26,29 @@ sealed class NotificationModel {
 
         override fun body(resources: Resources) = body
     }
+
+    data class Match(private val title: String, private val body: String): NotificationModel() {
+        override fun title(resources: Resources) = title
+
+        override fun body(resources: Resources) = body
+    }
+
+   companion object {
+        fun from(remoteMessage: RemoteMessage): NotificationModel? {
+            val data = remoteMessage.data
+            val title = data["title"].orEmpty()
+            val body = data["alert"].orEmpty()
+            val type = data["type"].orEmpty().lowercase(Locale.US)
+            val deeplinkUrl = data["deeplink"].orEmpty()
+            if(title.isEmpty() && body.isEmpty()) return null
+
+           return when(type){
+                "marketing" -> Marketing(title = title, body = body)
+                "match" -> Messaging(title = title, body = body)
+                else -> Match(title = title, body = body)
+            }
+        }
+    }
 }
 
 
@@ -40,3 +65,4 @@ enum class NotificationChannel(@StringRes val descriptionRes: Int){
 private fun getNotificationId() = ID_COUNTER++
 
 private var ID_COUNTER = 1
+

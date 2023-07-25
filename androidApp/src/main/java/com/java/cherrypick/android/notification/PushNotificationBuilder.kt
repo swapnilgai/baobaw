@@ -17,24 +17,25 @@ class PushNotificationBuilder(
     private val context: Context
     ) {
 
-    fun build(notificationModel: NotificationModel){
+    fun build(notificationModel: NotificationModel): NotificationSender? {
 
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
-        ) { return }
+        ) return null
 
 
         val body = notificationModel.body(resources)
         val notificationBuilder = NotificationCompat.Builder(context, notificationModel.channel.id(resources))
 
-        createChannel(notificationModel)
-
-        NotificationManagerCompat.from(context).notify(
-            notificationModel.id,
-            notificationBuilder.build()
-        )
+        return NotificationSender {
+            createChannel(notificationModel)
+            NotificationManagerCompat.from(context).notify(
+                notificationModel.id,
+                notificationBuilder.build()
+            )
+        }
     }
 
     private fun createChannel(notificationModel: NotificationModel){
@@ -50,4 +51,9 @@ class PushNotificationBuilder(
         notificationManager.createNotificationChannel(channel)
     }
 
+}
+
+
+fun interface NotificationSender{
+    fun send()
 }
