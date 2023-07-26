@@ -37,3 +37,7 @@ fun DefaultPreview() {
         NavigationGraph(rememberNavController())
     }
 }
+
+
+//https://supabase.com/docs/guides/auth/row-level-security
+//https://supabase.com/docs/guides/auth/managing-user-data
