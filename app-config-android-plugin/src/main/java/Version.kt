@@ -36,5 +36,5 @@ object Version {
     const val mokoGraphics = "0.9.0"
     const val location = "21.0.1"
     const val maps = "18.1.0"
-
+    const val permission = "0.30.1"
 }

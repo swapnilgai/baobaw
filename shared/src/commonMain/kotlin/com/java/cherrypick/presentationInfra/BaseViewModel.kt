@@ -67,6 +67,11 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
             _state.tryEmit(it)
         }
     }
+    fun requestPermission(permissions: List<String>, requestCode: Int){
+        UiEvent.Permission(permisions = permisions, requestCode = requestCode).let {
+            _state.tryEmit(it)
+        }
+    }
     fun onDismiss(){
         setContent {
             getContent()

@@ -74,6 +74,9 @@ fun <ContentT>BaseView(
         is UiEvent.Navigation -> {
                 navigateToScreen(navController, (viewState.value as UiEvent.Navigation).route)
         }
+        is UiEvent.Permission -> {
+
+        }
         else -> {
         }
     }
@@ -128,3 +131,25 @@ fun <T> stateSaver() = Saver<MutableState<T>, Any>(
     }
 )
 
+//@Composable
+//fun LocationPermission() {
+//    val permissionState = rememberPermissionState(permission = Manifest.permission.ACCESS_FINE_LOCATION)
+//
+//    when {
+//        permissionState.hasPermission -> {
+//            // Display content that requires the permission
+//            Text("Location permission granted")
+//        }
+//        permissionState.shouldShowRationale -> {
+//            // Display a rationale for why the permission is needed
+//            Text("Location permission is needed for this feature")
+//            Button(onClick = { permissionState.launchPermissionRequest() }) {
+//                Text("Request permission")
+//            }
+//        }
+//        else -> {
+//            // Request the permission
+//            permissionState.launchPermissionRequest()
+//        }
+//    }
+//}

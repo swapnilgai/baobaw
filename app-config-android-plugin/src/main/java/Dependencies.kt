@@ -99,7 +99,8 @@ object Dependencies {
             "androidx.lifecycle:lifecycle-viewmodel-compose:${Version.lifecycle}",
             "androidx.lifecycle:lifecycle-livedata-ktx:${Version.lifecycle}",
             "com.google.android.gms:play-services-location:${Version.location}",
-            "com.google.android.gms:play-services-maps:${Version.maps}"
+            "com.google.android.gms:play-services-maps:${Version.maps}",
+            "com.google.accompanist:accompanist-permissions:${Version.permission}"
         )
 
         val iceRock = listOf(

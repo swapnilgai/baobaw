@@ -4,24 +4,26 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationRequest
 import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationAvailability
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.java.cherrypick.interactor.Interactor
+import com.java.cherrypick.interactor.withInteractorContext
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.resume
 
 
 interface LocationInteractor {
 
-    suspend fun getCurrentLocation(): GeoCoordinates?
+    suspend fun getCurrentGeoCoordinates(): GeoCoordinates?
 
     suspend fun getAndSaveCurrentLocation()
 
@@ -36,7 +38,7 @@ interface LocationInteractor {
     suspend fun checkLocationSettings(): CheckLocationSettingResult
 }
 
-class LocationInteractorImpl(val context: Context):  Interactor {
+class LocationInteractorImpl(val context: Context): LocationInteractor, Interactor {
 
     private val locationRequest
         get() = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
@@ -46,9 +48,35 @@ class LocationInteractorImpl(val context: Context):  Interactor {
                 .build();
 
     private val fusedLocationProviderClient: FusedLocationProviderClient by lazy { LocationServices.getFusedLocationProviderClient(context) }
+    override suspend fun getCurrentGeoCoordinates(): GeoCoordinates? = withInteractorContext {
+        try {
+            val location = getUserCurrentLocation()
+            GeoCoordinates(
+                latitude = location.latitude,
+                longitude = location.longitude
+            )
+        } catch (e: Exception){
+            null
+        }
+    }
 
+    override suspend fun getAndSaveCurrentLocation() {
+        TODO("Not yet implemented")
+    }
 
-    fun isLocationPermissionGranted(): Boolean{
+    override suspend fun saveLocation(userLocation: UserLocation) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getLocationPrediction(query: String): List<LocationData> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getGeoCodedLocation(zipCode: String): UserLocation {
+        TODO("Not yet implemented")
+    }
+
+    override fun isLocationPermissionGranted(): Boolean{
         return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_COARSE_LOCATION
@@ -58,8 +86,11 @@ class LocationInteractorImpl(val context: Context):  Interactor {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    override suspend fun checkLocationSettings(): CheckLocationSettingResult {
+        TODO("Not yet implemented")
+    }
 
- private suspend fun getUserCurrentLocation(): Location = suspendCancellableCoroutine { continuation ->
+    private suspend fun getUserCurrentLocation(): Location = suspendCancellableCoroutine { continuation ->
      val locationCallBack = object : LocationCallback(){
          override fun onLocationResult(locationResult: LocationResult) {
              if(continuation.isActive){
@@ -79,15 +110,17 @@ class LocationInteractorImpl(val context: Context):  Interactor {
      }
 
      try {
-         val looper = Looper.myLooper() ?: Looper.getMainLooper()
-         fusedLocationProviderClient.requestLocationUpdates(
-             locationRequest,
-             locationCallBack,
-             looper
-         )
-     } catch (e: Exception){
+         if(isLocationPermissionGranted()) {
+             val looper = Looper.myLooper() ?: Looper.getMainLooper()
+             fusedLocationProviderClient.requestLocationUpdates(
+                 locationRequest,
+                 locationCallBack,
+                 looper
+             )
+         }
+     } catch (exception: Exception){
          if (continuation.isActive){
-             continuation.resumeWithException(e)
+             continuation.resumeWithException(exception)
              stopUpdatingLocation(locationCallBack)
          }
      }
@@ -99,7 +132,7 @@ class LocationInteractorImpl(val context: Context):  Interactor {
  }
 
 
-    private fun <T> CancellableContinuation<T>.resumeLatLocation(exception: Exception? = null) {
+    private fun CancellableContinuation<Location>.resumeLatLocation(exception: Exception? = null) {
         try {
             fusedLocationProviderClient.lastLocation
         } catch (e: SecurityException) {
@@ -109,16 +142,13 @@ class LocationInteractorImpl(val context: Context):  Interactor {
                 if (task.isCanceled) {
                     task.result
                         ?.let { location -> resume(location) }
-                        ?: resumeWithException(
-                            exception ?: LocationException(LocationError.LOCATION_NOT_AVAILABLE)
-                        )
+                        ?: resumeWithException(exception ?: LocationException(LocationError.LOCATION_NOT_AVAILABLE))
                 } else {
                     resumeWithException(exception ?: LocationException(LocationError.LOCATION_NOT_AVAILABLE))
                 }
             }
         }?:  resumeWithException(exception ?: LocationException(LocationError.LOCATION_NOT_AVAILABLE))
     }
-
 }
 
 
@@ -130,4 +160,4 @@ enum class LocationError{
 }
 
 
-class LocationException(val error: LocationError): Exception(error(error.name))
+class LocationException(val error: LocationError): Exception(error.name)

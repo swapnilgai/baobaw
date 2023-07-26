@@ -12,4 +12,6 @@ sealed class UiEvent<ContentT>{
     data class Navigation(val route: String, val navigateToScreen: Boolean = false): UiEvent<Nothing>()
 
     object Cancled : UiEvent<Nothing>()
+
+    data class Permission(val permisions: List<String>, val requestCode: Int): UiEvent<Nothing>()
 }
