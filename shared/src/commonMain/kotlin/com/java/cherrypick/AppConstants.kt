@@ -8,6 +8,7 @@ object AppConstants {
         const val userInput = "userInput"
         const val login = "login"
         const val resetPassword = "resetPassword"
+        const val userLocation = "userLocation"
     }
 
     object Auth{

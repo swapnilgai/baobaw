@@ -34,4 +34,5 @@ object Version {
     const val kswift        = "0.6.1"
     const val mokoResourcesGenerator = "0.23.0"
     const val mokoGraphics = "0.9.0"
+    const val mokoGeo = "0.6.0"
 }

@@ -101,7 +101,8 @@ object Dependencies {
         )
 
         val iceRock = listOf(
-            "dev.icerock.moko:resources:${Version.mokoResourcesGenerator}"
+            "dev.icerock.moko:resources:${Version.mokoResourcesGenerator}",
+            "dev.icerock.moko:geo:${Version.mokoGeo}"
         )
     }
 }

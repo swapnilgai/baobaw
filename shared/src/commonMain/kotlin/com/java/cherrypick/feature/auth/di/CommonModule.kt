@@ -3,9 +3,12 @@ package com.java.cherrypick.feature.auth.di
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.feature.auth.interactor.AuthInteractorImple
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
+import com.java.cherrypick.feature.auth.presentation.LocationViewModel
 import com.java.cherrypick.feature.auth.presentation.LoginViewModel
 import com.java.cherrypick.feature.auth.presentation.ResetPasswordViewModel
 import com.java.cherrypick.feature.auth.presentation.VerifyUserViewModel
+import dev.icerock.moko.geo.LocationTracker
+import dev.icerock.moko.permissions.PermissionsController
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.dsl.module
@@ -22,3 +25,8 @@ val authModule = module {
     single<LoginViewModel> { LoginViewModel(get()) }
     single<ResetPasswordViewModel> { ResetPasswordViewModel(get()) }
 }
+
+val locationModule = module {
+    single<LocationViewModel> { LocationViewModel() }
+}
+

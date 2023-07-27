@@ -75,6 +75,11 @@ fun LoginScreen(loginViewModel: LoginViewModel,
             Spacer(modifier = Modifier.padding(16.dp))
 
             ClickableText(text = AnnotatedString(stringResource(id = SharedRes.strings.reset_password)), onClick = {scope.launch { loginViewModel.onResetPasswordClicked() }})
+
+            Spacer(modifier = Modifier.padding(16.dp))
+
+            ClickableText(text = AnnotatedString("User location"), onClick = {scope.launch { loginViewModel.onUserLocationClicked() }})
+
         }
     }
 }

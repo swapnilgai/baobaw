@@ -33,4 +33,11 @@ class LoginViewModel(private val authInteractor: AuthInteractor): BaseViewModel<
             navigate(AppConstants.RoutIds.resetPassword)
         }
     }
+
+    //TODO remove this once tested
+    fun onUserLocationClicked(){
+        viewModelScope.launch {
+            navigate(AppConstants.RoutIds.userLocation)
+        }
+    }
 }
