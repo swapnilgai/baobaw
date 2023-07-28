@@ -70,6 +70,7 @@ kotlin {
                 Dependencies.Shared.androidMain.forEach {
                     implementation(it)
                 }
+                implementation("com.onesignal:OneSignal:[4.0.0, 4.99.99]")
             }
         }
 
@@ -119,12 +120,15 @@ buildkonfig {
     defaultConfigs {
     }
 
+    val onesignalAppId = extra["onesignal.app.id"] as String
+
     defaultConfigs("prod") {
         val apiKey = extra["api.key"] as String
         val apiUrl = extra["api.url"] as String
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "prod")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "onesignalAppId", onesignalAppId)
     }
 
     defaultConfigs("dev") {
@@ -133,6 +137,7 @@ buildkonfig {
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "dev")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "onesignalAppId", onesignalAppId)
     }
 }
 

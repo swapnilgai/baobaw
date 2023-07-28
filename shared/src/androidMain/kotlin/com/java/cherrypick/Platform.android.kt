@@ -1,5 +1,7 @@
 package com.java.cherrypick
 
+import com.onesignal.OneSignal
+
 class AndroidPlatform : Platform {
     override val name: String = "Android ${android.os.Build.VERSION.SDK_INT}"
 }
