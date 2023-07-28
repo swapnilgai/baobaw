@@ -29,6 +29,11 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
+import com.java.cherrypick.android.compose.moko.binder.BindLocationTrackerEffect
+import com.java.cherrypick.android.compose.moko.binder.LocationTrackerAccuracy
+import com.java.cherrypick.android.compose.moko.binder.LocationTrackerFactory
+import com.java.cherrypick.android.compose.moko.binder.rememberLocationTrackerFactory
+import com.java.cherrypick.feature.auth.presentation.PermissionContent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.java.cherrypick.feature.auth.presentation.PermissionViewModel
@@ -44,15 +49,20 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
                        navController: NavController,
                        scope: CoroutineScope = rememberCoroutineScope()){
 
-    var verifyUserState by remember { mutableStateOf<PermissionState?>(null) }
+    var viewState by remember { mutableStateOf<PermissionContent?>(null) }
 
-    fun setContent(state: PermissionState){
-        verifyUserState = state
+    fun setContent(state: PermissionContent){
+        viewState = state
     }
 
     BaseView(viewModel = permissionViewModel, navController = navController, setContentT = {state -> setContent(state)}) {
-        val factory: PermissionsControllerFactory = rememberPermissionsControllerFactory()
-        val controller: PermissionsController = remember(factory) { factory.createPermissionsController() }
+        val permissionsControllerFactory: PermissionsControllerFactory = rememberPermissionsControllerFactory()
+        val controller: PermissionsController = remember(permissionsControllerFactory) { permissionsControllerFactory.createPermissionsController() }
+
+        val locationTrackerFactory : LocationTrackerFactory =  rememberLocationTrackerFactory(LocationTrackerAccuracy.Best)
+        val locationTracker = locationTrackerFactory.createLocationTracker(controller)
+
+        BindLocationTrackerEffect(locationTracker)
         BindEffect(controller)
 
         Column(
@@ -66,18 +76,45 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
             Button(onClick = { scope.launch { permissionViewModel.requestPermission(Permission.LOCATION, controller) }},
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
             ) {
+                Text(text = "Location Permission")
+            }
+
+            Spacer(modifier = Modifier.padding(8.dp))
+
+            Button(onClick = { scope.launch { permissionViewModel.requestPermission(Permission.GALLERY, controller) }},
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
+            ) {
+                Text(text = "Gallery")
+            }
+
+            Spacer(modifier = Modifier.padding(8.dp))
+
+            Button(onClick = { scope.launch { permissionViewModel.getCurrentLocation(locationTracker) }},
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
+            ) {
                 Text(text = "Get Location")
             }
 
-            Spacer(modifier = Modifier.padding(16.dp))
+            Spacer(modifier = Modifier.padding(8.dp))
 
             Text(
-                text = verifyUserState?.name.toString(),
+                text = viewState?.locationContent.toString(),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 6.dp),
                 fontSize = 18.sp,
                 color = Color.Black
             )
+
+            Spacer(modifier = Modifier.padding(8.dp))
+
+            Text(
+                text = viewState?.permissionState.toString(),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 6.dp),
+                fontSize = 18.sp,
+                color = Color.Black
+            )
+
         }
     }
 }
