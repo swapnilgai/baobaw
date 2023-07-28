@@ -103,7 +103,8 @@ object Dependencies {
         val iceRock = listOf(
             "dev.icerock.moko:resources:${Version.mokoResourcesGenerator}",
             "dev.icerock.moko:permissions-compose:${Version.mokoPermissions}",
-            "dev.icerock.moko:mvvm-compose:${Version.mokoMvvmVersion}"
+            "dev.icerock.moko:mvvm-compose:${Version.mokoMvvmVersion}",
+            "dev.icerock.moko:geo:${Version.mokoGeo}"
         )
     }
 }

@@ -36,5 +36,5 @@ object Version {
     const val mokoGraphics = "0.9.0"
     const val mokoPermissions = "0.16.0"
     const val mokoMvvmVersion = "0.16.1"
-
+    const val mokoGeo = "0.6.0"
 }
