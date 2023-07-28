@@ -4,6 +4,7 @@ import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.feature.auth.interactor.AuthInteractorImple
 import com.java.cherrypick.feature.auth.presentation.AuthViewModel
 import com.java.cherrypick.feature.auth.presentation.LoginViewModel
+import com.java.cherrypick.feature.auth.presentation.PermissionViewModel
 import com.java.cherrypick.feature.auth.presentation.ResetPasswordViewModel
 import com.java.cherrypick.feature.auth.presentation.VerifyUserViewModel
 import org.koin.core.component.KoinComponent
@@ -21,4 +22,9 @@ val authModule = module {
     single<VerifyUserViewModel> { VerifyUserViewModel(get()) }
     single<LoginViewModel> { LoginViewModel(get()) }
     single<ResetPasswordViewModel> { ResetPasswordViewModel(get()) }
+}
+
+
+val permissionModule = module {
+    single<PermissionViewModel> { PermissionViewModel() }
 }
