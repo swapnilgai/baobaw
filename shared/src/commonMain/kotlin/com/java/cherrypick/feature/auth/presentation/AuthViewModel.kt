@@ -19,7 +19,7 @@ class AuthViewModel(private val authInteractor: AuthInteractor): BaseViewModel<A
                 }
             }
             navigate(
-                getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber))
+                getNavigationUrlWithoutBrackets(AppConstants.RoutIds.verifyOpt, listOf(phoneNumber, true))
             )
         }
     }
