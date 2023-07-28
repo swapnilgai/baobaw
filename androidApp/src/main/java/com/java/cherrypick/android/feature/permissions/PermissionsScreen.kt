@@ -1,0 +1,83 @@
+package com.java.cherrypick.android.feature.permissions
+
+import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LifecycleOwner
+import androidx.navigation.NavController
+import com.java.cherrypick.android.BaseView
+import com.java.cherrypick.android.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import com.java.cherrypick.feature.auth.presentation.PermissionViewModel
+import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.PermissionState
+import dev.icerock.moko.permissions.PermissionsController
+import dev.icerock.moko.permissions.compose.BindEffect
+import dev.icerock.moko.permissions.compose.PermissionsControllerFactory
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+
+@Composable
+fun PermissionsScreen(permissionViewModel: PermissionViewModel,
+                       navController: NavController,
+                       scope: CoroutineScope = rememberCoroutineScope()){
+
+    var verifyUserState by remember { mutableStateOf<PermissionState?>(null) }
+
+    fun setContent(state: PermissionState){
+        verifyUserState = state
+    }
+
+    BaseView(viewModel = permissionViewModel, navController = navController, setContentT = {state -> setContent(state)}) {
+        val factory: PermissionsControllerFactory = rememberPermissionsControllerFactory()
+        val controller: PermissionsController = remember(factory) { factory.createPermissionsController() }
+        BindEffect(controller)
+
+        Column(
+            Modifier
+                .padding(24.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Button(onClick = { scope.launch { permissionViewModel.requestPermission(Permission.LOCATION, controller) }},
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
+            ) {
+                Text(text = "Get Location")
+            }
+
+            Spacer(modifier = Modifier.padding(16.dp))
+
+            Text(
+                text = verifyUserState?.name.toString(),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 6.dp),
+                fontSize = 18.sp,
+                color = Color.Black
+            )
+        }
+    }
+}

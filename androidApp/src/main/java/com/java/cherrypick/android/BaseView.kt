@@ -1,5 +1,6 @@
 package com.java.cherrypick.android
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -45,7 +46,7 @@ fun <ContentT>BaseView(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
                 viewModel.onStart()
-            } else if (event == Lifecycle.Event.ON_PAUSE) {
+            } else if (event == Lifecycle.Event.ON_STOP) {
                 viewModel.clear()
             }
         }

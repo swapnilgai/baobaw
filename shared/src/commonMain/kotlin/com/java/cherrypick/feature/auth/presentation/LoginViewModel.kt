@@ -33,4 +33,10 @@ class LoginViewModel(private val authInteractor: AuthInteractor): BaseViewModel<
             navigate(AppConstants.RoutIds.resetPassword)
         }
     }
+
+    fun onPermissionsClicked(){
+        viewModelScope.launch {
+            navigate(AppConstants.RoutIds.permissionsScreen)
+        }
+    }
 }
