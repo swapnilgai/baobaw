@@ -2,15 +2,22 @@ package com.java.cherrypick.presentationInfra
 
 import com.java.cherrypick.SharedRes
 import com.java.cherrypick.executor.MainDispatcher
+import com.java.cherrypick.interactor.AwaitRetryOptions
 import com.java.cherrypick.interactor.InteracroeException
+import com.java.cherrypick.interactor.InteractorErrorHandler
 import dev.icerock.moko.resources.StringResource
+import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -26,7 +33,28 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         }
     }
 
-    var viewModelScope: CoroutineScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
+    private val interactorErrorHandler = object : InteractorErrorHandler(){
+
+        override fun awaitRetryOptionOrNull(error: Throwable): AwaitRetryOptions? {
+            return this@BaseViewModel.awaitRetryOptionOrNull(error)
+        }
+
+        override suspend fun awaitRetry(options: AwaitRetryOptions) {
+            val retryTrigger = Channel<Unit>(capacity = 1)
+            withContext(mainDispatcher.dispatcher){
+                //setError()
+            }
+            val awaitRetryScope = CoroutineScope(Job())
+            awaitRetryScope.launch {
+                retryTrigger.trySend(Unit).isSuccess
+            }
+            retryTrigger.receive()
+            awaitRetryScope.cancel()
+            withContext(mainDispatcher.dispatcher){ setLoading() }
+        }
+    }
+
+    var viewModelScope: CoroutineScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler + interactorErrorHandler)
 
     private val _state = MutableStateFlow<UiEvent<out ContentT>>(UiEvent.Content(initialContent))
 
@@ -70,6 +98,25 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
     fun onDismiss(){
         setContent {
             getContent()
+        }
+    }
+
+    /**
+     *   Return [AwaitRetryOptions] if an error UI with retry option should be displayed
+     *   for the give interactor [error]. Retrun null otherwise
+      */
+    protected open fun awaitRetryOptionOrNull(
+        error: Throwable
+    ): AwaitRetryOptions?{
+        return when (error) {
+            is IOException -> {   // check if network is avaialble
+                AwaitRetryOptions(
+                    title = SharedRes.strings.error,
+                    message = SharedRes.strings.error,
+                    description = SharedRes.strings.error
+                )
+            }
+            else -> null
         }
     }
 }

@@ -21,9 +21,9 @@ suspend fun <T>Interactor.withInteractorContext(
     retryOption: RetryOption<T> = RetryOption(0)
 ) : T {
 
-    val context = InteractorDispatcherProvider.dispatcher
     val interactorErrorHandling = coroutineContext[InteractorErrorHandler]
     val isFirstInteractorCall = coroutineContext[InteractorCoroutineContextElement] == null
+    val context = InteractorDispatcherProvider.dispatcher + InteractorCoroutineContextElement(true)
 
     return withContext(context) {
         var attemptIndex = -1

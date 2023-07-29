@@ -1,5 +1,6 @@
 package com.java.cherrypick.interactor
 
+import dev.icerock.moko.resources.StringResource
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
@@ -12,7 +13,7 @@ abstract class InteractorErrorHandler : AbstractCoroutineContextElement(Interact
 }
 
 data class AwaitRetryOptions(
-    val title: String?,
-    val message: String,
-    val description: String
+    val title: StringResource?,
+    val message: StringResource,
+    val description: StringResource
 )
