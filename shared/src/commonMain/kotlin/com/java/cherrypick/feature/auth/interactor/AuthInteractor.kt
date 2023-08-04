@@ -13,6 +13,8 @@ import io.github.jan.supabase.gotrue.providers.builtin.Phone
 import io.github.jan.supabase.gotrue.user.UserSession
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -28,10 +30,12 @@ interface AuthInteractor: Interactor {
     suspend fun logOut()
     suspend fun signIn(phoneNumber: String, password: String)
     suspend fun phoneExists(phoneNumber: String): Boolean?
-
+    suspend fun refreshToken()
 }
 
 class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
+
+    val authMutex = Mutex()
     override suspend fun signUp(signUpData: SignUpData): Email.Result? {
         return withInteractorContext {
             supabaseClient.gotrue.signUpWith(Email) {
@@ -65,11 +69,11 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun sendOptp(phoneNumber: String): Unit {
-        withInteractorContext {
-            supabaseClient.gotrue.sendOtpTo(Phone) {
-                this.phoneNumber = phoneNumber
+            withInteractorContext {
+                supabaseClient.gotrue.sendOtpTo(Phone) {
+                    this.phoneNumber = phoneNumber
+                }
             }
-        }
     }
 
     override suspend fun verifyOpt(opt: String, phoneNumber: String)  {
@@ -108,6 +112,12 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
            val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
            (result as JsonElement).jsonPrimitive.content.toBoolean()
        }
+    }
+
+    override suspend fun refreshToken() {
+        authMutex.withLock {
+            supabaseClient.gotrue.refreshCurrentSession()
+        }
     }
 }
 
