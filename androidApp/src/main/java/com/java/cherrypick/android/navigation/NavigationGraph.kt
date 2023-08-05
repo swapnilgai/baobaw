@@ -14,7 +14,9 @@ import com.java.cherrypick.android.feature.auth.LoginScreen
 import com.java.cherrypick.android.feature.auth.ResetPasswordScreen
 import com.java.cherrypick.android.feature.auth.VerifyOtpScreen
 import com.java.cherrypick.android.feature.permissions.PermissionsScreen
+import com.java.cherrypick.android.feature.photo_picker.PhotoPickerScreen
 import com.java.cherrypick.android.feature.userinput.UserInputScreen
+import com.java.cherrypick.feature.upload.presentation.ImageSelectionViewModel
 import com.java.cherrypick.util.getNavigationUrl
 import org.koin.androidx.compose.get
 
@@ -46,6 +48,9 @@ fun NavigationGraph(navController: NavHostController) {
         }
         composable(route = Screens.PermissionsScreen.route){
             PermissionsScreen(permissionViewModel = get(), navController = navController)
+        }
+        composable(route = Screens.ImagePickerScreen.route){
+            PhotoPickerScreen(imageSelectionViewModel = get(), navController = navController)
         }
     }
 }

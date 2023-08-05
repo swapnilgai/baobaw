@@ -5,6 +5,7 @@ buildscript {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
     dependencies {
         classpath("dev.icerock.moko:kswift-gradle-plugin:0.6.1")
@@ -17,6 +18,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

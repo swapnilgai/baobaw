@@ -8,7 +8,6 @@ plugins {
     id("dev.icerock.mobile.multiplatform-resources")
 }
 
-@OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
     android {
         compilations.all {

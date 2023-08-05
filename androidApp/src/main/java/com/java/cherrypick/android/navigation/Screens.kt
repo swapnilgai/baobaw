@@ -9,5 +9,6 @@ sealed class Screens(val route: String) {
     object Login: Screens(AppConstants.RoutIds.login)
     object ResetPassword: Screens(AppConstants.RoutIds.resetPassword)
     object PermissionsScreen: Screens(AppConstants.RoutIds.permissionsScreen)
+    object ImagePickerScreen: Screens(AppConstants.RoutIds.imagePickerScreen)
 
 }
