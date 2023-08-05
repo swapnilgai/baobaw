@@ -11,8 +11,8 @@ repositories {
 }
 
 gradlePlugin {
-    plugins.register("app-config-android-plugin") {
-        id = "app-config-android-plugin"
+    plugins.register("app-config-plugin") {
+        id = "app-config-plugin"
         implementationClass = "com.java.cherrypick.BuildPlugin"
     }
 }
