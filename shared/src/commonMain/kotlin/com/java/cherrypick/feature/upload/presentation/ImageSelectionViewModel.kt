@@ -1,5 +1,6 @@
 package com.java.cherrypick.feature.upload.presentation
 
+import com.java.cherrypick.feature.upload.interactor.ImageUploadInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import dev.icerock.moko.media.Bitmap
 import dev.icerock.moko.media.picker.MediaPickerController
@@ -8,7 +9,7 @@ import kotlinx.coroutines.launch
 
 data class ImageSelectionContent(val data: Bitmap? = null)
 
-class ImageSelectionViewModel : BaseViewModel<ImageSelectionContent>(initialContent = ImageSelectionContent()) {
+class ImageSelectionViewModel(private val imageUploadInteractor: ImageUploadInteractor) : BaseViewModel<ImageSelectionContent>(initialContent = ImageSelectionContent()) {
 
     fun onGalleryPressed(mediaPickerController: MediaPickerController) {
         selectImage(MediaSource.GALLERY, mediaPickerController)
@@ -23,6 +24,16 @@ class ImageSelectionViewModel : BaseViewModel<ImageSelectionContent>(initialCont
                 @Suppress("SwallowedException")
                 val image = mediaPickerController.pickImage(source)
                 setContent { copy(data = image) }
+        }
+    }
+
+    fun uploadImage(bitmap: Bitmap){
+        viewModelScope.launch {
+            setLoading()
+            imageUploadInteractor.imageUpload(bitmap)
+            setContent {
+                copy()
+            }
         }
     }
 }

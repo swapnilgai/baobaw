@@ -75,7 +75,13 @@ fun PhotoPickerScreen(imageSelectionViewModel: ImageSelectionViewModel,
             ) {
                 Text(text = "Gallery")
             }
-
+            Spacer(modifier = Modifier.padding(4.dp))
+            Button(onClick = { scope.launch { imageSelectionViewModel.uploadImage(viewState?.data!!) }},
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
+            ) {
+                Text(text = "Upload")
+            }
+            Spacer(modifier = Modifier.padding(5.dp))
             viewState?.data?.let {
                 BitmapImage(bitmap = it.platformBitmap)
             }
