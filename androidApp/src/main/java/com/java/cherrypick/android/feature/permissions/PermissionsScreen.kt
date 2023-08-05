@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -22,17 +23,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
+import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
 import com.java.cherrypick.android.compose.moko.binder.BindLocationTrackerEffect
 import com.java.cherrypick.android.compose.moko.binder.LocationTrackerAccuracy
 import com.java.cherrypick.android.compose.moko.binder.LocationTrackerFactory
 import com.java.cherrypick.android.compose.moko.binder.rememberLocationTrackerFactory
+import com.java.cherrypick.android.util.stringResource
 import com.java.cherrypick.feature.auth.presentation.PermissionContent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -115,6 +119,9 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
                 color = Color.Black
             )
 
+            Spacer(modifier = Modifier.padding(8.dp))
+
+            ClickableText(text = AnnotatedString("Image picker"), onClick = { scope.launch { permissionViewModel.onImagePickerClicked() } })
         }
     }
 }

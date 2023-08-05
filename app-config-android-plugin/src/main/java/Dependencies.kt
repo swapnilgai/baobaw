@@ -74,7 +74,8 @@ object Dependencies {
         val supabase = listOf(
             "io.github.jan-tennert.supabase:gotrue-kt:${Version.supabase}",
             "io.github.jan-tennert.supabase:postgrest-kt:${Version.supabase}",
-            "io.github.jan-tennert.supabase:realtime-kt:${Version.supabase}"
+            "io.github.jan-tennert.supabase:realtime-kt:${Version.supabase}",
+            "io.github.jan-tennert.supabase:storage-kt:${Version.supabase}"
         )
 
         val supabasePlatform = "io.github.jan-tennert.supabase:bom:${Version.supabase}"
@@ -104,7 +105,8 @@ object Dependencies {
             "dev.icerock.moko:resources:${Version.mokoResourcesGenerator}",
             "dev.icerock.moko:permissions-compose:${Version.mokoPermissions}",
             "dev.icerock.moko:mvvm-compose:${Version.mokoMvvmVersion}",
-            "dev.icerock.moko:geo:${Version.mokoGeo}"
+            "dev.icerock.moko:geo:${Version.mokoGeo}",
+            "dev.icerock.moko:media-compose:${Version.mokoMedia}"
         )
     }
 }

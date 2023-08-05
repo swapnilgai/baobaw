@@ -1,6 +1,6 @@
 package com.java.cherrypick.feature.auth.presentation
 
-import com.java.cherrypick.SharedRes
+import com.java.cherrypick.AppConstants.RoutIds.imagePickerScreen
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import dev.icerock.moko.geo.LocationTracker
 import dev.icerock.moko.permissions.DeniedAlwaysException
@@ -46,5 +46,9 @@ class PermissionViewModel: BaseViewModel<PermissionContent>(initialContent = Per
                 setContent { copy(permissionState = PermissionState.DeniedAlways)}
             }
         }
+    }
+
+    fun onImagePickerClicked(){
+        navigate(imagePickerScreen)
     }
 }
