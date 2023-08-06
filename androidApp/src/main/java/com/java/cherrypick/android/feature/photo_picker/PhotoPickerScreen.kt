@@ -4,9 +4,13 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -20,12 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.java.cherrypick.SharedRes
 import com.java.cherrypick.android.BaseView
 import com.java.cherrypick.android.R
-import com.java.cherrypick.android.util.stringResource
 import com.java.cherrypick.feature.auth.presentation.PermissionContent
 import com.java.cherrypick.feature.auth.presentation.PermissionViewModel
 import com.java.cherrypick.feature.upload.presentation.ImageSelectionContent
@@ -46,6 +52,8 @@ fun PhotoPickerScreen(imageSelectionViewModel: ImageSelectionViewModel,
                       scope: CoroutineScope = rememberCoroutineScope()) {
 
     var viewState by remember { mutableStateOf<ImageSelectionContent?>(null) }
+
+    var index by remember { mutableStateOf<String>("0") }
 
     fun setContent(state: ImageSelectionContent){
         viewState = state
@@ -75,12 +83,28 @@ fun PhotoPickerScreen(imageSelectionViewModel: ImageSelectionViewModel,
             ) {
                 Text(text = "Gallery")
             }
-            Spacer(modifier = Modifier.padding(4.dp))
-            Button(onClick = { scope.launch { imageSelectionViewModel.uploadImage(viewState?.data!!) }},
+            Spacer(modifier = Modifier.padding(2.dp))
+            Button(onClick = { scope.launch { imageSelectionViewModel.uploadImage(viewState?.data!!, index.toInt()) }},
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
             ) {
                 Text(text = "Upload")
             }
+            Spacer(modifier = Modifier.padding(2.dp))
+
+            Button(onClick = { scope.launch { imageSelectionViewModel.deleteImage(index.toInt()) }},
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
+            ) {
+                Text(text = "Delete")
+            }
+            Spacer(modifier = Modifier.padding(2.dp))
+
+            BasicTextField(
+                value = TextFieldValue(index, selection = TextRange(index.length)),
+                onValueChange = {
+                    index = it.text
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
             Spacer(modifier = Modifier.padding(5.dp))
             viewState?.data?.let {
                 BitmapImage(bitmap = it.platformBitmap)

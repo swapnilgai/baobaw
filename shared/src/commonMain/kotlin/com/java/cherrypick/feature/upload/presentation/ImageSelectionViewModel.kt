@@ -27,13 +27,35 @@ class ImageSelectionViewModel(private val imageUploadInteractor: ImageUploadInte
         }
     }
 
-    fun uploadImage(bitmap: Bitmap){
+    fun uploadImage(bitmap: Bitmap, index: Int = 1){
         viewModelScope.launch {
             setLoading()
-            imageUploadInteractor.imageUpload(bitmap)
+            imageUploadInteractor.imageUpload(bitmap, index)
             setContent {
                 copy()
             }
         }
     }
+
+    fun deleteImage(index: Int = 1){
+        viewModelScope.launch {
+            setLoading()
+            imageUploadInteractor.deleteImage(index)
+            setContent {
+                copy()
+            }
+        }
+    }
+
+
+//    fun getUrlFromId(id: String){
+//        viewModelScope.launch {
+//            setLoading()
+//            imageUploadInteractor.getUrlFromId(id)
+//            setContent {
+//                copy()
+//            }
+//        }
+//    }
+
 }
