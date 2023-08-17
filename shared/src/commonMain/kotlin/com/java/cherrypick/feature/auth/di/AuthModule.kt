@@ -18,7 +18,7 @@ class AuthKoinViewModelModule : KoinComponent {
 
 val authModule = module {
     single<AuthInteractor> { AuthInteractorImple(get()) }
-    single<AuthViewModel> { AuthViewModel(get()) }
+    single<AuthViewModel> { AuthViewModel(get(), get()) }
     single<VerifyUserViewModel> { VerifyUserViewModel(get()) }
     single<LoginViewModel> { LoginViewModel(get()) }
     single<ResetPasswordViewModel> { ResetPasswordViewModel(get()) }
