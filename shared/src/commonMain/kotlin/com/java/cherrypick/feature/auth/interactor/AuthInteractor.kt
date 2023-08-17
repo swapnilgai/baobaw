@@ -31,6 +31,8 @@ interface AuthInteractor: Interactor {
     suspend fun signIn(phoneNumber: String, password: String)
     suspend fun phoneExists(phoneNumber: String): Boolean?
     suspend fun refreshToken()
+
+    suspend fun getCurrentUserId(): String?
 }
 
 class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
@@ -117,6 +119,12 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     override suspend fun refreshToken() {
         authMutex.withLock {
             supabaseClient.gotrue.refreshCurrentSession()
+        }
+    }
+
+    override suspend fun getCurrentUserId(): String? {
+        return withInteractorContext {
+            supabaseClient.gotrue.currentUserOrNull()?.id
         }
     }
 }
