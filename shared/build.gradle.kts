@@ -121,6 +121,7 @@ buildkonfig {
     defaultConfigs("prod") {
         val apiKey = extra["api.key"] as String
         val apiUrl = extra["api.url"] as String
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "onSignal", extra["onesignal.app.id"] as String)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "prod")
@@ -129,6 +130,7 @@ buildkonfig {
     defaultConfigs("dev") {
         val apiKey = extra["dev.api.key"] as String
         val apiUrl = extra["dev.api.url"] as String
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "onSignal", extra["onesignal.app.id"] as String)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiKey", apiKey)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "apiUrl", apiUrl)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "environment", "dev")

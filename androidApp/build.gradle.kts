@@ -62,7 +62,7 @@ dependencies {
     implementation(project(":shared"))
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.7")
     implementation("com.google.firebase:firebase-messaging-ktx:23.1.0")
-
+    implementation("com.onesignal:OneSignal:[5.0.0, 5.99.99]")
     Dependencies.Shared.android.forEach {
         implementation(it)
     }

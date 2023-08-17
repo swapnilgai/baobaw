@@ -71,11 +71,11 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun sendOptp(phoneNumber: String): Unit {
-            withInteractorContext {
-                supabaseClient.gotrue.sendOtpTo(Phone) {
-                    this.phoneNumber = phoneNumber
-                }
+        withInteractorContext {
+            supabaseClient.gotrue.sendOtpTo(Phone) {
+                this.phoneNumber = phoneNumber
             }
+        }
     }
 
     override suspend fun verifyOpt(opt: String, phoneNumber: String)  {
@@ -95,7 +95,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun logOut() {
-         withInteractorContext {
+        withInteractorContext {
             supabaseClient.gotrue.logout()
         }
     }
@@ -110,10 +110,10 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun phoneExists(phoneNumber: String): Boolean? {
-       return withInteractorContext {
-           val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
-           (result as JsonElement).jsonPrimitive.content.toBoolean()
-       }
+        return withInteractorContext {
+            val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
+            (result as JsonElement).jsonPrimitive.content.toBoolean()
+        }
     }
 
     override suspend fun refreshToken() {

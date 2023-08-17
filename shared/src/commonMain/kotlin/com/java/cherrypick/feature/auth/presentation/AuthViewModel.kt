@@ -5,7 +5,6 @@ import com.java.cherrypick.feature.auth.interactor.AuthInteractor
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import com.java.cherrypick.util.Preferences
 import com.java.cherrypick.util.getNavigationUrlWithoutBrackets
-import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.coroutines.launch
 
 class AuthViewModel(private val authInteractor: AuthInteractor, private val preferences: Preferences): BaseViewModel<AuthState>(initialContent = AuthState()) {
