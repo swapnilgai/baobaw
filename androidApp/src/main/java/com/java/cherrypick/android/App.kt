@@ -27,8 +27,8 @@ class App: Application(), KoinComponent {
             appModule
         }
 
-     if(projectEnvironment.environment != ENVIRONMENT.PRODUCTION)
-        OneSignal.Debug.logLevel = LogLevel.VERBOSE
+        if(projectEnvironment.environment != ENVIRONMENT.PRODUCTION)
+            OneSignal.Debug.logLevel = LogLevel.VERBOSE
 
         authViewModel.refreshToken().let {
             preferences.getString(AppConstants.Auth.currentUser)?.let {currentUser ->
