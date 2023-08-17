@@ -14,6 +14,7 @@ object AppConstants {
 
     object Auth{
         const val otpCount = 6
+        const val currentUser = "currentUser"
     }
 
     object NavigationParam{
