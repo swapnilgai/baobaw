@@ -4,6 +4,7 @@ import com.java.cherrypick.AppConstants
 import com.java.cherrypick.feature.auth.model.SignUpData
 import com.java.cherrypick.feature.auth.presentation.AuthContent
 import com.java.cherrypick.interactor.Interactor
+import com.java.cherrypick.interactor.RetryOption
 import com.java.cherrypick.interactor.withInteractorContext
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.OtpType
@@ -31,13 +32,12 @@ interface AuthInteractor: Interactor {
     suspend fun signIn(phoneNumber: String, password: String)
     suspend fun phoneExists(phoneNumber: String): Boolean?
     suspend fun refreshToken()
-
     suspend fun getCurrentUserId(): String?
 }
 
 class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
 
-    val authMutex = Mutex()
+    private val authMutex = Mutex()
     override suspend fun signUp(signUpData: SignUpData): Email.Result? {
         return withInteractorContext {
             supabaseClient.gotrue.signUpWith(Email) {
@@ -117,10 +117,16 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun refreshToken() {
-        authMutex.withLock {
-            supabaseClient.gotrue.refreshCurrentSession()
+        return withInteractorContext(retryOption = RetryOption(
+            retryCount = 3,
+            retryCondition = { it.getOrThrow() != null }
+        )) {
+            authMutex.withLock {
+                supabaseClient.gotrue.refreshCurrentSession()
+            }
         }
     }
+
 
     override suspend fun getCurrentUserId(): String? {
         return withInteractorContext {

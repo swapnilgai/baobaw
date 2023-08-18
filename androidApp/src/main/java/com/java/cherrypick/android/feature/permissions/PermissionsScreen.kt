@@ -83,7 +83,7 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
                 Text(text = "Location Permission")
             }
 
-            Spacer(modifier = Modifier.padding(8.dp))
+            Spacer(modifier = Modifier.padding(6.dp))
 
             Button(onClick = { scope.launch { permissionViewModel.requestPermission(Permission.GALLERY, controller) }},
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
@@ -91,7 +91,7 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
                 Text(text = "Gallery")
             }
 
-            Spacer(modifier = Modifier.padding(8.dp))
+            Spacer(modifier = Modifier.padding(6.dp))
 
             Button(onClick = { scope.launch { permissionViewModel.getCurrentLocation(locationTracker) }},
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
@@ -99,7 +99,15 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
                 Text(text = "Get Location")
             }
 
-            Spacer(modifier = Modifier.padding(8.dp))
+            Spacer(modifier = Modifier.padding(6.dp))
+
+            Button(onClick = { scope.launch { permissionViewModel.updateLocation(locationTracker) }},
+                colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.cherry))
+            ) {
+                Text(text = "upload location")
+            }
+
+            Spacer(modifier = Modifier.padding(6.dp))
 
             Text(
                 text = viewState?.locationContent.toString(),
@@ -109,7 +117,7 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
                 color = Color.Black
             )
 
-            Spacer(modifier = Modifier.padding(8.dp))
+            Spacer(modifier = Modifier.padding(6.dp))
 
             Text(
                 text = viewState?.permissionState.toString(),
@@ -119,7 +127,7 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
                 color = Color.Black
             )
 
-            Spacer(modifier = Modifier.padding(8.dp))
+            Spacer(modifier = Modifier.padding(6.dp))
 
             ClickableText(text = AnnotatedString("Image picker"), onClick = { scope.launch { permissionViewModel.onImagePickerClicked() } })
         }

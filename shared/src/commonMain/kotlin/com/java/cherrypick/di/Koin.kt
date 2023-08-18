@@ -2,6 +2,7 @@ package com.java.cherrypick.di
 
 import com.java.cherrypick.feature.auth.di.authModule
 import com.java.cherrypick.feature.auth.di.permissionModule
+import com.java.cherrypick.feature.location.di.locationModule
 import com.java.cherrypick.feature.upload.di.uploadModule
 import com.java.cherrypick.networkInfra.di.networkModule
 import org.koin.core.context.startKoin
@@ -16,7 +17,8 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
             authModule,
             permissionModule,
             platformModule(),
-            uploadModule
+            uploadModule,
+            locationModule
         )
     }
 
