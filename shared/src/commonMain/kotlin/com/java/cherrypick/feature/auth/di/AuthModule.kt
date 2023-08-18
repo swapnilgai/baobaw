@@ -26,5 +26,5 @@ val authModule = module {
 
 
 val permissionModule = module {
-    single<PermissionViewModel> { PermissionViewModel() }
+    single<PermissionViewModel> { PermissionViewModel(get()) }
 }
