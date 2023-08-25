@@ -2,6 +2,7 @@ package com.java.cherrypick.feature.auth.presentation
 
 import com.java.cherrypick.AppConstants.RoutIds.imagePickerScreen
 import com.java.cherrypick.feature.location.interactor.LocationInteractor
+import com.java.cherrypick.interactor.interactorLaunch
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import dev.icerock.moko.geo.LocationTracker
 import dev.icerock.moko.permissions.DeniedAlwaysException
@@ -19,7 +20,7 @@ data class PermissionContent(val permissionState: PermissionState = PermissionSt
 class PermissionViewModel(val locationInteractor: LocationInteractor): BaseViewModel<PermissionContent>(initialContent = PermissionContent()) {
 
     fun requestPermission(permission: Permission, permissionsController: PermissionsController) {
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             try {
                 setLoading()
                 permissionsController.providePermission(permission)
@@ -34,7 +35,7 @@ class PermissionViewModel(val locationInteractor: LocationInteractor): BaseViewM
     }
 
     fun getCurrentLocation(locationTracker: LocationTracker) {
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             try {
                 setLoading()
                 locationTracker.startTracking()
@@ -54,7 +55,7 @@ class PermissionViewModel(val locationInteractor: LocationInteractor): BaseViewM
     }
 
     fun updateLocation(locationTracker: LocationTracker){
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             try {
                 setLoading()
                 locationTracker.startTracking()

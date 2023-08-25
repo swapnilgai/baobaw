@@ -31,9 +31,9 @@ suspend fun <T> Interactor.withInteractorContext(
     val context = InteractorDispatcherProvider.dispatcher + InteractorCoroutineContextElement(true)
 
     return withContext(context) {
-        val cacheResult : T? = if (isCachellowed && cacheOption != null) ({
-            cache.get(cacheOption.key)
-        }) as T? else {
+        val cacheResult : T? = if (isCachellowed && cacheOption != null) {
+            cache.get(cacheOption.key) as T?
+        } else {
             null
         }
         return@withContext if (cacheResult != null) {
@@ -49,8 +49,15 @@ suspend fun <T> Interactor.withInteractorContext(
                         delay(retryOption.delayForRetryAttempt(attemptIndex))
                     }
 
+
                     blockResult = coroutineScope {
-                        block()
+                        if(attemptIndex > 0 && retryOption.forceRefreshDuringRetry){
+                            withContext(CacheCoroutineContextElement(setCache = false)){
+                                    block()
+                            }
+                        } else {
+                            block()
+                        }
                     }
                     // check if we should retry based on the given 'retryCondition' and the result of the block
                     if (attemptIndex < retryOption.retryCount && retryOption.retryCondition(
@@ -61,6 +68,12 @@ suspend fun <T> Interactor.withInteractorContext(
                     ) {
                         continue
                     }
+                    cacheOption?.run {
+                        if(allowWrite){
+                            cache.put(key, blockResult as Any)
+                        }
+                    }
+
                     break
                 } catch (e: Exception) {
                     // check if we should await a retry based on the 'interactorErrorHandling'
