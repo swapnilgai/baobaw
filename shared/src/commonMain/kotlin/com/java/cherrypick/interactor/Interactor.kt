@@ -1,8 +1,9 @@
 package com.java.cherrypick.interactor
 
+import com.java.cherrypick.cache.CacheKey
+import com.java.cherrypick.cache.LRUCache
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
-import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -16,23 +17,35 @@ import kotlin.coroutines.coroutineContext
 interface Interactor
 
 private var retryRequestDeferred: Deferred<Unit>? = null
+
+private val cache = LRUCache<CacheKey, Any>(100)
 suspend fun <T> Interactor.withInteractorContext(
+    cacheOption: CacheOption ?= null,
     retryOption: RetryOption<T> = RetryOption(0),
     block: suspend CoroutineScope.() -> T
 ) : T {
 
+    val isCachellowed = coroutineContext[CacheCoroutineContextElement]?.setCache == true
     val interactorErrorHandling = coroutineContext[InteractorErrorHandler]
     val isFirstInteractorCall = coroutineContext[InteractorCoroutineContextElement] == null
     val context = InteractorDispatcherProvider.dispatcher + InteractorCoroutineContextElement(true)
 
     return withContext(context) {
+        val cacheResult : T? = if (isCachellowed && cacheOption != null) ({
+            cache.get(cacheOption.key)
+        }) as T? else {
+            null
+        }
+        return@withContext if (cacheResult != null) {
+            cacheResult
+        } else {
             var attemptIndex = -1
             var blockResult: T
             loop@ while (true) {
                 attemptIndex++
                 try {
                     retryRequestDeferred?.await()
-                    if(attemptIndex > 0){
+                    if (attemptIndex > 0) {
                         delay(retryOption.delayForRetryAttempt(attemptIndex))
                     }
 
@@ -40,16 +53,22 @@ suspend fun <T> Interactor.withInteractorContext(
                         block()
                     }
                     // check if we should retry based on the given 'retryCondition' and the result of the block
-                    if(attemptIndex < retryOption.retryCount && retryOption.retryCondition(Result.success(blockResult))){
+                    if (attemptIndex < retryOption.retryCount && retryOption.retryCondition(
+                            Result.success(
+                                blockResult
+                            )
+                        )
+                    ) {
                         continue
                     }
                     break
                 } catch (e: Exception) {
                     // check if we should await a retry based on the 'interactorErrorHandling'
                     val awaitRetryOptions = interactorErrorHandling?.awaitRetryOptionOrNull(e)
-                    if(awaitRetryOptions != null){
-                        if(retryRequestDeferred == null){ //reuse existing deferred if available
-                            retryRequestDeferred = async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
+                    if (awaitRetryOptions != null) {
+                        if (retryRequestDeferred == null) { //reuse existing deferred if available
+                            retryRequestDeferred =
+                                async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
                             retryRequestDeferred?.await()
                             retryRequestDeferred = null
                         }
@@ -57,7 +76,7 @@ suspend fun <T> Interactor.withInteractorContext(
                     }
 
                     // check if we should retry based on the given 'retryCondition' and the exception thrown by the block
-                    if(retryOption.retryCondition(Result.failure(e)) && attemptIndex < retryOption.retryCount){
+                    if (retryOption.retryCondition(Result.failure(e)) && attemptIndex < retryOption.retryCount) {
                         continue
                     }
                     // we have determined we should not attempt to retry: throw an exception
@@ -70,6 +89,7 @@ suspend fun <T> Interactor.withInteractorContext(
             }
             return@withContext blockResult
         }
+    }
 }
 
 private data class InteractorCoroutineContextElement(
