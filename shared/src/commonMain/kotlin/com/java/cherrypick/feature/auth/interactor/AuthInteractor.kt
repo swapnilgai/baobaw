@@ -1,8 +1,11 @@
 package com.java.cherrypick.feature.auth.interactor
 
 import com.java.cherrypick.AppConstants
+import com.java.cherrypick.cache.AuthSessionCacheKey
+import com.java.cherrypick.cache.UserExistCacheKey
 import com.java.cherrypick.feature.auth.model.SignUpData
 import com.java.cherrypick.feature.auth.presentation.AuthContent
+import com.java.cherrypick.interactor.CacheOption
 import com.java.cherrypick.interactor.Interactor
 import com.java.cherrypick.interactor.RetryOption
 import com.java.cherrypick.interactor.withInteractorContext
@@ -89,7 +92,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun getCurrentSession() : UserSession? {
-        return withInteractorContext {
+        return withInteractorContext(cacheOption = CacheOption(key = AuthSessionCacheKey())) {
             supabaseClient.gotrue.currentSessionOrNull()
         }
     }
@@ -110,7 +113,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun phoneExists(phoneNumber: String): Boolean? {
-        return withInteractorContext {
+        return withInteractorContext(cacheOption = CacheOption(key = UserExistCacheKey(phoneNumber))) {
             val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
             (result as JsonElement).jsonPrimitive.content.toBoolean()
         }

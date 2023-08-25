@@ -39,7 +39,4 @@ class App: Application(), KoinComponent {
         }
 
     }
-
-
-
 }

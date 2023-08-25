@@ -3,6 +3,7 @@ package com.java.cherrypick.feature.auth.presentation
 import com.java.cherrypick.AppConstants
 import com.java.cherrypick.SharedRes
 import com.java.cherrypick.feature.auth.interactor.AuthInteractor
+import com.java.cherrypick.interactor.interactorLaunch
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -10,7 +11,7 @@ import kotlinx.coroutines.launch
 class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewModel<VerifyUserState>(initialContent = VerifyUserState()) {
 
     fun sendOpt(phoneNumber: String){
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             setLoading()
             authInteractor.sendOptp(phoneNumber)
             delay(100)
@@ -19,7 +20,7 @@ class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewM
     }
 
     fun verifyOpt(phoneNumber: String, opt: String) {
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             setLoading()
             authInteractor.verifyOpt(phoneNumber = phoneNumber, opt = opt)
             val result = authInteractor.getCurrentSession()

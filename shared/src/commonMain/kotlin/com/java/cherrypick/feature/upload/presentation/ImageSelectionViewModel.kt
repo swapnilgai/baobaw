@@ -1,6 +1,7 @@
 package com.java.cherrypick.feature.upload.presentation
 
 import com.java.cherrypick.feature.upload.interactor.ImageUploadInteractor
+import com.java.cherrypick.interactor.interactorLaunch
 import com.java.cherrypick.presentationInfra.BaseViewModel
 import dev.icerock.moko.media.Bitmap
 import dev.icerock.moko.media.picker.MediaPickerController
@@ -20,7 +21,7 @@ class ImageSelectionViewModel(private val imageUploadInteractor: ImageUploadInte
     }
 
     private fun selectImage(source: MediaSource, mediaPickerController: MediaPickerController) {
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
                 @Suppress("SwallowedException")
                 val image = mediaPickerController.pickImage(source)
                 setContent { copy(data = image) }
@@ -28,7 +29,7 @@ class ImageSelectionViewModel(private val imageUploadInteractor: ImageUploadInte
     }
 
     fun uploadImage(bitmap: Bitmap, index: Int = 1){
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             setLoading()
             imageUploadInteractor.imageUpload(bitmap, index)
             setContent {
@@ -38,7 +39,7 @@ class ImageSelectionViewModel(private val imageUploadInteractor: ImageUploadInte
     }
 
     fun deleteImage(index: Int = 1){
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             setLoading()
             imageUploadInteractor.deleteImage(index)
             setContent {
