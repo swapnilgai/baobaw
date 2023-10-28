@@ -3,7 +3,7 @@
 import shared
 
 /**
- * selector: ClassContext/cherrypick:shared/com/java/cherrypick/presentationInfra/UiEvent */
+ * selector: ClassContext/baobaw:shared/com/java/baobaw/presentationInfra/UiEvent */
 public enum UiEventKs<ContentT : AnyObject> {
 
   case content(UiEventContent<ContentT>)

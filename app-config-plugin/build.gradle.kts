@@ -13,6 +13,6 @@ repositories {
 gradlePlugin {
     plugins.register("app-config-plugin") {
         id = "app-config-plugin"
-        implementationClass = "com.java.cherrypick.BuildPlugin"
+        implementationClass = "com.java.baobaw.BuildPlugin"
     }
 }

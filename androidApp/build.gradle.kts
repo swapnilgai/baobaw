@@ -1,16 +1,14 @@
-
-
 plugins {
     id("com.android.application")
     kotlin("android")
-    id("com.google.gms.google-services")
+//    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.java.cherrypick.android"
+    namespace = "com.java.baobaw.android"
     compileSdk = 33
     defaultConfig {
-        applicationId = "com.java.cherrypick.android"
+        applicationId = "com.java.baobaw.android"
         minSdk = 24
         targetSdk = 33
         versionCode = 1
