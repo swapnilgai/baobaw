@@ -106,7 +106,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.java.cherrypick"
+    namespace = "com.java.baobaw"
     compileSdk = 33
     defaultConfig {
         minSdk = 24
@@ -114,7 +114,7 @@ android {
 }
 
 buildkonfig {
-    packageName = "com.java.cherrypick"
+    packageName = "com.java.baobaw"
     defaultConfigs {
     }
 
@@ -139,11 +139,11 @@ buildkonfig {
 
 kswift {
     install(dev.icerock.moko.kswift.plugin.feature.SealedToSwiftEnumFeature) {
-        filter = includeFilter("ClassContext/cherrypick:shared/com/java/cherrypick/presentationInfra/UiEvent")
+        filter = includeFilter("ClassContext/baobaw:shared/com/java/baobaw/presentationInfra/UiEvent")
     }
 }
 
 multiplatformResources {
-    multiplatformResourcesPackage = "com.java.cherrypick"
+    multiplatformResourcesPackage = "com.java.baobaw"
     multiplatformResourcesClassName = "SharedRes"
 }
