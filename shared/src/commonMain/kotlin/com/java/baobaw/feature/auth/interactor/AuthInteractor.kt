@@ -1,10 +1,10 @@
 package com.java.baobaw.feature.auth.interactor
 
-import com.java.baobaw.AppConstants
 import com.java.baobaw.cache.AuthSessionCacheKey
 import com.java.baobaw.cache.UserExistCacheKey
 import com.java.baobaw.feature.auth.model.SignUpData
 import com.java.baobaw.feature.auth.presentation.AuthContent
+import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.RetryOption
@@ -30,15 +30,13 @@ interface AuthInteractor: Interactor {
     suspend fun login(userName: String, password: String)
     suspend fun verifyOpt(opt: String, phoneNumber: String)
     suspend fun sendOptp(phoneNumber: String): Unit
-    suspend fun getCurrentSession() : UserSession?
     suspend fun logOut()
     suspend fun signIn(phoneNumber: String, password: String)
     suspend fun phoneExists(phoneNumber: String): Boolean?
     suspend fun refreshToken()
-    suspend fun getCurrentUserId(): String?
 }
 
-class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInteractor {
+class AuthInteractorImple(private val supabaseClient: SupabaseClient, val seasonInteractive: SeasonInteractor): AuthInteractor {
 
     private val authMutex = Mutex()
     override suspend fun signUp(signUpData: SignUpData): Email.Result? {
@@ -91,12 +89,6 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
         }
     }
 
-    override suspend fun getCurrentSession() : UserSession? {
-        return withInteractorContext(cacheOption = CacheOption(key = AuthSessionCacheKey())) {
-            supabaseClient.gotrue.currentSessionOrNull()
-        }
-    }
-
     override suspend fun logOut() {
         withInteractorContext {
             supabaseClient.gotrue.logout()
@@ -124,16 +116,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
             retryCount = 3,
             retryCondition = { it.getOrThrow() != null }
         )) {
-            authMutex.withLock {
                 supabaseClient.gotrue.refreshCurrentSession()
-            }
-        }
-    }
-
-
-    override suspend fun getCurrentUserId(): String? {
-        return withInteractorContext {
-            supabaseClient.gotrue.currentUserOrNull()?.id
         }
     }
 }

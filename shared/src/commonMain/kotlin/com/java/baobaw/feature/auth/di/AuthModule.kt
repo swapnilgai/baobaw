@@ -17,13 +17,12 @@ class AuthKoinViewModelModule : KoinComponent {
 }
 
 val authModule = module {
-    single<AuthInteractor> { AuthInteractorImple(get()) }
-    single<AuthViewModel> { AuthViewModel(get(), get()) }
-    single<VerifyUserViewModel> { VerifyUserViewModel(get()) }
-    single<LoginViewModel> { LoginViewModel(get()) }
+    single<AuthInteractor> { AuthInteractorImple(get(), get()) }
+    single<AuthViewModel> { AuthViewModel(get(), get(), get()) }
+    single<VerifyUserViewModel> { VerifyUserViewModel(get(), get()) }
+    single<LoginViewModel> { LoginViewModel(get(), get()) }
     single<ResetPasswordViewModel> { ResetPasswordViewModel(get()) }
 }
-
 
 val permissionModule = module {
     single<PermissionViewModel> { PermissionViewModel(get()) }

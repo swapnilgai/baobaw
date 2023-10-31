@@ -3,12 +3,13 @@ package com.java.baobaw.feature.auth.presentation
 import com.java.baobaw.AppConstants
 import com.java.baobaw.SharedRes
 import com.java.baobaw.feature.auth.interactor.AuthInteractor
+import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewModel<VerifyUserState>(initialContent = VerifyUserState()) {
+class VerifyUserViewModel(private val authInteractor: AuthInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<VerifyUserState>(initialContent = VerifyUserState()) {
 
     fun sendOpt(phoneNumber: String){
         viewModelScope.interactorLaunch {
@@ -23,7 +24,7 @@ class VerifyUserViewModel(private val authInteractor: AuthInteractor): BaseViewM
         viewModelScope.interactorLaunch {
             setLoading()
             authInteractor.verifyOpt(phoneNumber = phoneNumber, opt = opt)
-            val result = authInteractor.getCurrentSession()
+            val result = seasonInteractor.getCurrentSession()
             if(result?.user != null){
                 navigate(
                     com.java.baobaw.AppConstants.RoutIds.userInput
