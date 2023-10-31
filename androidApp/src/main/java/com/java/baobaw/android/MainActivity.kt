@@ -1,7 +1,6 @@
 package com.java.baobaw.android
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,10 +11,14 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.java.baobaw.android.navigation.NavigationGraph
+import com.java.baobaw.feature.common.presentation.MainViewModel
+import org.koin.android.ext.android.inject
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val mainViewModel by inject<MainViewModel>()
+        //mainViewModel.initCompatibilityBatchInBackground()
 
         setContent {
             val navController = rememberNavController()

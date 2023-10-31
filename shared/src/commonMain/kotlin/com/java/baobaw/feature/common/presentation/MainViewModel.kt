@@ -8,8 +8,7 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
     init {
         initCompatibilityBatchInBackground()
     }
-
-    private fun initCompatibilityBatchInBackground() {
+    fun initCompatibilityBatchInBackground() {
         viewModelScope.interactorLaunch {
             compatibilityBatchInteractor.initCompatibilityBatch()
         }
