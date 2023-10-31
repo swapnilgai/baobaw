@@ -2,6 +2,7 @@ package com.java.baobaw.di
 
 import com.java.baobaw.feature.auth.di.authModule
 import com.java.baobaw.feature.auth.di.permissionModule
+import com.java.baobaw.feature.common.di.commonModule
 import com.java.baobaw.feature.location.di.locationModule
 import com.java.baobaw.feature.upload.di.uploadModule
 import com.java.baobaw.networkInfra.di.networkModule
@@ -14,9 +15,10 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
         modules(
             appModule,
             networkModule,
+            commonModule,
             authModule,
             permissionModule,
-            com.java.baobaw.di.platformModule(),
+            platformModule(),
             uploadModule,
             locationModule
         )

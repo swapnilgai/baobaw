@@ -6,5 +6,6 @@ data class RetryOption<T>(
     val maxDelay: Long = 1000,
     val delayIncrementalFactor: Double = 2.0,
     val retryCondition: (Result<T>) -> Boolean = {it.isFailure},
-    val forceRefreshDuringRetry: Boolean = true
+    val forceRefreshDuringRetry: Boolean = true,
+    val throwException: Boolean = true
 )

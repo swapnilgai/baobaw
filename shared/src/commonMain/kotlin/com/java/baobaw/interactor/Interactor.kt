@@ -21,88 +21,60 @@ private var retryRequestDeferred: Deferred<Unit>? = null
 private val cache =
     LRUCache<CacheKey, Any>(100)
 suspend fun <T> Interactor.withInteractorContext(
-    cacheOption: CacheOption ?= null,
+    cacheOption: CacheOption? = null,
     retryOption: RetryOption<T> = RetryOption(0),
     block: suspend CoroutineScope.() -> T
-) : T {
-
-    val isCachellowed = coroutineContext[CacheCoroutineContextElement]?.setCache == true
+): T {
+    val isCacheAllowed = coroutineContext[CacheCoroutineContextElement]?.setCache == true
     val interactorErrorHandling = coroutineContext[InteractorErrorHandler]
     val isFirstInteractorCall = coroutineContext[InteractorCoroutineContextElement] == null
     val context = InteractorDispatcherProvider.dispatcher + InteractorCoroutineContextElement(true)
 
     return withContext(context) {
-        val cacheResult : T? = if (isCachellowed && cacheOption != null) {
-            cache.get(cacheOption.key) as T?
-        } else {
-            null
+        cacheOption?.takeIf { isCacheAllowed }?.key?.let { key ->
+            return@withContext cache.get(key) as T
         }
-        return@withContext if (cacheResult != null) {
-            cacheResult
-        } else {
-            var attemptIndex = -1
-            var blockResult: T
-            loop@ while (true) {
-                attemptIndex++
-                try {
-                    retryRequestDeferred?.await()
-                    if (attemptIndex > 0) {
-                        delay(retryOption.delayForRetryAttempt(attemptIndex))
-                    }
+        var attemptIndex = 0
+        var blockResult: T
+        while (true) {
+            try {
+                retryRequestDeferred?.await()
+                retryRequestDeferred = null
 
+                if (attemptIndex > 0) delay(retryOption.delayForRetryAttempt(attemptIndex))
 
-                    blockResult = coroutineScope {
-                        if(attemptIndex > 0 && retryOption.forceRefreshDuringRetry){
-                            withContext(CacheCoroutineContextElement(setCache = false)){
-                                    block()
-                            }
-                        } else {
-                            block()
-                        }
-                    }
-                    // check if we should retry based on the given 'retryCondition' and the result of the block
-                    if (attemptIndex < retryOption.retryCount && retryOption.retryCondition(
-                            Result.success(
-                                blockResult
-                            )
-                        )
-                    ) {
-                        continue
-                    }
-                    cacheOption?.run {
-                        if(allowWrite){
-                            cache.put(key, blockResult as Any)
-                        }
-                    }
-
-                    break
-                } catch (e: Exception) {
-                    // check if we should await a retry based on the 'interactorErrorHandling'
-                    val awaitRetryOptions = interactorErrorHandling?.awaitRetryOptionOrNull(e)
-                    if (awaitRetryOptions != null) {
-                        if (retryRequestDeferred == null) { //reuse existing deferred if available
-                            retryRequestDeferred =
-                                async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
-                            retryRequestDeferred?.await()
-                            retryRequestDeferred = null
-                        }
-                        continue
-                    }
-
-                    // check if we should retry based on the given 'retryCondition' and the exception thrown by the block
-                    if (retryOption.retryCondition(Result.failure(e)) && attemptIndex < retryOption.retryCount) {
-                        continue
-                    }
-                    // we have determined we should not attempt to retry: throw an exception
-                    throw when {
-                        !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
-                        e is HttpRequestException || e is RestException -> e.toInteractorException()
-                        else -> e.toInteractorException()
+                blockResult = coroutineScope {
+                    if (attemptIndex > 0 && retryOption.forceRefreshDuringRetry) {
+                        withContext(CacheCoroutineContextElement(setCache = false)) { block() }
+                    } else {
+                        block()
                     }
                 }
+
+                if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(Result.success(blockResult))) {
+                    break
+                }
+            } catch (e: Exception) {
+                if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(Result.failure(e))) {
+                    val awaitRetryOptions = interactorErrorHandling?.awaitRetryOptionOrNull(e)
+                    if (awaitRetryOptions != null && retryRequestDeferred == null) {
+                        retryRequestDeferred = async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
+                        continue
+                    }
+
+                    if (retryOption.throwException)
+                        throw when {
+                            !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
+                            e is HttpRequestException || e is RestException -> e.toInteractorException()
+                            else -> e.toInteractorException()
+                        }
+                }
             }
-            return@withContext blockResult
+            attemptIndex++
         }
+
+        cacheOption?.takeIf { it.allowWrite }?.let { cache.put(it.key, blockResult as Any) }
+        blockResult
     }
 }
 

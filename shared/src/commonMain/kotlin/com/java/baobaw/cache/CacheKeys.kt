@@ -1,7 +1,8 @@
 package com.java.baobaw.cache
 
 
-data class AuthSessionCacheKey(val key: String = "AuthSessionCacheKey"):
-    com.java.baobaw.cache.CacheKey
+data class AuthSessionCacheKey(val key: String = "AuthSessionCacheKey"): CacheKey
 
-data class UserExistCacheKey(val key: String): com.java.baobaw.cache.CacheKey
+data class UserExistCacheKey(val key: String): CacheKey
+
+data class CurrentUserCacheKey(val key: String = "CurrentUserCacheKey"): CacheKey
