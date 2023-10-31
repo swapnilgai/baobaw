@@ -3,17 +3,18 @@ package com.java.baobaw.feature.auth.presentation
 import com.java.baobaw.AppConstants
 import com.java.baobaw.SharedRes
 import com.java.baobaw.feature.auth.interactor.AuthInteractor
+import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val authInteractor: AuthInteractor): BaseViewModel<Unit>(initialContent = Unit) {
+class LoginViewModel(private val authInteractor: AuthInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<Unit>(initialContent = Unit) {
 
     fun signIn(phoneNumber: String, password: String) {
         viewModelScope.interactorLaunch {
             setLoading()
             authInteractor.signIn(phoneNumber = phoneNumber, password = password)
-            val result = authInteractor.getCurrentSession()
+            val result = seasonInteractor.getCurrentSession()
             if(result?.user != null){
                 navigate(
                     com.java.baobaw.AppConstants.RoutIds.userInput
