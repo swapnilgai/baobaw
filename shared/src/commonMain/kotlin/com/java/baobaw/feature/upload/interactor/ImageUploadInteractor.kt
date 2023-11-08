@@ -40,7 +40,7 @@ class ImageUploadInteractorImpl(private val supabaseClient: SupabaseClient): Ima
                     // function to check if image is valid and does not contain any wrong content
                     // returns true if does not contain any wrong image
                     val result = supabaseClient.postgrest.rpc(
-                        AppConstants.Queries.validateImge,
+                        AppConstants.Queries.IS_IMAGE_APPROPRIATE,
                         publicImageUrl
                     ).body
                     if ((result as JsonElement).jsonPrimitive.content.toBoolean()) {

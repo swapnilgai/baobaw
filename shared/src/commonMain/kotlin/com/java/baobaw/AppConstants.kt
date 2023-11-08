@@ -23,8 +23,8 @@ object AppConstants {
     }
 
     object Queries{
-        val userExistWithPhone  = "phone_exists"
-        val validateImge  = "validate_image"
-        val updateImageUrl  = "update_image_url"
+        const val userExistWithPhone  = "phone_exists"
+        const val  IS_IMAGE_APPROPRIATE = "is_image_appropriate"
+        const val updateImageUrl  = "update_image_url"
     }
 }
