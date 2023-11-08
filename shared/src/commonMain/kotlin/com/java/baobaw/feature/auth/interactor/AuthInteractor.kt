@@ -1,7 +1,6 @@
 package com.java.baobaw.feature.auth.interactor
 
 import com.java.baobaw.AppConstants
-import com.java.baobaw.cache.AuthSessionCacheKey
 import com.java.baobaw.cache.UserExistCacheKey
 import com.java.baobaw.feature.auth.model.SignUpData
 import com.java.baobaw.feature.auth.presentation.AuthContent
@@ -15,11 +14,9 @@ import io.github.jan.supabase.gotrue.OtpType
 import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.gotrue.providers.builtin.Phone
-import io.github.jan.supabase.gotrue.user.UserSession
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -55,13 +52,18 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient, val season
 
     override suspend fun signUp(phoneNumber: String, password: String): AuthContent? {
         return withInteractorContext {
-            supabaseClient.gotrue.signUpWith(Phone) {
-                this.phoneNumber = phoneNumber
+            val str = phoneNumber.removePrefix("+")
+//            supabaseClient.gotrue.signUpWith(Phone) {
+//                this.phoneNumber = phoneNumber
+//                this.password = password
+//            }
+            supabaseClient.gotrue.signUpWith(Email) {
+                this.email = "swa@yahoo.com"
                 this.password = password
             }?.let { result ->
                 AuthContent(
                     id = result.id,
-                    phone = result.phone,
+                    phone = "",
                     confirmationMessage = "${result.confirmationSentAt.toString()}",
                 )
             }
@@ -98,16 +100,20 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient, val season
 
     override suspend fun signIn(phoneNumber: String, password: String) {
         withInteractorContext {
-            supabaseClient.gotrue.loginWith(Phone) {
-                this.phoneNumber = phoneNumber
+            supabaseClient.gotrue.loginWith(Email) {
+                this.email = "swa@yahoo.com"
                 this.password = password
             }
+//            supabaseClient.gotrue.loginWith(Phone) {
+//                this.phoneNumber = phoneNumber
+//                this.password = password
+//            }
         }
     }
 
     override suspend fun phoneExists(phoneNumber: String): Boolean? {
-        return withInteractorContext(cacheOption = CacheOption(key = UserExistCacheKey(phoneNumber))) {
-            val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
+        return withInteractorContext() {
+            val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.PHONE_EXISTS, phoneNumber.numberOnly().toPhoneExist()).body
             (result as JsonElement).jsonPrimitive.content.toBoolean()
         }
     }

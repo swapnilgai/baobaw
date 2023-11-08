@@ -7,7 +7,6 @@ import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import com.java.baobaw.util.Preferences
 import com.java.baobaw.util.getNavigationUrlWithoutBrackets
-import kotlinx.coroutines.launch
 
 class AuthViewModel(private val authInteractor: AuthInteractor, private val preferences: Preferences, private val seasonInteractor: SeasonInteractor): BaseViewModel<AuthState>(initialContent = AuthState()) {
 
@@ -21,8 +20,12 @@ class AuthViewModel(private val authInteractor: AuthInteractor, private val pref
                     )
                 }
             }
+            //TODO navigate to VERIFY_OPT screen
+//            navigate(
+//                getNavigationUrlWithoutBrackets(AppConstants.RoutIds.VERIFY_OPT, listOf(phoneNumber, true))
+//            )
             navigate(
-                getNavigationUrlWithoutBrackets(com.java.baobaw.AppConstants.RoutIds.verifyOpt, listOf(phoneNumber, true))
+                AppConstants.RoutIds.USER_INPUT
             )
         }
     }
@@ -30,7 +33,7 @@ class AuthViewModel(private val authInteractor: AuthInteractor, private val pref
         viewModelScope.interactorLaunch {
             authInteractor.refreshToken()
             seasonInteractor.getCurrentUserId()?.let {
-                preferences.setString(com.java.baobaw.AppConstants.Auth.currentUser, it)
+                preferences.setString(com.java.baobaw.AppConstants.Auth.CURRENT_USER, it)
             }
         }
     }

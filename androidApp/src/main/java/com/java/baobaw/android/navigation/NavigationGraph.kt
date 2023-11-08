@@ -8,7 +8,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.java.baobaw.AppConstants
 import com.java.baobaw.android.feature.auth.EnterPhoneScreen
 import com.java.baobaw.android.feature.auth.LoginScreen
 import com.java.baobaw.android.feature.auth.ResetPasswordScreen
@@ -16,7 +15,6 @@ import com.java.baobaw.android.feature.auth.VerifyOtpScreen
 import com.java.baobaw.android.feature.permissions.PermissionsScreen
 import com.java.baobaw.android.feature.photo_picker.PhotoPickerScreen
 import com.java.baobaw.android.feature.userinput.UserInputScreen
-import com.java.baobaw.feature.upload.presentation.ImageSelectionViewModel
 import com.java.baobaw.util.getNavigationUrl
 import org.koin.androidx.compose.get
 
@@ -29,15 +27,15 @@ fun NavigationGraph(navController: NavHostController) {
         composable(route = Screens.SignUp.route){
             EnterPhoneScreen(authViewModel = get(), navController)
         }
-        composable(route = getNavigationUrl(baseRoute = Screens.VerifyOpt.route, listOf(com.java.baobaw.AppConstants.NavigationParam.phoneNumber, com.java.baobaw.AppConstants.NavigationParam.sendOpt)),
-                arguments = listOf(navArgument(com.java.baobaw.AppConstants.NavigationParam.phoneNumber){
+        composable(route = getNavigationUrl(baseRoute = Screens.VerifyOpt.route, listOf(com.java.baobaw.AppConstants.NavigationParam.PHONE_NUMBER, com.java.baobaw.AppConstants.NavigationParam.SEND_OPT)),
+                arguments = listOf(navArgument(com.java.baobaw.AppConstants.NavigationParam.PHONE_NUMBER){
                 type = NavType.StringType
-            }, navArgument(com.java.baobaw.AppConstants.NavigationParam.sendOpt){
+            }, navArgument(com.java.baobaw.AppConstants.NavigationParam.SEND_OPT){
                     type = NavType.BoolType
                 }
         )){ navBackStackEntry ->
-            val phoneNumber = navBackStackEntry.arguments?.getString(com.java.baobaw.AppConstants.NavigationParam.phoneNumber)?: ""
-            val sendOpt = navBackStackEntry.arguments?.getBoolean(com.java.baobaw.AppConstants.NavigationParam.sendOpt)?: false
+            val phoneNumber = navBackStackEntry.arguments?.getString(com.java.baobaw.AppConstants.NavigationParam.PHONE_NUMBER)?: ""
+            val sendOpt = navBackStackEntry.arguments?.getBoolean(com.java.baobaw.AppConstants.NavigationParam.SEND_OPT)?: false
             VerifyOtpScreen(verifyUserViewModel = get(), phoneNumber = phoneNumber, sendOpt = sendOpt, navController = navController)
         }
         composable(route = Screens.UserInput.route){

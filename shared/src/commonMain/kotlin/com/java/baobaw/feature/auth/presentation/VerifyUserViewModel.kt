@@ -7,7 +7,6 @@ import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class VerifyUserViewModel(private val authInteractor: AuthInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<VerifyUserState>(initialContent = VerifyUserState()) {
 
@@ -27,10 +26,10 @@ class VerifyUserViewModel(private val authInteractor: AuthInteractor, private va
             val result = seasonInteractor.getCurrentSession()
             if(result?.user != null){
                 navigate(
-                    com.java.baobaw.AppConstants.RoutIds.userInput
+                    AppConstants.RoutIds.USER_INPUT
                 )
             }
-            else setError(message = com.java.baobaw.SharedRes.strings.token_has_expired_or_is_invalid)
+            else setError(message = SharedRes.strings.token_has_expired_or_is_invalid)
         }
     }
 }

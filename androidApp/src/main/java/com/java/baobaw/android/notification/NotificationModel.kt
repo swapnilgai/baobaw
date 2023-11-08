@@ -3,8 +3,8 @@ package com.java.baobaw.android.notification
 import android.content.res.Resources
 import androidx.annotation.StringRes
 import com.google.firebase.messaging.RemoteMessage
+import com.java.baobaw.android.R
 import java.util.Locale
-
 
 sealed class NotificationModel {
 
@@ -55,7 +55,9 @@ sealed class NotificationModel {
 enum class NotificationChannel(@StringRes val descriptionRes: Int){
     DEFAULT(descriptionRes = com.java.baobaw.R.string.ok){
         override fun id(resources: Resources): String {
-            return resources.getString(com.java.baobaw.R.string.ok)
+            return "OK"
+
+            //resources.getString(R.string.ok)
         }
     };
 

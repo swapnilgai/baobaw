@@ -7,5 +7,5 @@ import dev.icerock.moko.resources.StringResource
 
 @Composable
 fun stringResource(id: StringResource, vararg args: Any): String {
-    return com.java.baobaw.util.Strings(LocalContext.current).get(id, args.toList())
+    return Strings(LocalContext.current).get(id, args.toList())
 }
