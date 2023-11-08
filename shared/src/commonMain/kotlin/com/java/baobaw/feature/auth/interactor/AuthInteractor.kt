@@ -1,5 +1,6 @@
 package com.java.baobaw.feature.auth.interactor
 
+import com.java.baobaw.AppConstants
 import com.java.baobaw.cache.AuthSessionCacheKey
 import com.java.baobaw.cache.UserExistCacheKey
 import com.java.baobaw.feature.auth.model.SignUpData
@@ -106,7 +107,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient, val season
 
     override suspend fun phoneExists(phoneNumber: String): Boolean? {
         return withInteractorContext(cacheOption = CacheOption(key = UserExistCacheKey(phoneNumber))) {
-            val result =  supabaseClient.postgrest.rpc(com.java.baobaw.AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
+            val result =  supabaseClient.postgrest.rpc(AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
             (result as JsonElement).jsonPrimitive.content.toBoolean()
         }
     }

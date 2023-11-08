@@ -1,12 +1,20 @@
 package com.java.baobaw.feature.upload.interactor
 
+import com.java.baobaw.AppConstants
+import com.java.baobaw.feature.auth.interactor.numberOnly
+import com.java.baobaw.feature.auth.interactor.toBoolean
+import com.java.baobaw.feature.auth.interactor.toPhoneExist
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.withInteractorContext
 import dev.icerock.moko.media.Bitmap
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.exceptions.NotFoundRestException
 import io.github.jan.supabase.gotrue.gotrue
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.storage.storage
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonPrimitive
 
 //data class (val bucket_id: String, val user_id: string)
 
@@ -23,13 +31,28 @@ class ImageUploadInteractorImpl(private val supabaseClient: SupabaseClient): Ima
     override suspend fun imageUpload(bitmap: Bitmap, index: Int) {
        return withInteractorContext {
             supabaseClient.gotrue.currentUserOrNull()?.id?.let { currentUser ->
-                try {
-                    supabaseClient.storage.retrieveBucketById(currentUser)
-                } catch (e: NotFoundRestException){
-                    supabaseClient.storage.createBucket(currentUser)
-                } finally {
-                    supabaseClient.storage[currentUser].upload("$index.png", bitmap.toByteArray(), upsert = true)
+                supabaseClient.storage["Profile"].let { bucket ->
+                    val imagePath = "$currentUser/$index.png"
+                    bucket.upload(
+                        imagePath,
+                        bitmap.toByteArray(),
+                        upsert = true
+                    )
+                    val publicImageUrl = bucket.publicUrl("$currentUser/temp.png")
+                    // function to check if image is valid and does not contain any wrong content
+                    // returns true if does not contain any wrong image
+                    val result = supabaseClient.postgrest.rpc(
+                        AppConstants.Queries.validateImge,
+                        publicImageUrl
+                    ).body
+                    if ((result as JsonElement).jsonPrimitive.content.toBoolean()) {
+                        //upload image url in profile table
+                        supabaseClient.postgrest.rpc(
+                            AppConstants.Queries.updateImageUrl,
+                            publicImageUrl
+                        ).body
                     }
+                }
             }
         }
     }
@@ -41,5 +64,4 @@ class ImageUploadInteractorImpl(private val supabaseClient: SupabaseClient): Ima
             }
         }
     }
-
 }

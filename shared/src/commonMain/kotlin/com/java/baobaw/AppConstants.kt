@@ -24,5 +24,7 @@ object AppConstants {
 
     object Queries{
         val userExistWithPhone  = "phone_exists"
+        val validateImge  = "validate_image"
+        val updateImageUrl  = "update_image_url"
     }
 }
