@@ -26,7 +26,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.java.baobaw.SharedRes
 import com.java.baobaw.android.navigation.navigateToScreen
 import com.java.baobaw.presentationInfra.BaseViewModel
 import com.java.baobaw.presentationInfra.UiEvent

@@ -6,7 +6,6 @@ import com.java.baobaw.feature.auth.interactor.AuthInteractor
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
-import kotlinx.coroutines.launch
 
 class LoginViewModel(private val authInteractor: AuthInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<Unit>(initialContent = Unit) {
 
@@ -17,28 +16,28 @@ class LoginViewModel(private val authInteractor: AuthInteractor, private val sea
             val result = seasonInteractor.getCurrentSession()
             if(result?.user != null){
                 navigate(
-                    com.java.baobaw.AppConstants.RoutIds.userInput
+                    AppConstants.RoutIds.USER_INPUT
                 )
             }
-            else setError(message = com.java.baobaw.SharedRes.strings.invalid_login_credentials)
+            else setError(message = SharedRes.strings.invalid_login_credentials)
         }
     }
 
     fun onSignUpClicked(){
         viewModelScope.interactorLaunch {
-            navigate(com.java.baobaw.AppConstants.RoutIds.signUp)
+            navigate(AppConstants.RoutIds.SIGN_UP)
         }
     }
 
     fun onResetPasswordClicked(){
         viewModelScope.interactorLaunch {
-            navigate(com.java.baobaw.AppConstants.RoutIds.resetPassword)
+            navigate(AppConstants.RoutIds.RESET_PASSWORD)
         }
     }
 
     fun onPermissionsClicked(){
         viewModelScope.interactorLaunch {
-            navigate(com.java.baobaw.AppConstants.RoutIds.permissionsScreen)
+            navigate(AppConstants.RoutIds.PERMISSIONS_SCREEN)
         }
     }
 }

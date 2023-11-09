@@ -8,7 +8,6 @@ import com.java.baobaw.feature.auth.presentation.AuthViewModel
 import com.java.baobaw.model.ENVIRONMENT
 import com.java.baobaw.model.ProjectEnvironment
 import com.onesignal.OneSignal
-import com.java.baobaw.util.Preferences
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.component.KoinComponent
@@ -31,7 +30,7 @@ class App: Application(), KoinComponent {
             OneSignal.Debug.logLevel = LogLevel.VERBOSE
 
         authViewModel.refreshToken().let {
-            preferences.getString(com.java.baobaw.AppConstants.Auth.currentUser)?.let { currentUser ->
+            preferences.getString(AppConstants.Auth.CURRENT_USER)?.let { currentUser ->
                 OneSignal.initWithContext(this, projectEnvironment.onSignalApiKey)
                 OneSignal.login(currentUser)
                 OneSignal.User.pushSubscription.optIn()

@@ -1,6 +1,6 @@
 package com.java.baobaw.feature.auth.presentation
 
-import com.java.baobaw.AppConstants.RoutIds.imagePickerScreen
+import com.java.baobaw.AppConstants.RoutIds.IMAGE_PICKER_SCREEN
 import com.java.baobaw.feature.location.interactor.LocationInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
@@ -11,7 +11,6 @@ import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.PermissionState
 import dev.icerock.moko.permissions.PermissionsController
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 data class LocationContent(val lat: Double = 0.0, val lan: Double = 0.0)
 
@@ -51,7 +50,7 @@ class PermissionViewModel(val locationInteractor: LocationInteractor): BaseViewM
     }
 
     fun onImagePickerClicked(){
-        navigate(imagePickerScreen)
+        navigate(IMAGE_PICKER_SCREEN)
     }
 
     fun updateLocation(locationTracker: LocationTracker){

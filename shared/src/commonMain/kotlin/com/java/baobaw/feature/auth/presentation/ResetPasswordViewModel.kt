@@ -2,7 +2,6 @@ package com.java.baobaw.feature.auth.presentation
 
 import com.java.baobaw.AppConstants
 import com.java.baobaw.SharedRes
-import kotlinx.coroutines.launch
 import com.java.baobaw.feature.auth.interactor.AuthInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
@@ -15,8 +14,8 @@ class ResetPasswordViewModel(private val authInteractor: AuthInteractor): BaseVi
             setLoading()
             val phoneExists = authInteractor.phoneExists(phoneNumber) ?: false
             if(!phoneExists)
-                setError(message = com.java.baobaw.SharedRes.strings.user_does_not_exist_please_sign_up)
-            else navigate(getNavigationUrlWithoutBrackets(com.java.baobaw.AppConstants.RoutIds.verifyOpt, listOf(phoneNumber, true)))
+                setError(message = SharedRes.strings.user_does_not_exist_please_sign_up)
+            else navigate(getNavigationUrlWithoutBrackets(AppConstants.RoutIds.VERIFY_OPT, listOf(phoneNumber, true)))
 
         }
     }
