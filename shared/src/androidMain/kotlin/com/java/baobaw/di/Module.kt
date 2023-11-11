@@ -6,6 +6,6 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
-    single { com.java.baobaw.executor.MainDispatcher() }
-    single { com.java.baobaw.util.Preferences() }
+    single { MainDispatcher() }
+    single { Preferences("BAOBAW") }
 }
