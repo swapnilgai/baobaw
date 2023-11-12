@@ -10,6 +10,7 @@ object Dependencies {
     const val androidCoreKtx = "androidx.core:core-ktx:${Version.androidktxCore}"
     const val androidKotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Version.kotlinVersion}"
     const val koin = "io.insert-koin:koin-core:${Version.koin}"
+    const val mockk = "io.mockk:mockk:${Version.mockk}"
     object Compose {
         const val compiler = "androidx.compose.compiler:compiler:${Version.compose}"
         const val runtime = "androidx.compose.runtime:runtime:${Version.compose}"
@@ -41,7 +42,8 @@ object Dependencies {
             "io.ktor:ktor-client-mock:${Version.ktor}",
             "io.insert-koin:koin-test:${Version.koin}",
             "io.mockk:mockk-common:${Version.mockkCommon}",
-            "app.cash.turbine:turbine:${Version.turbine}"
+            "app.cash.turbine:turbine:${Version.turbine}",
+            junit
         )
 
         val commonKotlin = listOf(
@@ -63,7 +65,7 @@ object Dependencies {
 
         val androidTest = listOf(
             "junit:junit:4.13.2",
-            "io.mockk:mockk:${Version.mockk}",
+            mockk,
             "app.cash.turbine:turbine:${Version.turbine}"
         )
 

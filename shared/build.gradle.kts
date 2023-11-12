@@ -1,3 +1,4 @@
+import Dependencies.mockk
 
 plugins {
     kotlin("multiplatform")
@@ -99,6 +100,10 @@ kotlin {
             iosSimulatorArm64Test.dependsOn(this)
         }
 
+        val androidTest by creating {
+            dependsOn(commonTest)
+        }
+
         val appMain by creating {
             dependsOn(commonMain)
         }
@@ -112,7 +117,9 @@ android {
         minSdk = 24
     }
 }
-
+dependencies {
+    testImplementation(mockk)
+}
 buildkonfig {
     packageName = "com.java.baobaw"
     defaultConfigs {

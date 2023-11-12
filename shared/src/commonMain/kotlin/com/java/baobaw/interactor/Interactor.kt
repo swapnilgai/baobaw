@@ -62,17 +62,17 @@ suspend fun <T> Interactor.withInteractorContext(
                         continue
                     }
 
-                    if (retryOption.throwException)
+                    if (retryOption.throwException) {
                         throw when {
                             !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
                             e is HttpRequestException || e is RestException -> e.toInteractorException()
                             else -> e.toInteractorException()
                         }
+                    } else throw IllegalStateException("State is not valid") //TODO check alternative to break loop
                 }
             }
             attemptIndex++
         }
-
         cacheOption?.takeIf { it.allowWrite }?.let { cache.put(it.key, blockResult as Any) }
         blockResult
     }
