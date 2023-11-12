@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "com.java.baobaw.android"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
     }
@@ -18,7 +18,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources {
