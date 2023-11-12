@@ -71,6 +71,7 @@ kotlin {
                     implementation(it)
                 }
             }
+            dependsOn(commonMain)
         }
 
         val iosX64Main by getting
@@ -112,7 +113,7 @@ kotlin {
 
 android {
     namespace = "com.java.baobaw"
-    compileSdk = 33
+    compileSdk = 34
     defaultConfig {
         minSdk = 24
     }

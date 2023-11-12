@@ -2,7 +2,7 @@ import com.java.baobaw.feature.common.interactor.COMPATIBILITY_BATCH
 import com.java.baobaw.feature.common.interactor.CompatibilityBatchInteractorImpl
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.networkInfra.SupabaseService
-import io.github.jan.supabase.postgrest.query.PostgrestResult
+import io.github.jan.supabase.postgrest.result.PostgrestResult
 import io.ktor.http.Headers
 import io.mockk.coEvery
 import io.mockk.coVerify

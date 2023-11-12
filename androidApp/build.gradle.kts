@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.java.baobaw.android"
-    compileSdk = 33
+    compileSdk = 34
     defaultConfig {
         applicationId = "com.java.baobaw.android"
         minSdk = 24
@@ -18,7 +18,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources {

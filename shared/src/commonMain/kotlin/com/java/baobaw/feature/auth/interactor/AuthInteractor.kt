@@ -9,6 +9,7 @@ import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.withInteractorContext
+import com.java.baobaw.util.Preferences
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.OtpType
 import io.github.jan.supabase.gotrue.gotrue
@@ -34,7 +35,7 @@ interface AuthInteractor: Interactor {
     suspend fun refreshToken()
 }
 
-class AuthInteractorImple(private val supabaseClient: SupabaseClient, val seasonInteractive: SeasonInteractor): AuthInteractor {
+class AuthInteractorImple(private val supabaseClient: SupabaseClient, val seasonInteractive: SeasonInteractor,private val preferences: Preferences): AuthInteractor {
 
     private val authMutex = Mutex()
     override suspend fun signUp(signUpData: SignUpData): Email.Result? {
@@ -119,11 +120,17 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient, val season
     }
 
     override suspend fun refreshToken() {
-        return withInteractorContext(retryOption = RetryOption(
-            retryCount = 3,
-            retryCondition = { it.getOrThrow() != null }
-        )) {
-                supabaseClient.gotrue.refreshCurrentSession()
+        return withInteractorContext(retryOption = RetryOption(retryCount = 3)) {
+            val currentSession = supabaseClient.gotrue.currentSessionOrNull()
+            if(currentSession!=null)
+            currentSession.refreshToken.let{
+                //TODO update shared preference with secure storage
+                preferences.setString(AppConstants.Auth.CURRENT_USER, it)
+            }else{
+                preferences.getString(AppConstants.Auth.CURRENT_USER, "").let {
+                    if(it.isNotBlank()) supabaseClient.gotrue.refreshSession(it)
+                }
+            }
         }
     }
 }

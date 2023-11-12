@@ -29,7 +29,7 @@ object Version {
     const val mockkCommon   = "1.12.5"
     const val turbine       = "0.12.1"
     const val coroutines    = "1.6.4"
-    const val supabase      = "1.2.0"
+    const val supabase      = "1.4.6"
     const val buildkonfig   = "0.13.3"
     const val kswift        = "0.6.1"
     const val mokoResourcesGenerator = "0.23.0"
