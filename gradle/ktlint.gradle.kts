@@ -14,6 +14,7 @@ val ktlintCheck by tasks.creating(JavaExec::class) {
     classpath = ktlint
     mainClass.set("com.pinterest.ktlint.Main")
     args = listOf("src/**/*.kt", "**/*.gradle.kts")
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 
 val ktlintFormat by tasks.creating(JavaExec::class) {
@@ -24,6 +25,7 @@ val ktlintFormat by tasks.creating(JavaExec::class) {
     classpath = ktlint
     mainClass.set("com.pinterest.ktlint.Main")
     args = listOf("-F", "src/**/*.kt", "**/*.gradle.kts")
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 
 val testAllUnitTests by tasks.register("testAllUnitTests") {
