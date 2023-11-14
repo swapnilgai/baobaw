@@ -10,7 +10,7 @@ jobs:
 
   build:
     name: Test Build and Release
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ github.ref || github.head_ref }}
     permissions:
