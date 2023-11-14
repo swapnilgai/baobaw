@@ -55,7 +55,7 @@ jobs:
         name: 'Authenticate with Firebase'
         uses: 'google-github-actions/auth@v1'
         with:
-          credentials: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
 
       - name: Distribute APK to Firebase App Distribution
         run: firebase appdistribution:distribute androidApp/build/outputs/apk/release/androidApp-release-unsigned.apk
