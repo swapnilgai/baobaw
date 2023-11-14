@@ -7,9 +7,19 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  build:
 
-    runs-on: ubuntu-latest
+  test:
+    name: Run unit test cases
+    runs-on: [ ubuntu-latest-4-cores ]
+
+    steps:
+      - name: Run unit test cases
+        run: ./gradlew testDebugUnitTest
+
+  build:
+    name: Build Android Release
+    needs: test
+    runs-on: [ ubuntu-latest-16-cores ]
 
     steps:
       - uses: actions/checkout@v3
@@ -19,21 +29,49 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+
       - name: Set app.properties
         run: echo " ${{ secrets.GRADLE_PROPERTIES }} " >> gradle.properties
+
       - name: Create google-services.json file
         run: cat androidApp/google-services.json | base64
+
       - name: Putting data in google-services.json
         env:
-            DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo $DATA > androidApp/google-services.json
+
       - name: KT lint check
         run: ./gradlew ktlintFormat --info --stacktrace
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Run unit test cases
-        run: ./gradlew testDebugUnitTest
-      - name: Build app
-        run: ./gradlew assembleDebug
 
+      - name: Build Android Release
+        run: ./gradlew assembleRelease
 
+  upload:
+    name: Upload APK to Firebase App Distribution
+    needs: build
+    runs-on: [ ubuntu-latest-4-cores ]
+    env:
+      BRANCH_NAME: ${{ github.ref || github.head_ref }}
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Firebase CLI
+        run: curl -sL https://firebase.tools | bash
+
+      - name: Login to Firebase
+        run: firebase login:ci --token ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Distribute APK to Firebase App Distribution
+        run: firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk 
+            --app ${{ secrets.FIREBASE_APP_ID }}
+            --release-notes "$BRANCH_NAME"          
+            --groups testers
+            --debug
