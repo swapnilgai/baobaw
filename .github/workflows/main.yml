@@ -70,7 +70,7 @@ jobs:
         run: firebase login:ci --token ${{ secrets.FIREBASE_TOKEN }}
 
       - name: Distribute APK to Firebase App Distribution
-        run: firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk 
+        run: firebase appdistribution:distribute androidApp/build/outputs/apk/release/app-release.apk 
             --app ${{ secrets.FIREBASE_APP_ID }}
             --release-notes "$BRANCH_NAME"          
             --groups testers
