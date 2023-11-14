@@ -7,10 +7,15 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
+
   build:
-
+    name: Test Build and Release
     runs-on: ubuntu-latest
-
+    env:
+      BRANCH_NAME: ${{ github.ref || github.head_ref }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - uses: actions/checkout@v3
       - name: set up JDK 17
@@ -19,21 +24,44 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-      - name: Set app.properties
+
+      - name: Set gradle.properties
         run: echo " ${{ secrets.GRADLE_PROPERTIES }} " >> gradle.properties
+
       - name: Create google-services.json file
         run: cat androidApp/google-services.json | base64
+
       - name: Putting data in google-services.json
         env:
-            DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo $DATA > androidApp/google-services.json
+
       - name: KT lint check
         run: ./gradlew ktlintFormat --info --stacktrace
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
       - name: Run unit test cases
         run: ./gradlew testDebugUnitTest
-      - name: Build app
-        run: ./gradlew assembleDebug
+
+      - name: Build Android Release
+        run: ./gradlew assembleRelease
+
+      - name: Install Firebase Tools
+        run: sudo npm install -g firebase-tools
+
+      - id: 'auth'
+        name: 'Authenticate with Firebase'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+
+      - name: Distribute APK to Firebase App Distribution
+        run: firebase appdistribution:distribute androidApp/build/outputs/apk/release/androidApp-release-unsigned.apk
+          --app ${{ secrets.FIREBASE_APP_ID }}
+          --release-notes "{{ env.BRANCH_NAME }}"
+          --groups testers
+          --debug
 
 
