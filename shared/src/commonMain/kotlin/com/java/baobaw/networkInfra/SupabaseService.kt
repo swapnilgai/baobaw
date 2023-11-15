@@ -10,6 +10,7 @@ import io.github.jan.supabase.postgrest.query.PostgrestUpdate
 import io.github.jan.supabase.postgrest.query.Returning
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 import io.github.jan.supabase.postgrest.rpc
+import io.github.jan.supabase.storage.storage
 
 
 interface SupabaseService {
@@ -29,6 +30,10 @@ interface SupabaseService {
         count: Count? = null,
         filter: PostgrestFilterBuilder.() -> Unit = {}
     ): PostgrestResult
+
+    suspend fun bucketUpload(path: String, data: ByteArray, upsert: Boolean = false): String
+    suspend fun bucketDelete(path: String): Unit
+    fun bucketPublicUrl(path: String): String
 }
 class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseService {
 
@@ -50,5 +55,18 @@ class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseS
            null -> supabaseClient.postgrest.rpc(function) { filter }
            else -> supabaseClient.postgrest.rpc(function, parameters) { filter }
     }
+
+    override suspend fun bucketUpload(path: String, data: ByteArray, upsert: Boolean): String {
+        return supabaseClient.storage[path].upload(path, data, upsert)
+    }
+
+    override fun bucketPublicUrl(path: String): String {
+        return supabaseClient.storage[path].publicUrl(path)
+    }
+
+    override suspend fun bucketDelete(path: String): Unit {
+        return supabaseClient.storage[path].delete(path)
+    }
+
     override suspend fun currentUserOrNull(): UserInfo? = supabaseClient.gotrue.currentUserOrNull()
 }

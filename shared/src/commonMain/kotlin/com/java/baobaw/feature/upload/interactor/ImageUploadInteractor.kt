@@ -2,10 +2,12 @@ package com.java.baobaw.feature.upload.interactor
 
 import com.java.baobaw.AppConstants
 import com.java.baobaw.feature.auth.interactor.toBoolean
+import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.model.Profile
+import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.toCompressByteArray
 import dev.icerock.moko.media.Bitmap
 import io.github.jan.supabase.SupabaseClient
@@ -27,50 +29,41 @@ interface ImageUploadInteractor {
 //https://github.com/hlnstepanova/kmpizza-repo/blob/448e5f78c89863c843ea3d62fd8e8ea5b674a90c/shared/src/commonMain/kotlin/dev/tutorial/kmpizza/viewmodel/RecipeDetailsViewModel.kt
 //https://github.com/icerockdev/moko-media
 
-class ImageUploadInteractorImpl(private val supabaseClient: SupabaseClient): ImageUploadInteractor, Interactor{
+class ImageUploadInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor): ImageUploadInteractor, Interactor{
     override suspend fun imageUpload(bitmap: Bitmap, index: Int): String {
        return  withInteractorContext {
-            supabaseClient.gotrue.currentUserOrNull()?.id?.let { currentUser ->
-                supabaseClient.storage["Profile"].let { bucket ->
-                    supabaseClient.postgrest.let { postgrest ->
-                        val imagePath = "$currentUser/$index.png"
-                        bucket.upload(
-                            imagePath,
-                            bitmap.toCompressByteArray(),
-                            upsert = true
-                        )
-                        val publicUrl = bucket.publicUrl(imagePath)
-                        // function to check if image is valid and does not contain any wrong content
-                        // returns true if does not contain any wrong image
+           val currentUser = seasonInteractor.getCurrentUserId()
+           val imagePath = "$currentUser/$index.png"
+           supabaseService.bucketUpload(
+               imagePath,
+               bitmap.toCompressByteArray(),
+               upsert = true
+           )
+           val publicUrl = supabaseService.bucketPublicUrl(imagePath)
 
-                        postgrest["profile"].update({ Profile::image_url_one setTo publicUrl }) {
-                            Profile::user_id eq currentUser
-                        }
+           supabaseService.tableUpdate("profile", { Profile::image_url_one setTo publicUrl }) {
+               Profile::user_id eq currentUser
+           }
 
-                        val result = postgrest.rpc(
-                            AppConstants.Queries.IS_IMAGE_APPROPRIATE,
-                            mapOf("image_url" to publicUrl)
-                        ).body
+           val result = supabaseService.rpc(
+               AppConstants.Queries.IS_IMAGE_APPROPRIATE,
+               mapOf("image_url" to publicUrl)
+           ).body
 
-                        if ((result as JsonElement).jsonPrimitive.content.toBoolean()) {
-                            // Retrieve the existing profile data
-                            postgrest["profile"].update({ Profile::image_url_one setTo publicUrl }) {
-                                Profile::user_id eq currentUser
-                            }
-                        }
-                        return@withInteractorContext publicUrl
-                    }
-                }
-            }
-           return@withInteractorContext ""
-        }
+           if ((result as JsonElement).jsonPrimitive.content.toBoolean()) {
+               // Retrieve the existing profile data
+               supabaseService.tableUpdate("profile", { Profile::image_url_one setTo publicUrl }) {
+                   Profile::user_id eq currentUser
+               }
+           }
+           return@withInteractorContext publicUrl
+       }
     }
 
-    override suspend fun deleteImage(index: Int): Unit {
+    override suspend fun deleteImage(index: Int) {
         return withInteractorContext {
-            supabaseClient.gotrue.currentUserOrNull()?.id?.let { currentUser ->
-                supabaseClient.storage[currentUser].delete("$index.png")
-            }
+            val currentUser = seasonInteractor.getCurrentUserId()
+            supabaseService.bucketDelete("$currentUser/$index.png")
         }
     }
 }
