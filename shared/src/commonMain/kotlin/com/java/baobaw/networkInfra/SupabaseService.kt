@@ -11,6 +11,7 @@ import io.github.jan.supabase.postgrest.query.Returning
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.storage.storage
+import kotlinx.serialization.json.JsonElement
 
 
 interface SupabaseService {
@@ -25,15 +26,15 @@ interface SupabaseService {
 
     suspend fun rpc(
         function: String,
-        parameters: Any? = null,
+        parameters: JsonElement? = null,
         head: Boolean = false,
         count: Count? = null,
         filter: PostgrestFilterBuilder.() -> Unit = {}
     ): PostgrestResult
 
-    suspend fun bucketUpload(path: String, data: ByteArray, upsert: Boolean = false): String
+    suspend fun bucketUpload(bucket: String, path: String, data: ByteArray, upsert: Boolean = false): String
     suspend fun bucketDelete(path: String): Unit
-    fun bucketPublicUrl(path: String): String
+    fun bucketPublicUrl(bucket: String, path: String): String
 }
 class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseService {
 
@@ -43,11 +44,11 @@ class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseS
         returning: Returning,
         count: Count?,
         filter: PostgrestFilterBuilder.() -> Unit
-    ): PostgrestResult = supabaseClient.postgrest[tableName].update(update) { filter }
+    ): PostgrestResult = supabaseClient.postgrest[tableName].update(update = update, filter = filter)
 
     override suspend fun rpc(
         function: String,
-        parameters: Any?,
+        parameters: JsonElement?,
         head: Boolean,
         count: Count?,
         filter: PostgrestFilterBuilder.() -> Unit
@@ -56,12 +57,12 @@ class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseS
            else -> supabaseClient.postgrest.rpc(function, parameters) { filter }
     }
 
-    override suspend fun bucketUpload(path: String, data: ByteArray, upsert: Boolean): String {
-        return supabaseClient.storage[path].upload(path, data, upsert)
+    override suspend fun bucketUpload(bucket: String, path: String, data: ByteArray, upsert: Boolean): String {
+        return supabaseClient.storage[bucket].upload(path, data, upsert)
     }
 
-    override fun bucketPublicUrl(path: String): String {
-        return supabaseClient.storage[path].publicUrl(path)
+    override  fun bucketPublicUrl(bucket: String, path: String): String {
+        return supabaseClient.storage[bucket].publicUrl(path)
     }
 
     override suspend fun bucketDelete(path: String): Unit {

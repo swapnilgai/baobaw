@@ -6,6 +6,8 @@ import com.java.baobaw.feature.common.interactor.CompatibilityBatchInteractorImp
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.feature.common.interactor.SeasonInteractorImpl
 import com.java.baobaw.feature.common.presentation.MainViewModel
+import com.java.baobaw.util.BitmapProcessor
+import com.java.baobaw.util.BitmapProcessorImpl
 import org.koin.dsl.module
 
 
@@ -13,4 +15,5 @@ val commonModule = module {
     single<SeasonInteractor> { SeasonInteractorImpl(get()) }
     single<CompatibilityBatchInteractor> { CompatibilityBatchInteractorImpl(get(), get()) }
     single<MainViewModel> { MainViewModel(get()) }
+    single<BitmapProcessor> { BitmapProcessorImpl() }
 }
