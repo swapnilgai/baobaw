@@ -1,9 +1,11 @@
 package com.java.baobaw.networkInfra
 
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.gotrue.PostgrestFilterDSL
 import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.user.UserInfo
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Count
 import io.github.jan.supabase.postgrest.query.PostgrestFilterBuilder
 import io.github.jan.supabase.postgrest.query.PostgrestUpdate
@@ -35,6 +37,15 @@ interface SupabaseService {
     suspend fun bucketUpload(bucket: String, path: String, data: ByteArray, upsert: Boolean = false): String
     suspend fun bucketDelete(path: String): Unit
     fun bucketPublicUrl(bucket: String, path: String): String
+
+    suspend fun select(
+        tableName: String,
+        columns: Columns = Columns.ALL,
+        head: Boolean = false,
+        count: Count? = null,
+        single: Boolean = false,
+        filter: @PostgrestFilterDSL PostgrestFilterBuilder.() -> Unit = {}
+    ): PostgrestResult
 }
 class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseService {
 
@@ -70,4 +81,15 @@ class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseS
     }
 
     override suspend fun currentUserOrNull(): UserInfo? = supabaseClient.gotrue.currentUserOrNull()
+
+    override suspend fun select(
+        tableName: String,
+        columns: Columns,
+        head: Boolean,
+        count: Count?,
+        single: Boolean,
+        filter: PostgrestFilterBuilder.() -> Unit
+    ): PostgrestResult {
+        return supabaseClient.postgrest[tableName].select(columns = columns, head = head, count = count, single = single, filter = filter)
+    }
 }

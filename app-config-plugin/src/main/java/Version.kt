@@ -39,4 +39,5 @@ object Version {
     const val mokoGeo = "0.6.0"
     const val mokoMedia = "0.11.0"
     const val mokoMediaFilePicker = "1.9.1"
+    const val kotlinxDatetime = "0.4.1"
 }

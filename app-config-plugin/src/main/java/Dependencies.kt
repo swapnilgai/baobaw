@@ -35,6 +35,7 @@ object Dependencies {
             "io.ktor:ktor-client-logging:${Version.ktor}",
              koin,
             "co.touchlab:kermit:${Version.kermit}",
+            "org.jetbrains.kotlinx:kotlinx-datetime:${Version.kotlinxDatetime}"
         )
 
         val commonTest = listOf(
