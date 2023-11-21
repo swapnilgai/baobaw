@@ -1,6 +1,10 @@
 package com.java.baobaw.feature.chatt_detail
 
 import com.java.baobaw.presentationInfra.BaseViewModel
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.realtime.PostgresAction
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Transient
 import kotlinx.serialization.SerialName
@@ -21,7 +25,13 @@ data class ChatMessage(
 )
 
 
-class ChatViewModel(private val chatInteractor: ChatInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
+class ChatViewModel(private val chatInteractor: ChatInteractor, private val supabaseClient: SupabaseClient): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
+
+
+    fun init(){
+        getConversation("1")
+        subscribeToConversation("1")
+    }
 
     fun fetchPreviousDataPage() {
         // Fetch next page logic
@@ -31,12 +41,27 @@ class ChatViewModel(private val chatInteractor: ChatInteractor): BaseViewModel<L
     fun getConversation(referenceId: String) {
         viewModelScope.launch {
             val result = chatInteractor.getMessages(referenceId)
-            val res = result.size
             setContent { result }
         }
     }
 
     fun subscribeToConversation(referenceId: String) {
         // Subscribe to conversation logic
+        viewModelScope.launch {
+            val channel = chatInteractor.getMessagesStream(referenceId)
+            channel.onEach {
+                when (it) {
+                    is PostgresAction.Insert -> chatInteractor.jsonElementToChatMessage( it.record.toString()).let { chatMessage ->
+                            setContent { getContent() + chatMessage }
+                        }
+                    is PostgresAction.Update -> chatInteractor.jsonElementToChatMessage( it.record.toString()).let { chatMessage ->
+                            setContent { getContent() + chatMessage }
+                    }
+                    else -> {}
+                }
+            }.launchIn(this)
+
+            chatInteractor.joinMessageStream()
+        }
     }
 }
