@@ -79,6 +79,10 @@ fun LoginScreen(loginViewModel: LoginViewModel,
             Spacer(modifier = Modifier.padding(16.dp))
 
             ClickableText(text = AnnotatedString("Permissions"), onClick = {scope.launch { loginViewModel.onPermissionsClicked() }})
+
+            Spacer(modifier = Modifier.padding(16.dp))
+
+            ClickableText(text = AnnotatedString("Chat"), onClick = {scope.launch { loginViewModel.onChatClicked() }})
         }
     }
 }

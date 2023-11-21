@@ -9,7 +9,7 @@ object Version {
     const val retrofit = "2.9.0"
     const val okHttp = "4.1.0"
     const val androidktxCore= "1.9.0"
-    const val kotlinVersion = "1.8.10"
+    const val kotlinVersion = "1.9.20"
     const val compose = "1.4.2"
     const val composeConstraintLayout = "1.0.1"
     const val kotlinCompilerVersion = "1.6.21"
@@ -17,7 +17,7 @@ object Version {
 
     const val activity      = "1.5.1"
     const val ktor          = "2.3.2"
-    const val serialization = "1.4.1"
+    const val serialization = "1.6.1"
     const val koin          = "3.3.2"
     const val koinCompose   = "3.4.1"
     const val coil          = "1.3.1"

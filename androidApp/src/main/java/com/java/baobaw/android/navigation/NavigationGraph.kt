@@ -1,5 +1,7 @@
 package com.java.baobaw.android.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
@@ -12,12 +14,14 @@ import com.java.baobaw.android.feature.auth.EnterPhoneScreen
 import com.java.baobaw.android.feature.auth.LoginScreen
 import com.java.baobaw.android.feature.auth.ResetPasswordScreen
 import com.java.baobaw.android.feature.auth.VerifyOtpScreen
+import com.java.baobaw.android.feature.chat.ChatScreen
 import com.java.baobaw.android.feature.permissions.PermissionsScreen
 import com.java.baobaw.android.feature.photo_picker.PhotoPickerScreen
 import com.java.baobaw.android.feature.userinput.UserInputScreen
 import com.java.baobaw.util.getNavigationUrl
 import org.koin.androidx.compose.get
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screens.Login.route) {
@@ -49,6 +53,9 @@ fun NavigationGraph(navController: NavHostController) {
         }
         composable(route = Screens.ImagePickerScreen.route){
             PhotoPickerScreen(imageSelectionViewModel = get(), navController = navController)
+        }
+        composable(route = Screens.ChatScreen.route){
+            ChatScreen(chatViewModel = get(), navController = navController)
         }
     }
 }

@@ -4,9 +4,9 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     id("com.codingfeline.buildkonfig") version Version.buildkonfig
-    kotlin("plugin.serialization") version Version.kotlinVersion
     id("dev.icerock.moko.kswift")
     id("dev.icerock.mobile.multiplatform-resources")
+    kotlin("plugin.serialization") version Version.kotlinVersion
 }
 
 kotlin {

@@ -10,6 +10,7 @@ object AppConstants {
         const val RESET_PASSWORD = "resetPassword"
         const val PERMISSIONS_SCREEN = "permissionsScreen"
         const val IMAGE_PICKER_SCREEN = "imagePickerScreen"
+        const val CHAT_SCREEN = "chatScreen"
     }
 
     object Auth{
