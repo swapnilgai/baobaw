@@ -12,6 +12,9 @@ import io.github.jan.supabase.postgrest.query.PostgrestUpdate
 import io.github.jan.supabase.postgrest.query.Returning
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 import io.github.jan.supabase.postgrest.rpc
+import io.github.jan.supabase.realtime.RealtimeChannel
+import io.github.jan.supabase.realtime.createChannel
+import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.storage.storage
 import kotlinx.serialization.json.JsonElement
 
@@ -46,9 +49,20 @@ interface SupabaseService {
         single: Boolean = false,
         filter: @PostgrestFilterDSL PostgrestFilterBuilder.() -> Unit = {}
     ): PostgrestResult
+
+    fun getMessageRealtimeChannel(): RealtimeChannel
+
+    suspend fun realTimeConnect()
+
+    fun realTimeDisconnect()
+
+    suspend fun realtimeRemoveChannel(realtimeChannel: RealtimeChannel)
+
 }
+
 class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseService {
 
+    private val realtimeChannel: RealtimeChannel = supabaseClient.realtime.createChannel("messages")
     override suspend fun tableUpdate(
         tableName: String,
         update: PostgrestUpdate.() -> Unit,
@@ -92,4 +106,18 @@ class SupabaseServiceImpl(private val supabaseClient: SupabaseClient): SupabaseS
     ): PostgrestResult {
         return supabaseClient.postgrest[tableName].select(columns = columns, head = head, count = count, single = single, filter = filter)
     }
+
+    override fun getMessageRealtimeChannel(): RealtimeChannel = realtimeChannel
+    override suspend fun realTimeConnect() {
+        supabaseClient.realtime.connect()
+    }
+
+    override fun realTimeDisconnect() {
+        supabaseClient.realtime.disconnect()
+    }
+
+    override suspend fun realtimeRemoveChannel(realtimeChannel: RealtimeChannel) {
+        supabaseClient.realtime.removeChannel(realtimeChannel)
+    }
+
 }

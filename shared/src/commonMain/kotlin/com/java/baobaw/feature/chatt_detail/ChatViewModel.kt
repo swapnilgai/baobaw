@@ -1,5 +1,6 @@
 package com.java.baobaw.feature.chatt_detail
 
+import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import io.github.jan.supabase.SupabaseClient
@@ -31,7 +32,7 @@ data class ChatMessage(
 )
 
 
-class ChatViewModel(private val chatInteractor: ChatInteractor, private val supabaseClient: SupabaseClient): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
+class ChatViewModel(private val chatInteractor: ChatInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
 
 
     fun init(){
@@ -62,7 +63,7 @@ class ChatViewModel(private val chatInteractor: ChatInteractor, private val supa
     fun subscribeToConversation(referenceId: String) {
         // Subscribe to conversation logic
         viewModelScope.interactorLaunch {
-            val currentUserId = supabaseClient.gotrue.currentUserOrNull()?.id
+            val currentUserId = seasonInteractor.getCurrentUserId()
             val channel = chatInteractor.getMessagesStream(referenceId)
             channel.onEach {
                 when (it) {

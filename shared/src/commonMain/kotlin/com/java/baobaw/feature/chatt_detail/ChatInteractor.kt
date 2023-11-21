@@ -5,11 +5,8 @@ import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.realtime.PostgresAction
-import io.github.jan.supabase.realtime.RealtimeChannel
-import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +16,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 
 interface ChatInteractor : Interactor {
-    suspend fun getMessages(referenceId: String, minRange: Long = 0, maxRange: Long = 20): List<ChatMessage>
+    suspend fun getMessages(referenceId: String, minRange: Long = 0, maxRange: Long = 10): List<ChatMessage>
     fun getMessagesStream(referenceId: String): Flow<PostgresAction>
 
     suspend fun joinMessageStream()
@@ -29,17 +26,15 @@ interface ChatInteractor : Interactor {
     suspend fun sendMessage(inputText: String)
 
     suspend fun unSubscribeToConversation()
-
-    }
-class ChatInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor,
-                         private val realtimeChannel: RealtimeChannel, private val supabaseClient: SupabaseClient) : ChatInteractor {
+}
+class ChatInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) : ChatInteractor {
 
     override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): List<ChatMessage> = withInteractorContext {
         val messages : List<ChatMessage> = supabaseService.select("messages") {
             eq("reference_id", referenceId)
+            order("created_date", Order.DESCENDING)
             range(minRange, maxRange)
-            order("created_date", Order.ASCENDING)
-        }.decodeList()
+        }.decodeList<ChatMessage>().asReversed()
 
         // Set isUserCreated property
         val currentUserId = seasonInteractor.getCurrentUserId()
@@ -47,7 +42,7 @@ class ChatInteractorImpl(private val supabaseService: SupabaseService, private v
    }
 
     override fun getMessagesStream(referenceId: String): Flow<PostgresAction> {
-
+        val realtimeChannel = supabaseService.getMessageRealtimeChannel()
         val changeFlow = realtimeChannel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "messages"
             filter = "reference_id=eq.$referenceId"
@@ -56,15 +51,15 @@ class ChatInteractorImpl(private val supabaseService: SupabaseService, private v
     }
 
     override suspend fun joinMessageStream() {
-        supabaseClient.realtime.connect()
-        realtimeChannel.join()
+        supabaseService.realTimeConnect()
+        supabaseService.getMessageRealtimeChannel().join()
     }
 
     override suspend fun unSubscribeToConversation() {
-        supabaseClient.realtime.disconnect()
-        realtimeChannel.let {
+        supabaseService.realTimeDisconnect()
+        supabaseService.getMessageRealtimeChannel().let {
             it.leave()
-            supabaseClient.realtime.removeChannel(it)
+            supabaseService.realtimeRemoveChannel(it)
         }
     }
 
