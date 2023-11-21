@@ -1,6 +1,5 @@
 package com.java.baobaw.android
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -30,6 +29,8 @@ import com.java.baobaw.android.navigation.navigateToScreen
 import com.java.baobaw.presentationInfra.BaseViewModel
 import com.java.baobaw.presentationInfra.UiEvent
 import com.java.baobaw.android.util.stringResource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -38,6 +39,7 @@ fun <ContentT>BaseView(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     navController: NavController,
     setContentT: (ContentT) -> Unit,
+    scope: CoroutineScope,
     content: @Composable () -> Unit) {
 
     content.invoke()
@@ -46,7 +48,10 @@ fun <ContentT>BaseView(
             if (event == Lifecycle.Event.ON_START) {
                 viewModel.onStart()
             } else if (event == Lifecycle.Event.ON_STOP) {
-                viewModel.clear()
+                scope.launch {
+                    viewModel.clearViewModel()  // Now called from within a coroutine
+                    viewModel.clear()
+                }
             }
         }
 

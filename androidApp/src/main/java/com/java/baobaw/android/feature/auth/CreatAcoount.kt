@@ -59,7 +59,7 @@ fun EnterPhoneScreen(authViewModel: AuthViewModel,
         authContent = state.content
     }
 
-    BaseView(viewModel = authViewModel, navController = navController, setContentT = { state -> setAuthState(state)}) {
+    BaseView(viewModel = authViewModel, navController = navController, scope = scope, setContentT = { state -> setAuthState(state)}) {
         CountryCodeView(
             onSignUpClick =  { phone, password -> scope.launch { authViewModel.onSignUpClick(phone, password)}},
         )

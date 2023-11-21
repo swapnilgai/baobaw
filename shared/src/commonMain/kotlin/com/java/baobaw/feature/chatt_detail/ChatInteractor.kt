@@ -5,25 +5,37 @@ import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.RealtimeChannel
+import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 
 interface ChatInteractor : Interactor {
     suspend fun getMessages(referenceId: String, minRange: Long = 0, maxRange: Long = 20): List<ChatMessage>
-    suspend fun getMessagesStream(referenceId: String): Flow<PostgresAction>
+    fun getMessagesStream(referenceId: String): Flow<PostgresAction>
 
     suspend fun joinMessageStream()
 
     suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage
-}
-class ChatInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor,
-                         private val realtimeChannel: RealtimeChannel, val supabaseClient: SupabaseClient) : ChatInteractor {
 
+    suspend fun sendMessage(inputText: String)
+
+    suspend fun unSubscribeToConversation()
+
+    }
+class ChatInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor,
+                         private val realtimeChannel: RealtimeChannel, private val supabaseClient: SupabaseClient) : ChatInteractor {
+
+
+//    var channel: RealtimeChannel = supabaseClient.realtime.createChannel("messages")
     override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): List<ChatMessage> = withInteractorContext {
         val messages : List<ChatMessage> = supabaseService.select("messages") {
             eq("reference_id", referenceId)
@@ -36,7 +48,8 @@ class ChatInteractorImpl(private val supabaseService: SupabaseService, private v
         messages.map { it.copy(isUserCreated = it.creatorUserId == currentUserId) }
    }
 
-    override suspend fun getMessagesStream(referenceId: String): Flow<PostgresAction> {
+    override fun getMessagesStream(referenceId: String): Flow<PostgresAction> {
+
         val changeFlow = realtimeChannel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "messages"
             filter = "reference_id=eq.$referenceId"
@@ -49,10 +62,43 @@ class ChatInteractorImpl(private val supabaseService: SupabaseService, private v
         realtimeChannel.join()
     }
 
+    override suspend fun unSubscribeToConversation() {
+        supabaseClient.realtime.disconnect()
+        realtimeChannel.let {
+            it.leave()
+            supabaseClient.realtime.removeChannel(it)
+        }
+    }
+
     override suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage = withInteractorContext {
             Json.decodeFromString<ChatMessage>(jsonString)
         }
+
+    override suspend fun sendMessage(inputText: String): Unit = withInteractorContext {
+        val currentUserId = supabaseService.currentUserOrNull()?.id
+        val request = ChatMessageRequest(
+            creatorUserId = currentUserId!!,
+            otherUserId = "a1b2c3d4-782c-4ccb-816c-62d012345685",
+            message = inputText
+        )
+        supabaseService.rpc(
+            function = "insert_message",
+            parameters = Json.encodeToJsonElement(request)
+        )
+    }
 }
+
+
+inline fun <reified T> Any.encodeToJsonElement() = Json.encodeToJsonElement(this)
+//inline fun <reified T> Any.encodeToJsonElement() = Json.encodeToJsonElement(T::class.serializer(), this)
+
+
+@Serializable
+data class ChatMessageRequest(
+    @SerialName("creator_user_id") val creatorUserId: String,
+    @SerialName("other_user_id") val otherUserId: String,
+    @SerialName("message") val message: String?
+)
 
 
 

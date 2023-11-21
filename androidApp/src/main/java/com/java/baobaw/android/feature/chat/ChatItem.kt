@@ -28,6 +28,8 @@ import com.java.baobaw.android.BaseView
 import com.java.baobaw.feature.chatt_detail.ChatMessage
 import com.java.baobaw.feature.chatt_detail.ChatViewModel
 import kotlinx.coroutines.CoroutineScope
+import androidx.compose.material.TextField
+import androidx.compose.material.Button
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -40,6 +42,16 @@ fun ChatScreen(
 
     var chatState by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
 
+    var inputText by remember { mutableStateOf("") }
+
+    // Function to handle the sending of the message
+    fun sendMessage() {
+        if (inputText.isNotBlank()) {
+            // Call a function from your viewModel to send the message
+            chatViewModel.sendMessage(inputText)
+            inputText = "" // Clear the input field after sending
+        }
+    }
     LaunchedEffect(Unit) {
         // This block will be executed when YourChatView is first composed
         chatViewModel.init()
@@ -48,7 +60,7 @@ fun ChatScreen(
         chatState = state
     }
 
-    BaseView(viewModel = chatViewModel, navController = navController, setContentT = { state -> setChatState(state)}) {
+    BaseView(viewModel = chatViewModel, navController = navController, scope = scope, setContentT = { state -> setChatState(state)}) {
         LazyColumn(
             reverseLayout = true, // This ensures the latest messages are at the bottom.
             modifier = Modifier.fillMaxHeight()
@@ -58,6 +70,39 @@ fun ChatScreen(
                 val message = chatState[chatState.size - index - 1]
                 ChatMessageItem(message = message, isCurrentUser = message.isUserCreated)
             }
+        }
+        ChatInputField(
+            inputText = inputText,
+            onInputTextChange = { inputText = it },
+            onSendMessage = { sendMessage() }
+        )
+    }
+}
+
+
+@Composable
+fun ChatInputField(
+    inputText: String,
+    onInputTextChange: (String) -> Unit,
+    onSendMessage: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextField(
+            value = inputText,
+            onValueChange = onInputTextChange,
+            modifier = Modifier.weight(1f),
+            placeholder = { Text("Type your message here") }
+        )
+        Button(
+            onClick = onSendMessage,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Text("Send")
         }
     }
 }

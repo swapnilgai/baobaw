@@ -9,7 +9,7 @@ import io.github.jan.supabase.realtime.realtime
 import org.koin.dsl.module
 
 val chatModule = module {
-    single { get<SupabaseClient>().realtime.createChannel("messages") }
+    factory { get<SupabaseClient>().realtime.createChannel("messages") }
     single<ChatInteractor> { ChatInteractorImpl(get(), get(), get(), get()) }
     single<ChatViewModel> { ChatViewModel(get(), get()) }
 }

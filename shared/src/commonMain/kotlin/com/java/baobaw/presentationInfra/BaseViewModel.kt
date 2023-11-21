@@ -75,14 +75,15 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         _state.value = UiEvent.Loading
     }
     fun clear(){
-        if(_state.value!=UiEvent.Cancled) {
-            viewModelScope.cancel()
-            _state.tryEmit(UiEvent.Cancled)
-        }
+        _state.tryEmit(UiEvent.Cancled)
+        viewModelScope.cancel()
     }
 
+    open suspend fun clearViewModel(){}
+
     fun onStart(){
-        if(!viewModelScope.isActive) viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
+        if(!viewModelScope.isActive)
+            viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
     }
     fun navigate(route: String){
         UiEvent.Navigation(route).let {
@@ -111,9 +112,9 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         return when (error) {
             is IOException -> {   // check if network is avaialble
                 AwaitRetryOptions(
-                    title = com.java.baobaw.SharedRes.strings.error,
-                    message = com.java.baobaw.SharedRes.strings.error,
-                    description = com.java.baobaw.SharedRes.strings.error
+                    title = SharedRes.strings.error,
+                    message = SharedRes.strings.error,
+                    description = SharedRes.strings.error
                 )
             }
             else -> null

@@ -37,7 +37,7 @@ fun LoginScreen(loginViewModel: LoginViewModel,
                 navController: NavController,
                 scope: CoroutineScope = rememberCoroutineScope()){
 
-    BaseView(viewModel = loginViewModel, navController = navController, setContentT = {}) {
+    BaseView(viewModel = loginViewModel, navController = navController, scope = scope, setContentT = {}) {
         Column(
             Modifier
                 .padding(24.dp)

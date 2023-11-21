@@ -59,7 +59,7 @@ fun VerifyOtpScreen(
         authState = state
     }
 
-    BaseView(viewModel = verifyUserViewModel, navController = navController, setContentT = { state -> setAuthState(state)}) {
+    BaseView(viewModel = verifyUserViewModel, navController = navController, scope = scope, setContentT = { state -> setAuthState(state)}) {
         VerifyOtpView(phoneNumber = phoneNumber,
             onSendClicked = { phoneNumber, opt -> verifyUserViewModel.verifyOpt(phoneNumber, opt) },
             scope = scope
