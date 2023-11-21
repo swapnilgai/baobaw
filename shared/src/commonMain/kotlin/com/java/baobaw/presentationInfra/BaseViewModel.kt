@@ -23,7 +23,7 @@ import org.koin.core.component.inject
 
 abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent {
 
-    private val mainDispatcher: com.java.baobaw.executor.MainDispatcher by inject()
+    private val mainDispatcher: MainDispatcher by inject()
     private var currentState: ContentT = initialContent
 
     //TODO find common folder for strings.xml
@@ -91,7 +91,7 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         }
     }
 
-    fun setError(title: StringResource = com.java.baobaw.SharedRes.strings.error, message: StringResource){
+    fun setError(title: StringResource = SharedRes.strings.error, message: StringResource){
         UiEvent.Error(title = title, message = message).let {
             _state.tryEmit(it)
         }

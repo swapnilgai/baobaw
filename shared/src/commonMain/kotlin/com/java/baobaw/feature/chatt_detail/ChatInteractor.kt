@@ -34,8 +34,6 @@ interface ChatInteractor : Interactor {
 class ChatInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor,
                          private val realtimeChannel: RealtimeChannel, private val supabaseClient: SupabaseClient) : ChatInteractor {
 
-
-//    var channel: RealtimeChannel = supabaseClient.realtime.createChannel("messages")
     override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): List<ChatMessage> = withInteractorContext {
         val messages : List<ChatMessage> = supabaseService.select("messages") {
             eq("reference_id", referenceId)

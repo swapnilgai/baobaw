@@ -1,7 +1,7 @@
 package com.java.baobaw
 
-class AndroidPlatform : com.java.baobaw.Platform {
+class AndroidPlatform : Platform {
     override val name: String = "Android ${android.os.Build.VERSION.SDK_INT}"
 }
 
-actual fun getPlatform(): com.java.baobaw.Platform = AndroidPlatform()
+actual fun getPlatform(): Platform = AndroidPlatform()
