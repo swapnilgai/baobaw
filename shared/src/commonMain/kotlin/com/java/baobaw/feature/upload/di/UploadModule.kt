@@ -7,6 +7,6 @@ import org.koin.dsl.module
 
 
 val uploadModule = module {
-    single<ImageUploadInteractor> { ImageUploadInteractorImpl(get(), get()) }
+    single<ImageUploadInteractor> { ImageUploadInteractorImpl(get(), get(), get()) }
     single<ImageSelectionViewModel> { ImageSelectionViewModel(get()) }
 }

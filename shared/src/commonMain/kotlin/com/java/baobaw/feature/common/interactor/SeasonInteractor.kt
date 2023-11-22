@@ -23,7 +23,7 @@ class SeasonInteractorImpl(private val supabaseClient: SupabaseClient): SeasonIn
     }
 
     override suspend fun getCurrentUserId(): String? {
-        return withInteractorContext(cacheOption = CacheOption(key = CurrentUserCacheKey())) {
+        return withInteractorContext {
             supabaseClient.gotrue.currentUserOrNull()?.id
         }
     }

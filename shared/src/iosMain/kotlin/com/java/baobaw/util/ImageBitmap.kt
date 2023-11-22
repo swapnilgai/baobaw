@@ -15,7 +15,7 @@ import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.get
 import kotlinx.cinterop.reinterpret
 
-actual fun Bitmap.toCompressByteArray(maxWidth: Int, maxHeight: Int, format: CompressFormat, quality: Int): ByteArray {
+fun Bitmap.toCompressByteArray(maxWidth: Int, maxHeight: Int, format: CompressFormat, quality: Int): ByteArray {
 //    val uiImage = this.image
 //    val currentSize = uiImage.size.useContents {
 //        this
@@ -44,4 +44,11 @@ actual fun Bitmap.toCompressByteArray(maxWidth: Int, maxHeight: Int, format: Com
 //    val data: CPointer<ByteVar> = bytes.reinterpret()
 //    return ByteArray(length.toInt()) { index -> data[index] }
     return byteArrayOf()
+}
+
+
+actual class BitmapProcessorImpl actual constructor() : BitmapProcessor {
+    actual override fun toCompressByteArray(bitmap: Bitmap, maxWidth: Int, maxHeight: Int, format: CompressFormat, quality: Int): ByteArray {
+        return byteArrayOf()
+    }
 }
