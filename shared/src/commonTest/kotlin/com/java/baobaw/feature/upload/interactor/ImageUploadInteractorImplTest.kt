@@ -124,7 +124,6 @@ class ImageUploadInteractorImplTest {
         }
     }
 
-
     @Test
     fun testInvalidUserId() = runTest {
         // Arrange
