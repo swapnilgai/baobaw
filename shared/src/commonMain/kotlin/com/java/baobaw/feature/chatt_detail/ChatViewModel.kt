@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Transient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,16 +22,14 @@ import kotlinx.serialization.Serializable
 data class ChatMessage(
     @SerialName("id") val id: Int,
     @SerialName("reference_id") val referenceId: String,
-    @SerialName("user_id_one") val userIdOne: String,
-    @SerialName("user_id_two") val userIdTwo: String,
     @SerialName("creator_user_id") val creatorUserId: String,
     @SerialName("message") val message: String?, // Nullable since "message" can be null
     @SerialName("created_date") val createdDate: String,
     @SerialName("seen") val seen: Boolean,
     @SerialName("is_deleted") val isDeleted: Boolean,
-    @Transient val isUserCreated: Boolean = false // Transient property, defaulting to false
+    @Transient val isUserCreated: Boolean = false,
+    @Transient val isHeader: Boolean = false // Transient property, defaulting to false
 )
-
 
 class ChatViewModel(private val chatInteractor: ChatInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
 
@@ -67,13 +66,13 @@ class ChatViewModel(private val chatInteractor: ChatInteractor, private val seas
             val channel = chatInteractor.getMessagesStream(referenceId)
             channel.onEach {
                 when (it) {
-                    is PostgresAction.Insert -> chatInteractor.jsonElementToChatMessage( it.record.toString()).let { chatMessage ->
-                        val updatedChatMessage = chatMessage.copy(isUserCreated = chatMessage.creatorUserId == currentUserId)
-                        setContent { getContent() + updatedChatMessage }
+                    is PostgresAction.Insert -> {
+                        val list = chatInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
+                        setContent { list }
                     }
                     is PostgresAction.Update -> chatInteractor.jsonElementToChatMessage( it.record.toString()).let { chatMessage ->
-                        val updatedChatMessage = chatMessage.copy(isUserCreated = chatMessage.creatorUserId == currentUserId)
-                        setContent { getContent() + updatedChatMessage }
+                        val list = chatInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
+                        setContent { list }
                     }
                     else -> {}
                 }
