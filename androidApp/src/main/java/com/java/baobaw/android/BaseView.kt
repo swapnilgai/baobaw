@@ -46,7 +46,8 @@ fun <ContentT>BaseView(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
-                viewModel.onStart()
+                    viewModel.onStart()
+                    viewModel.init()
             } else if (event == Lifecycle.Event.ON_STOP) {
                 scope.launch {
                     viewModel.clearViewModel()  // Now called from within a coroutine

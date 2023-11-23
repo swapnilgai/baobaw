@@ -94,7 +94,7 @@ class ChatInteractorImpl(private val supabaseService: SupabaseService, private v
         val currentUserId = seasonInteractor.getCurrentUserId()
         val request = ChatMessageRequest(
             creatorUserId = currentUserId!!,
-            otherUserId = "a1b2c3d4-782c-4ccb-816c-62d012345685",
+            otherUserId = "883d0db4-6049-4b5f-acc4-75aeb47b0c1b",
             message = inputText
         )
         supabaseService.rpc(
@@ -106,7 +106,7 @@ class ChatInteractorImpl(private val supabaseService: SupabaseService, private v
     override fun getMessagesStream(referenceId: String): Flow<PostgresAction> {
         val realtimeChannel = supabaseService.getMessageRealtimeChannel()
         val changeFlow = realtimeChannel.postgresChangeFlow<PostgresAction>(schema = "public") {
-            table = "messages"
+            table = "last_message"
             filter = "reference_id=eq.$referenceId"
         }
         return changeFlow

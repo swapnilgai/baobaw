@@ -33,10 +33,9 @@ data class ChatMessage(
 
 class ChatViewModel(private val chatInteractor: ChatInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
 
-
-    fun init(){
-        getConversation("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:a1b2c3d4-782c-4ccb-816c-62d012345685")
-        subscribeToConversation("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:a1b2c3d4-782c-4ccb-816c-62d012345685")
+    override fun init() {
+        getConversation("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:883d0db4-6049-4b5f-acc4-75aeb47b0c1b")
+        subscribeToConversation("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:883d0db4-6049-4b5f-acc4-75aeb47b0c1b")
     }
 
     fun fetchPreviousDataPage() {
@@ -47,6 +46,7 @@ class ChatViewModel(private val chatInteractor: ChatInteractor, private val seas
         viewModelScope.launch {
             setLoading()
             chatInteractor.sendMessage(inputText)
+            setContent { getContent() }
         }
     }
 
@@ -70,7 +70,7 @@ class ChatViewModel(private val chatInteractor: ChatInteractor, private val seas
                         val list = chatInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
                         setContent { list }
                     }
-                    is PostgresAction.Update -> chatInteractor.jsonElementToChatMessage( it.record.toString()).let { chatMessage ->
+                    is PostgresAction.Update -> {
                         val list = chatInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
                         setContent { list }
                     }

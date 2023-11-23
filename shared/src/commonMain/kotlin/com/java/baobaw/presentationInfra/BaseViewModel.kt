@@ -80,7 +80,7 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
     }
 
     open suspend fun clearViewModel(){}
-
+    open fun init(){}
     fun onStart(){
         if(!viewModelScope.isActive)
             viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )

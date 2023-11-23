@@ -52,10 +52,7 @@ fun ChatScreen(
             inputText = "" // Clear the input field after sending
         }
     }
-    LaunchedEffect(Unit) {
-        // This block will be executed when YourChatView is first composed
-        chatViewModel.init()
-    }
+
     fun setChatState(state: List<ChatMessage>){
         chatState = state
     }
