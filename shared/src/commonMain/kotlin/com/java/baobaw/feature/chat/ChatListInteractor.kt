@@ -61,14 +61,14 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
 
     override suspend fun getLastMessagesTotalCount(): Long {
         return withInteractorContext(cacheOption = CacheOption(key = LastMessagesTotalCount())) {
-            val currentUser =
-                seasonInteractor.getCurrentUserId()!! // Replace with actual function to get current user ID
-            supabaseService.select("last_message", count = Count.EXACT, head = true) {
-                or {
-                    eq("user_id_one", currentUser)
-                    eq("user_id_one", currentUser)
-                }
-            }.decodeResultAs<Long>()
+            seasonInteractor.getCurrentUserId()?.let {currentUser ->
+                supabaseService.select("last_message", count = Count.EXACT, head = true) {
+                    or {
+                        eq("user_id_one", currentUser)
+                        eq("user_id_one", currentUser)
+                    }
+                }.decodeResultAs<Long>()
+            }?: 0
         }
     }
 

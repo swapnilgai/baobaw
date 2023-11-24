@@ -1,4 +1,4 @@
-package com.java.baobaw.feature.chatt_detail
+package com.java.baobaw.feature.chat
 
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.Interactor
@@ -6,9 +6,6 @@ import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
 import io.github.jan.supabase.postgrest.query.Order
-import io.github.jan.supabase.realtime.PostgresAction
-import io.github.jan.supabase.realtime.postgresChangeFlow
-import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -38,21 +35,17 @@ data class ChatMessageRequest(
     @SerialName("message") val message: String?
 )
 
-interface ChatInteractor : Interactor {
+interface ChatDetailInteractor : Interactor {
     suspend fun getMessages(referenceId: String, minRange: Long = 0, maxRange: Long = 50): List<ChatMessage>
-    fun getMessagesStream(referenceId: String): Flow<PostgresAction>
-
-    suspend fun joinMessageStream()
 
     suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage
 
     suspend fun sendMessage(inputText: String)
 
-    suspend fun unSubscribeToConversation()
-
     suspend fun jsonElementToChatMessage(jsonString: String, list: List<ChatMessage>): List<ChatMessage>
 }
-class ChatInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) : ChatInteractor {
+class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) :
+    ChatDetailInteractor {
 
     override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): List<ChatMessage>  = withInteractorContext {
         // Fetch messages from the database
@@ -102,32 +95,7 @@ class ChatInteractorImpl(private val supabaseService: SupabaseService, private v
             parameters = Json.encodeToJsonElement(request)
         )
     }
-
-    override fun getMessagesStream(referenceId: String): Flow<PostgresAction> {
-        val realtimeChannel = supabaseService.getMessageRealtimeChannel()
-        val changeFlow = realtimeChannel.postgresChangeFlow<PostgresAction>(schema = "public") {
-            table = "last_message"
-            filter = "reference_id=eq.$referenceId"
-        }
-        return changeFlow
     }
-
-    override suspend fun joinMessageStream() {
-        supabaseService.realTimeConnect()
-        supabaseService.getMessageRealtimeChannel().join()
-    }
-
-    override suspend fun unSubscribeToConversation() {
-        supabaseService.realTimeDisconnect()
-        supabaseService.getMessageRealtimeChannel().let {
-            it.leave()
-            supabaseService.realtimeRemoveChannel(it)
-        }
-    }
-
-
-
-}
 
 fun List<ChatMessageResponse>.toChatMessagesWithHeaders(currentUserId: String): List<ChatMessage> {
     val timeZone = TimeZone.currentSystemDefault()

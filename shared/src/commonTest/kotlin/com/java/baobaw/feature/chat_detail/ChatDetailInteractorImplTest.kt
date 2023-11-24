@@ -1,8 +1,7 @@
 package com.java.baobaw.feature.chat_detail
 
-import com.java.baobaw.feature.chatt_detail.ChatInteractorImpl
-import com.java.baobaw.feature.chatt_detail.ChatMessage
-import com.java.baobaw.feature.chatt_detail.ChatMessageResponse
+import com.java.baobaw.feature.chat.ChatDetailInteractorImpl
+import com.java.baobaw.feature.chat.ChatMessageResponse
 import com.java.baobaw.feature.common.interactor.CompatibilityBatchInteractorImpl
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.InteracroeException
@@ -23,7 +22,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class ChatInteractorImplTest {
+class ChatDetailInteractorImplTest {
 
     private lateinit var supabaseService: SupabaseService
     private lateinit var seasonInteractor: SeasonInteractor
@@ -86,7 +85,7 @@ class ChatInteractorImplTest {
 
         coEvery { seasonInteractor.getCurrentUserId() } returns currentUserId
 
-        val chatInteractor = ChatInteractorImpl(supabaseService, seasonInteractor)
+        val chatInteractor = ChatDetailInteractorImpl(supabaseService, seasonInteractor)
         // Act
         val result = chatInteractor.getMessages(referenceId)
         // Assert
@@ -112,7 +111,7 @@ class ChatInteractorImplTest {
 
         coEvery { seasonInteractor.getCurrentUserId() } returns currentUserId
 
-        val chatInteractor = ChatInteractorImpl(supabaseService, seasonInteractor)
+        val chatInteractor = ChatDetailInteractorImpl(supabaseService, seasonInteractor)
         // Act
         assertFailsWith<InteracroeException.Generic> {
             chatInteractor.getMessages(referenceId)
@@ -122,7 +121,7 @@ class ChatInteractorImplTest {
     @Test
     fun `sendMessage calls RPC with correct parameters`() = runTest {
         // Mock dependencies
-        val chatInteractor = ChatInteractorImpl(supabaseService, seasonInteractor)
+        val chatInteractor = ChatDetailInteractorImpl(supabaseService, seasonInteractor)
         val inputText = "Hello, World!"
         val currentUserId = "currentUserId"
 
@@ -138,7 +137,7 @@ class ChatInteractorImplTest {
         // Mock dependencies
         val supabaseService = mockk<SupabaseService>(relaxed = true)
         val seasonInteractor = mockk<SeasonInteractor>()
-        val chatInteractor = ChatInteractorImpl(supabaseService, seasonInteractor)
+        val chatInteractor = ChatDetailInteractorImpl(supabaseService, seasonInteractor)
         val inputText = "Hello, World!"
 
         coEvery { supabaseService.currentUserOrNull() } returns null

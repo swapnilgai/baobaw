@@ -40,6 +40,7 @@ fun <ContentT>BaseView(
     navController: NavController,
     setContentT: (ContentT) -> Unit,
     scope: CoroutineScope,
+    init: () -> Unit = {},
     content: @Composable () -> Unit) {
 
     content.invoke()
@@ -47,7 +48,7 @@ fun <ContentT>BaseView(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
                     viewModel.onStart()
-                    viewModel.init()
+                    init.invoke()
             } else if (event == Lifecycle.Event.ON_STOP) {
                 scope.launch {
                     viewModel.clearViewModel()  // Now called from within a coroutine

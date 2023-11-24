@@ -1,19 +1,11 @@
-package com.java.baobaw.feature.chatt_detail
+package com.java.baobaw.feature.chat
 
-import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.realtime.PostgresAction
-import io.github.jan.supabase.realtime.realtime
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Transient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -31,10 +23,11 @@ data class ChatMessage(
     @Transient val isHeader: Boolean = false // Transient property, defaulting to false
 )
 
-class ChatViewModel(private val chatInteractor: ChatInteractor, private val seasonInteractor: SeasonInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
+class ChatViewModel(private val chatDetailInteractor: ChatDetailInteractor,
+                    private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
 
-    override fun init() {
-        getConversation("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:883d0db4-6049-4b5f-acc4-75aeb47b0c1b")
+    fun inti(referenceId: String){
+        getConversation(referenceId)
         subscribeToConversation("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:883d0db4-6049-4b5f-acc4-75aeb47b0c1b")
     }
 
@@ -45,7 +38,7 @@ class ChatViewModel(private val chatInteractor: ChatInteractor, private val seas
     fun sendMessage(inputText: String){
         viewModelScope.launch {
             setLoading()
-            chatInteractor.sendMessage(inputText)
+            chatDetailInteractor.sendMessage(inputText)
             setContent { getContent() }
         }
     }
@@ -54,7 +47,7 @@ class ChatViewModel(private val chatInteractor: ChatInteractor, private val seas
     fun getConversation(referenceId: String) {
         viewModelScope.launch {
             setLoading()
-            val result = chatInteractor.getMessages(referenceId)
+            val result = chatDetailInteractor.getMessages(referenceId)
             setContent { result }
         }
     }
@@ -62,30 +55,28 @@ class ChatViewModel(private val chatInteractor: ChatInteractor, private val seas
     fun subscribeToConversation(referenceId: String) {
         // Subscribe to conversation logic
         viewModelScope.interactorLaunch {
-            val currentUserId = seasonInteractor.getCurrentUserId()
-            val channel = chatInteractor.getMessagesStream(referenceId)
+            val channel = chatRealtimeInteractor.getFlowStream("last_message", "reference_id=eq.$referenceId")
             channel.onEach {
                 when (it) {
                     is PostgresAction.Insert -> {
-                        val list = chatInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
+                        val list = chatDetailInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
                         setContent { list }
                     }
                     is PostgresAction.Update -> {
-                        val list = chatInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
+                        val list = chatDetailInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
                         setContent { list }
                     }
                     else -> {}
                 }
             }.launchIn(this)
 
-            chatInteractor.joinMessageStream()
+            chatRealtimeInteractor.subscribe()
         }
     }
 
      override suspend fun clearViewModel(){
          viewModelScope.launch {
-             chatInteractor.unSubscribeToConversation()
-         }.join()  //
+             chatRealtimeInteractor.unSubscribe()
+         }.join()
     }
-
 }

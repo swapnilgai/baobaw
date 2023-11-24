@@ -13,7 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,12 +24,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.java.baobaw.android.BaseView
-import com.java.baobaw.feature.chatt_detail.ChatMessage
-import com.java.baobaw.feature.chatt_detail.ChatViewModel
+import com.java.baobaw.feature.chat.ChatMessage
+import com.java.baobaw.feature.chat.ChatViewModel
 import kotlinx.coroutines.CoroutineScope
 import androidx.compose.material.TextField
 import androidx.compose.material.Button
-import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -57,7 +55,9 @@ fun ChatScreen(
         chatState = state
     }
 
-    BaseView(viewModel = chatViewModel, navController = navController, scope = scope, setContentT = { state -> setChatState(state)}) {
+    BaseView(viewModel = chatViewModel, navController = navController, scope = scope,
+        init = { chatViewModel.inti("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:883d0db4-6049-4b5f-acc4-75aeb47b0c1b")},
+        setContentT = { state -> setChatState(state)}) {
         LazyColumn(
             reverseLayout = true, // This ensures the latest messages are at the bottom.
             modifier = Modifier.fillMaxHeight()
