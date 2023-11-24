@@ -6,3 +6,5 @@ data class AuthSessionCacheKey(val key: String = "AuthSessionCacheKey"): CacheKe
 data class UserExistCacheKey(val key: String): CacheKey
 
 data class CurrentUserCacheKey(val key: String = "CurrentUserCacheKey"): CacheKey
+
+data class LastMessagesTotalCount(val key: String = "LastMessagesTotalCount"): CacheKey
