@@ -15,9 +15,10 @@ import com.java.baobaw.feature.common.presentation.MainViewModel
 import org.koin.android.ext.android.inject
 
 class MainActivity : AppCompatActivity() {
+    val mainViewModel by inject<MainViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val mainViewModel by inject<MainViewModel>()
         //mainViewModel.initCompatibilityBatchInBackground()
 
         setContent {
@@ -35,6 +36,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        mainViewModel.cancelSubscribeToChat()
     }
 }
 

@@ -32,7 +32,7 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
         viewModelScope.launch {
             supabaseClient.gotrue.sessionStatus.collect {
                 when (it) {
-                    is SessionStatus.Authenticated -> loadChat()
+                    is SessionStatus.Authenticated -> subscribeToChat()
                     SessionStatus.LoadingFromStorage -> println("Loading from storage")
                     SessionStatus.NetworkError -> println("Network error")
                     SessionStatus.NotAuthenticated -> println("Not authenticated")
@@ -41,7 +41,7 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
         }
     }
 
-    fun loadChat() {
+    fun subscribeToChat() {
         viewModelScope.interactorLaunch {
             chatRealtimeInteractor.subscribeToNewMessages()
                 .onEach { newMessage ->
@@ -56,6 +56,9 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
             compatibilityBatchInteractor.initCompatibilityBatch()
         }
     }
-
-
+    fun cancelSubscribeToChat() {
+        viewModelScope.launch {
+            chatRealtimeInteractor.unSubscribe()
+        }
+    }
 }

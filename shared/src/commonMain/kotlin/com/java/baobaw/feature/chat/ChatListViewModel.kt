@@ -24,10 +24,10 @@ class ChatListViewModel(
 ) : BaseViewModel<ChatListContent>(ChatListContent(emptyList())) {
 
     fun init() {
-        loadMoreMessages()
+        loadMoreMessages(1)
         subscribeToNewMessages()
     }
-    fun loadMoreMessages() {
+    fun loadMoreMessages(currentPageNumber: Long = getContent().currentPageNumber) {
         val currentState = getContent()
 
         // Guard against multiple simultaneous loads and if it's the last page
@@ -37,7 +37,7 @@ class ChatListViewModel(
 
         setLoading()
         viewModelScope.interactorLaunch {
-                val result = chatListInteractor.getLastMessages(currentState.currentPageNumber, 20L)
+                val result = chatListInteractor.getLastMessages(currentPageNumber, 20L)
                 val newPageNumber = currentState.currentPageNumber + 1
                 val newIsLastPage = newPageNumber >= result.totalPages
 
