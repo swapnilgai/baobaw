@@ -36,11 +36,11 @@ data class ChatMessageRequest(
 )
 
 interface ChatDetailInteractor : Interactor {
-    suspend fun getMessages(referenceId: String, minRange: Long = 0, maxRange: Long = 50): List<ChatMessage>
+    suspend fun getMessages(referenceId: String, minRange: Long = 0 , maxRange: Long = 50): List<ChatMessage>
 
     suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage
 
-    suspend fun sendMessage(inputText: String)
+    suspend fun sendMessage(inputText: String, referenceId: String): Unit
 
     suspend fun jsonElementToChatMessage(jsonString: String, list: List<ChatMessage>): List<ChatMessage>
 }
@@ -83,17 +83,20 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         updatedList
     }
 
-    override suspend fun sendMessage(inputText: String): Unit = withInteractorContext {
+    override suspend fun sendMessage(inputText: String, referenceId: String): Unit = withInteractorContext {
         val currentUserId = seasonInteractor.getCurrentUserId()
-        val request = ChatMessageRequest(
-            creatorUserId = currentUserId!!,
-            otherUserId = "883d0db4-6049-4b5f-acc4-75aeb47b0c1b",
-            message = inputText
-        )
-        supabaseService.rpc(
-            function = "insert_message",
-            parameters = Json.encodeToJsonElement(request)
-        )
+        referenceId.split(":").filterNot { it == currentUserId }.firstOrNull()?.let { otherUserId ->
+            // Send message to the other user (the user id is the second part of the reference id separated by "
+            val request = ChatMessageRequest(
+                creatorUserId = currentUserId!!,
+                otherUserId = otherUserId,
+                message = inputText
+            )
+            supabaseService.rpc(
+                function = "insert_message",
+                parameters = Json.encodeToJsonElement(request)
+            )
+        }
     }
     }
 

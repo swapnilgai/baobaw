@@ -23,5 +23,12 @@ class LRUCache<K, V>(private val capacity: Int) : com.java.baobaw.cache.Cache<K,
         }
         cacheMap[key] = value
     }
+    fun remove(key: K) {
+        cacheMap.remove(key)
+    }
+
+    fun clear() {
+        cacheMap.clear()
+    }
 }
 

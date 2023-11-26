@@ -35,7 +35,8 @@ import androidx.compose.material.Button
 fun ChatScreen(
     chatViewModel: ChatViewModel,
     scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController
+    navController: NavController,
+    referenceId: String
 ){
 
     var chatState by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
@@ -46,7 +47,7 @@ fun ChatScreen(
     fun sendMessage() {
         if (inputText.isNotBlank()) {
             // Call a function from your viewModel to send the message
-            chatViewModel.sendMessage(inputText)
+            chatViewModel.sendMessage(inputText, referenceId)
             inputText = "" // Clear the input field after sending
         }
     }
@@ -56,7 +57,7 @@ fun ChatScreen(
     }
 
     BaseView(viewModel = chatViewModel, navController = navController, scope = scope,
-        init = { chatViewModel.inti("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:883d0db4-6049-4b5f-acc4-75aeb47b0c1b")},
+        init = { chatViewModel.inti(referenceId)},
         setContentT = { state -> setChatState(state)}) {
         LazyColumn(
             reverseLayout = true, // This ensures the latest messages are at the bottom.

@@ -28,17 +28,13 @@ class ChatViewModel(private val chatDetailInteractor: ChatDetailInteractor,
 
     fun inti(referenceId: String){
         getConversation(referenceId)
-        subscribeToConversation("76c1c1ef-ec48-4bcb-9081-d2c52edb8661:883d0db4-6049-4b5f-acc4-75aeb47b0c1b")
+        subscribeToConversation(referenceId)
     }
 
-    fun fetchPreviousDataPage() {
-        // Fetch next page logic
-    }
-
-    fun sendMessage(inputText: String){
+    fun sendMessage(inputText: String, referenceId: String){
         viewModelScope.launch {
             setLoading()
-            chatDetailInteractor.sendMessage(inputText)
+            chatDetailInteractor.sendMessage(inputText, referenceId)
             setContent { getContent() }
         }
     }

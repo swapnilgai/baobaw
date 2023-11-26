@@ -1,5 +1,6 @@
 package com.java.baobaw.interactor
 
+import com.java.baobaw.BuildKonfig
 import com.java.baobaw.cache.CacheKey
 import com.java.baobaw.cache.LRUCache
 import io.github.jan.supabase.exceptions.HttpRequestException
@@ -31,50 +32,67 @@ suspend fun <T> Interactor.withInteractorContext(
     val context = InteractorDispatcherProvider.dispatcher + InteractorCoroutineContextElement(true)
 
     return withContext(context) {
-        cacheOption?.takeIf { isCacheAllowed }?.key?.let { key ->
-            return@withContext cache.get(key) as T
+        val cacheResult: T? = if (isCacheAllowed && cacheOption != null) {
+            cache.get(cacheOption.key) as T?
+        } else {
+            null
         }
-        var attemptIndex = 0
-        var blockResult: T
-        while (true) {
-            try {
-                retryRequestDeferred?.await()
-                retryRequestDeferred = null
+        return@withContext if (cacheResult != null) {
+            cacheResult
+        } else {
+            var attemptIndex = 0
+            var blockResult: T
+            while (true) {
+                try {
+                    retryRequestDeferred?.await()
+                    retryRequestDeferred = null
 
-                if (attemptIndex > 0) delay(retryOption.delayForRetryAttempt(attemptIndex))
+                    if (attemptIndex > 0) delay(retryOption.delayForRetryAttempt(attemptIndex))
 
-                blockResult = coroutineScope {
-                    if (attemptIndex > 0 && retryOption.forceRefreshDuringRetry) {
-                        withContext(CacheCoroutineContextElement(setCache = false)) { block() }
-                    } else {
-                        block()
-                    }
-                }
-
-                if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(Result.success(blockResult))) {
-                    break
-                }
-            } catch (e: Exception) {
-                if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(Result.failure(e))) {
-                    val awaitRetryOptions = interactorErrorHandling?.awaitRetryOptionOrNull(e)
-                    if (awaitRetryOptions != null && retryRequestDeferred == null) {
-                        retryRequestDeferred = async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
-                        continue
-                    }
-
-                    if (retryOption.throwException) {
-                        throw when {
-                            !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
-                            e is HttpRequestException || e is RestException -> e.toInteractorException()
-                            else -> e.toInteractorException()
+                    blockResult = coroutineScope {
+                        if (attemptIndex > 0 && retryOption.forceRefreshDuringRetry) {
+                            withContext(CacheCoroutineContextElement(setCache = false)) { block() }
+                        } else {
+                            block()
                         }
-                    } else throw IllegalStateException("State is not valid") //TODO check alternative to break loop
+                    }
+
+                    if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(
+                            Result.success(
+                                blockResult
+                            )
+                        )
+                    ) {
+                        break
+                    }
+                } catch (e: Exception) {
+                    if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(
+                            Result.failure(
+                                e
+                            )
+                        )
+                    ) {
+                        val awaitRetryOptions = interactorErrorHandling?.awaitRetryOptionOrNull(e)
+                        if (awaitRetryOptions != null && retryRequestDeferred == null) {
+                            retryRequestDeferred =
+                                async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
+                            continue
+                        }
+
+                        if (retryOption.throwException) {
+                            throw when {
+                                !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
+                                e is HttpRequestException || e is RestException -> e.toInteractorException()
+                                else -> e.toInteractorException()
+                            }
+                        } else throw IllegalStateException("State is not valid") //TODO check alternative to break loop
+                    }
                 }
+                attemptIndex++
             }
-            attemptIndex++
+            cacheOption?.takeIf { it.allowWrite }?.let { cache.put(it.key, blockResult as Any) }
+            blockResult
         }
-        cacheOption?.takeIf { it.allowWrite }?.let { cache.put(it.key, blockResult as Any) }
-        blockResult
     }
 }
 
@@ -92,4 +110,13 @@ private fun <T> RetryOption<T>.delayForRetryAttempt(attemptNumber: Int): Long{
     }
         .coerceAtLeast(0L)
         .coerceAtMost(maxDelay)
+}
+
+suspend fun Interactor.invalidateCache(cacheKey: CacheKey) {
+    if(coroutineContext[InteractorCoroutineContextElement] == null){
+        if(BuildKonfig.environment == "debug"){
+            throw IllegalStateException("invalidateCache should be called from within an interactor")
+        }
+    }
+    cache.remove(cacheKey)
 }

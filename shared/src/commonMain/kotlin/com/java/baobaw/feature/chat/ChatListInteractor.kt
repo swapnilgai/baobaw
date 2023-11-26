@@ -1,10 +1,11 @@
 package com.java.baobaw.feature.chat
 
-import com.java.baobaw.cache.AuthSessionCacheKey
 import com.java.baobaw.cache.LastMessagesTotalCount
+import com.java.baobaw.cache.UserMessagesKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.Interactor
+import com.java.baobaw.interactor.invalidateCache
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
@@ -54,45 +55,45 @@ data class PaginatedResponse<T>(
 
 interface ChatListInteractor : Interactor{
     suspend fun getLastMessagesTotalCount(): Long
-    suspend fun getLastMessages(pageNumber: Long, pageSize: Long): PaginatedResponse<LastMessage>
-
+    suspend fun getLastMessages(pageNumber: Long, pageSize: Long, currentMessages: List<LastMessage> = emptyList()): PaginatedResponse<LastMessage>
+    suspend fun jsonElementToLastMessage(jsonString: String): LastMessage
+    suspend fun invalidateMessageCache(pageNumber: Long = 1, pageSize: Long = 20L)
+    suspend fun updateMessagesWithNewData(currentMessages: List<LastMessage>, newMessages: List<LastMessage>): List<LastMessage>
 }
 class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor): ChatListInteractor {
 
     override suspend fun getLastMessagesTotalCount(): Long {
-        return withInteractorContext(cacheOption = CacheOption(key = LastMessagesTotalCount())) {
+        return withInteractorContext(cacheOption = CacheOption(key = LastMessagesTotalCount("LastMessagesTotalCount"))) {
             seasonInteractor.getCurrentUserId()?.let {currentUser ->
                 supabaseService.select("last_message", count = Count.EXACT, head = true) {
                     or {
                         eq("user_id_one", currentUser)
-                        eq("user_id_one", currentUser)
+                        eq("user_id_two", currentUser)
                     }
-                }.decodeResultAs<Long>()
+                }.count()?:0
             }?: 0
         }
     }
 
     override suspend fun getLastMessages(
         pageNumber: Long,
-        pageSize: Long
+        pageSize: Long,
+        currentMessages: List<LastMessage>
     ): PaginatedResponse<LastMessage> {
-        return withInteractorContext {
+        return withInteractorContext(cacheOption = CacheOption(key = UserMessagesKey(pageSize = pageSize, pageNumber = pageNumber))) {
             // Fetch messages from the database
             val currentUser = seasonInteractor.getCurrentUserId()!! // Replace with actual function to get current user ID
 
-            val offset = (pageNumber - 1) * pageSize
+            val offset = pageNumber * pageSize
 
             val listMessageResponseAwait = async {
                 supabaseService.select("last_message") {
                     or {
                         eq("user_id_one", currentUser)
-                        eq("user_id_one", currentUser)
+                        eq("user_id_two", currentUser)
                     }
+                    limit(offset)
                     order("created_date", Order.DESCENDING)
-                    limit(
-                        pageSize,
-                        offset.toString()
-                    )  // Use limit for pageSize and offset for skipping records
                 }
             }
             val countAwait = async { getLastMessagesTotalCount() }
@@ -100,28 +101,67 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
             val totalRecords = countAwait.await()
             val listMessageResponse = listMessageResponseAwait.await().decodeResultAs<List<LastMessageResponse>>()
 
+            val lastMessageList = listMessageResponse.toLastMessages(currentUser)
+
+            val combinedMessages = updateMessagesWithNewData(currentMessages, lastMessageList)
+
             PaginatedResponse(
-                data = listMessageResponse.toLastMessages(currentUser),
+                data = combinedMessages,
                 pageNumber = pageNumber,
                 pageSize = pageSize,
                 totalPages = ceil(totalRecords / pageSize.toDouble()).toInt()
             )
         }
     }
+
+    override suspend fun jsonElementToLastMessage(jsonString: String): LastMessage = withInteractorContext {
+        val userId = seasonInteractor.getCurrentUserId()
+        jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(userId!!)
+    }
+
+    override suspend fun invalidateMessageCache(pageNumber: Long, pageSize: Long) = withInteractorContext {
+        invalidateCache(UserMessagesKey(pageNumber = pageNumber, pageSize = pageSize))
+    }
+
+    override suspend fun updateMessagesWithNewData(
+        currentMessages: List<LastMessage>,
+        newMessages: List<LastMessage>
+    ): List<LastMessage> {
+        val currentMessageIds = currentMessages.map { it.id }.toSet()
+        val updatedMessagesMap = newMessages.associateBy { it.id }
+
+        val combinedMessages = mutableListOf<LastMessage>()
+
+        // Update existing messages and keep track of which new messages have been used
+        currentMessages.forEach { message ->
+            val updatedMessage = updatedMessagesMap[message.id]
+            combinedMessages.add(updatedMessage ?: message)
+        }
+
+        // Add new messages that weren't already in the current messages
+        newMessages.forEach { message ->
+            if (message.id !in currentMessageIds) {
+                combinedMessages.add(message)
+            }
+        }
+        return combinedMessages
+    }
 }
 fun List<LastMessageResponse>.toLastMessages(currentUser: String): List<LastMessage> {
-    return this.map { response ->
-        LastMessage(
-            id = response.id,
-            referenceId = response.referenceId,
-            creatorUserId = response.creatorUserId,
-            imageUrl = if (currentUser == response.userIdOne) response.userIdTwoImageUrl ?: "" else response.userIdOneImageUrl,
-            name = if (currentUser == response.userIdOne) response.userIdTwoName else response.userIdOneName,
-            message = if (response.isDeleted) "Deleted Message" else response.message,
-            isDeleted = response.isDeleted,
-            seen = if (currentUser == response.creatorUserId) true else response.seen,
-            createdDate = response.createdDate
-        )
-    }
+    return this.map { response -> response.toLastMessage(currentUser) }
+}
+
+fun LastMessageResponse.toLastMessage(currentUser: String): LastMessage {
+    return LastMessage(
+        id = this.id,
+        referenceId = this.referenceId,
+        creatorUserId = this.creatorUserId,
+        imageUrl = if (currentUser == this.userIdOne) this.userIdTwoImageUrl ?: "" else this.userIdOneImageUrl,
+        name = if (currentUser == this.userIdOne) this.userIdTwoName else this.userIdOneName,
+        message = if (this.isDeleted) "Deleted Message" else this.message,
+        isDeleted = this.isDeleted,
+        seen = if (currentUser == this.creatorUserId) true else this.seen,
+        createdDate = this.createdDate
+    )
 }
 
