@@ -13,3 +13,6 @@ data class LastMessagesTotalCount(val key: String = "LastMessagesTotalCount"): C
 
 data class UserMessagesKey(val key: String = "UserMessagesKey"): CacheKey
 
+data class MessageDetailKey(val referenceId: String): CacheKey
+
+

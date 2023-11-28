@@ -54,11 +54,11 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
             channel.onEach {
                 when (it) {
                     is PostgresAction.Insert -> {
-                        val list = chatDetailInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
+                        val list = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId)
                         setContent { list }
                     }
                     is PostgresAction.Update -> {
-                        val list = chatDetailInteractor.jsonElementToChatMessage( it.record.toString(), getContent() )
+                        val list = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId)
                         setContent { list }
                     }
                     else -> {}

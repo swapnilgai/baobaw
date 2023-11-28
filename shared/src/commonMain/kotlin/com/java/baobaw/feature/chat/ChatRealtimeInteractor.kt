@@ -3,6 +3,7 @@ package com.java.baobaw.feature.chat
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.withInteractorContext
+import com.java.baobaw.util.decodeResultAs
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.RealtimeChannel

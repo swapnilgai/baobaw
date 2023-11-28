@@ -1,6 +1,9 @@
 package com.java.baobaw.feature.chat
 
+import com.java.baobaw.cache.LastMessagesTotalCount
+import com.java.baobaw.cache.MessageDetailKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
+import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
@@ -42,12 +45,13 @@ interface ChatDetailInteractor : Interactor {
 
     suspend fun sendMessage(inputText: String, referenceId: String): Unit
 
-    suspend fun jsonElementToChatMessage(jsonString: String, list: List<ChatMessage>): List<ChatMessage>
+    suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): List<ChatMessage>
 }
 class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) :
     ChatDetailInteractor {
 
-    override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): List<ChatMessage>  = withInteractorContext {
+    override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): List<ChatMessage>  =
+        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId))) {
         // Fetch messages from the database
         val messages = supabaseService.select("messages") {
             eq("reference_id", referenceId)
@@ -58,7 +62,6 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         val currentUserId = seasonInteractor.getCurrentUserId()
 
         messages.toChatMessagesWithHeaders(currentUserId!!)
-        // Get current user id for comparison
     }
 
     override suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage = withInteractorContext {
@@ -66,7 +69,10 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         jsonString.decodeResultAs<ChatMessageResponse>().toChatMessage(userId!!)
     }
 
-    override suspend fun jsonElementToChatMessage(jsonString: String, list: List<ChatMessage>): List<ChatMessage> = withInteractorContext {
+    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): List<ChatMessage> =
+        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId,), skipCache = true)) {
+        val list = getMessages(referenceId = referenceId)
+
         val userId = seasonInteractor.getCurrentUserId()
         val msgResponse: ChatMessageResponse = jsonString.decodeResultAs<ChatMessageResponse>()
         val newMsg = msgResponse.toChatMessage(userId!!)
