@@ -130,7 +130,7 @@ fun ChatMessageItem(message: ChatMessage, isCurrentUser: Boolean) {
                 )
 
                 Text(
-                    text = message.createdDate.toString(),
+                    text = message.createdTime.toString(),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 4.dp),
                     color = if (isCurrentUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant

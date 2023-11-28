@@ -5,21 +5,20 @@ import com.java.baobaw.presentationInfra.BaseViewModel
 import io.github.jan.supabase.realtime.PostgresAction
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.serialization.Transient
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChatMessage(
-    @SerialName("id") val id: Int,
-    @SerialName("reference_id") val referenceId: String,
-    @SerialName("creator_user_id") val creatorUserId: String,
-    @SerialName("message") val message: String?, // Nullable since "message" can be null
-    @SerialName("created_date") val createdDate: String,
-    @SerialName("seen") val seen: Boolean,
-    @SerialName("is_deleted") val isDeleted: Boolean,
-    @Transient val isUserCreated: Boolean = false,
-    @Transient val isHeader: Boolean = false // Transient property, defaulting to false
+    val id: Int,
+    val referenceId: String,
+    val creatorUserId: String,
+    val message: String?, // Nullable since "message" can be null
+    val createdTime: String,
+    val createdDate: String,
+    val seen: Boolean,
+    val isDeleted: Boolean,
+    val isUserCreated: Boolean = false,
+    val isHeader: Boolean = false // Transient property, defaulting to false
 )
 
 class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor,

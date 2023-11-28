@@ -1,5 +1,6 @@
 package com.java.baobaw.feature.common.presentation
 
+import com.java.baobaw.feature.chat.ChatDetailInteractor
 import com.java.baobaw.feature.chat.ChatListInteractor
 import com.java.baobaw.feature.chat.ChatListType
 import com.java.baobaw.feature.chat.ChatRealtimeInteractor
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatchInteractor,
                     private val supabaseClient: SupabaseClient,
                     private val chatRealtimeInteractor: ChatRealtimeInteractor,
-                    private val chatListInteractor: ChatListInteractor
+                    private val chatListInteractor: ChatListInteractor,
+                    private val chatDetailInteractor: ChatDetailInteractor
 ) : BaseViewModel<Unit>(initialContent = Unit) {
     init {
        // initCompatibilityBatchInBackground()
@@ -47,6 +49,7 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
             chatRealtimeInteractor.subscribeToNewMessages(chatListType = ChatListType.NOTIFICATION)
                 .onEach { newMessage ->
                     chatListInteractor.updateMessages(newMessage)
+                    chatDetailInteractor.updateMessages(newMessage)
                 }.launchIn(this)
             chatRealtimeInteractor.connect()
             chatRealtimeInteractor.subscribe(chatListType = ChatListType.NOTIFICATION)

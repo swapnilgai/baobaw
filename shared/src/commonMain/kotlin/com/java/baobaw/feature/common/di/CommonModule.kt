@@ -14,6 +14,6 @@ import org.koin.dsl.module
 val commonModule = module {
     single<SeasonInteractor> { SeasonInteractorImpl(get()) }
     single<CompatibilityBatchInteractor> { CompatibilityBatchInteractorImpl(get(), get()) }
-    single<MainViewModel> { MainViewModel(get(), get(), get(), get()) }
+    single<MainViewModel> { MainViewModel(get(), get(), get(), get(), get()) }
     single<BitmapProcessor> { BitmapProcessorImpl() }
 }
