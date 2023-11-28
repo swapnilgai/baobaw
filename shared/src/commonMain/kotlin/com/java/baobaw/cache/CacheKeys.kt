@@ -1,5 +1,7 @@
 package com.java.baobaw.cache
 
+const val INITIAL_PAGE_NUMBER = 0
+const val DEFAULT_PAGE_SIZE = 20
 
 data class AuthSessionCacheKey(val key: String = "AuthSessionCacheKey"): CacheKey
 
@@ -9,5 +11,5 @@ data class CurrentUserCacheKey(val key: String = "CurrentUserCacheKey"): CacheKe
 
 data class LastMessagesTotalCount(val key: String = "LastMessagesTotalCount"): CacheKey
 
-data class UserMessagesKey(val key: String = "UserMessagesKey",  val pageNumber: Long = 0, val pageSize: Long = 20): CacheKey
+data class UserMessagesKey(val key: String = "UserMessagesKey"): CacheKey
 

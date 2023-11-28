@@ -1,6 +1,7 @@
 package com.java.baobaw.interactor
 
 import com.java.baobaw.BuildKonfig
+import com.java.baobaw.cache.Cache
 import com.java.baobaw.cache.CacheKey
 import com.java.baobaw.cache.LRUCache
 import io.github.jan.supabase.exceptions.HttpRequestException
@@ -19,8 +20,7 @@ interface Interactor
 
 private var retryRequestDeferred: Deferred<Unit>? = null
 
-private val cache =
-    LRUCache<CacheKey, Any>(100)
+val cache : Cache<CacheKey, Any> = LRUCache(100)
 suspend fun <T> Interactor.withInteractorContext(
     cacheOption: CacheOption? = null,
     retryOption: RetryOption<T> = RetryOption(0),
@@ -32,7 +32,7 @@ suspend fun <T> Interactor.withInteractorContext(
     val context = InteractorDispatcherProvider.dispatcher + InteractorCoroutineContextElement(true)
 
     return withContext(context) {
-        val cacheResult: T? = if (isCacheAllowed && cacheOption != null) {
+        val cacheResult: T? = if (isCacheAllowed && cacheOption != null && !cacheOption.skipCache) {
             cache.get(cacheOption.key) as T?
         } else {
             null

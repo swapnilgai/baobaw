@@ -14,7 +14,6 @@ import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.async
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
-import kotlin.math.ceil
 
 @Serializable
 data class LastMessageResponse(
@@ -48,17 +47,16 @@ data class LastMessage(
 
 data class PaginatedResponse<T>(
     val data: List<T>,
-    val pageNumber: Long,
-    val pageSize: Long,
-    val totalPages: Int
+    val offset: Long,
+    val totalRecords: Long
 )
 
 interface ChatListInteractor : Interactor{
     suspend fun getLastMessagesTotalCount(): Long
-    suspend fun getLastMessages(pageNumber: Long, pageSize: Long, currentMessages: List<LastMessage> = emptyList()): PaginatedResponse<LastMessage>
+    suspend fun getLastMessages(offset: Long, isLastPage: Boolean = false, currentMessages: List<LastMessage> = emptyList()): PaginatedResponse<LastMessage>
     suspend fun jsonElementToLastMessage(jsonString: String): LastMessage
-    suspend fun invalidateMessageCache(pageNumber: Long = 1, pageSize: Long = 20L)
-    suspend fun updateMessagesWithNewData(currentMessages: List<LastMessage>, newMessages: List<LastMessage>): List<LastMessage>
+    suspend fun invalidateMessageCache()
+    suspend fun updateMessages(newMessages: LastMessage): PaginatedResponse<LastMessage>
 }
 class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor): ChatListInteractor {
 
@@ -76,15 +74,13 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
     }
 
     override suspend fun getLastMessages(
-        pageNumber: Long,
-        pageSize: Long,
+        offset: Long,
+        isLastPage: Boolean,
         currentMessages: List<LastMessage>
     ): PaginatedResponse<LastMessage> {
-        return withInteractorContext(cacheOption = CacheOption(key = UserMessagesKey(pageSize = pageSize, pageNumber = pageNumber))) {
+        return withInteractorContext(cacheOption = CacheOption(key = UserMessagesKey(), skipCache = !isLastPage)) {
             // Fetch messages from the database
             val currentUser = seasonInteractor.getCurrentUserId()!! // Replace with actual function to get current user ID
-
-            val offset = pageNumber * pageSize
 
             val listMessageResponseAwait = async {
                 supabaseService.select("last_message") {
@@ -107,9 +103,8 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
 
             PaginatedResponse(
                 data = combinedMessages,
-                pageNumber = pageNumber,
-                pageSize = pageSize,
-                totalPages = ceil(totalRecords / pageSize.toDouble()).toInt()
+                offset = offset,
+                totalRecords = totalRecords
             )
         }
     }
@@ -119,11 +114,36 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
         jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(userId!!)
     }
 
-    override suspend fun invalidateMessageCache(pageNumber: Long, pageSize: Long) = withInteractorContext {
-        invalidateCache(UserMessagesKey(pageNumber = pageNumber, pageSize = pageSize))
+    override suspend fun invalidateMessageCache() = withInteractorContext {
+        invalidateCache(UserMessagesKey())
     }
 
-    override suspend fun updateMessagesWithNewData(
+    override suspend fun updateMessages(
+        newMessages: LastMessage
+    ): PaginatedResponse<LastMessage> {
+        return withInteractorContext(cacheOption = CacheOption(key = UserMessagesKey(), skipCache = true)) {
+            // Create a mutable copy of currentMessages
+            val getLastMessagesResult = getLastMessages(0, true)
+            val updatedMessages = getLastMessagesResult.data.toMutableList()
+
+            // Find and remove the message with the same id as newMessages
+            val messageToRemove = updatedMessages.find { it.id == newMessages.id }
+            updatedMessages.remove(messageToRemove)
+
+            // Add newMessages to the first position
+            updatedMessages.add(0, newMessages)
+
+            // Return the updated list
+
+            PaginatedResponse(
+                data = updatedMessages,
+                offset = getLastMessagesResult.offset,
+                totalRecords = getLastMessagesResult.totalRecords
+            )
+        }
+    }
+
+    private fun updateMessagesWithNewData(
         currentMessages: List<LastMessage>,
         newMessages: List<LastMessage>
     ): List<LastMessage> {
@@ -147,6 +167,7 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
         return combinedMessages
     }
 }
+
 fun List<LastMessageResponse>.toLastMessages(currentUser: String): List<LastMessage> {
     return this.map { response -> response.toLastMessage(currentUser) }
 }

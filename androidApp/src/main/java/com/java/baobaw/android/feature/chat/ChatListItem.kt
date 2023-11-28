@@ -64,10 +64,8 @@ fun ChatListView(chatListViewModel: ChatListViewModel,
                 )
 
                 // Load more messages when near the end of the list and not already loading or at the last page
-                if (index >= chatListState.messages.size - 1 &&
-                    !chatListState.isLastPage &&
-                    !chatListState.isLoading) {
-                    chatListViewModel.loadMoreMessages()
+                if (index >= chatListState.messages.size - 1) {
+                    //chatListViewModel.loadMoreMessages()
                 }
             }
         }
@@ -77,10 +75,8 @@ fun ChatListView(chatListViewModel: ChatListViewModel,
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
                 .collect { lastIndex ->
                     if (lastIndex != null &&
-                        lastIndex >= chatListState.messages.size - 10 && // Threshold for pagination
-                        !chatListState.isLastPage &&
-                        !chatListState.isLoading) {
-                        chatListViewModel.loadMoreMessages()
+                        lastIndex >= chatListState.messages.size - 10) {
+                        //chatListViewModel.loadMoreMessages()
                     }
                 }
         }

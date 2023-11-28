@@ -1,6 +1,7 @@
 package com.java.baobaw.feature.common.presentation
 
 import com.java.baobaw.feature.chat.ChatListInteractor
+import com.java.baobaw.feature.chat.ChatListType
 import com.java.baobaw.feature.chat.ChatRealtimeInteractor
 import com.java.baobaw.feature.chat.ChatRealtimeInteractorImpl
 import com.java.baobaw.feature.common.interactor.CompatibilityBatchInteractor
@@ -41,13 +42,14 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
         }
     }
 
-    fun subscribeToChat() {
+    private fun subscribeToChat() {
         viewModelScope.interactorLaunch {
-            chatRealtimeInteractor.subscribeToNewMessages()
+            chatRealtimeInteractor.subscribeToNewMessages(chatListType = ChatListType.NOTIFICATION)
                 .onEach { newMessage ->
-                    chatListInteractor.invalidateMessageCache()
+                    chatListInteractor.updateMessages(newMessage)
                 }.launchIn(this)
-            chatRealtimeInteractor.subscribe()
+            chatRealtimeInteractor.connect()
+            chatRealtimeInteractor.subscribe(chatListType = ChatListType.NOTIFICATION)
         }
     }
 
@@ -58,7 +60,8 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
     }
     fun cancelSubscribeToChat() {
         viewModelScope.launch {
-            chatRealtimeInteractor.unSubscribe()
+            chatRealtimeInteractor.unSubscribe(chatListType = ChatListType.NOTIFICATION)
+            chatRealtimeInteractor.disconnect()
         }
     }
 }

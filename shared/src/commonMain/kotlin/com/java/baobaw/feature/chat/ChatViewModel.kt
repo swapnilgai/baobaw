@@ -32,7 +32,7 @@ class ChatViewModel(private val chatDetailInteractor: ChatDetailInteractor,
     }
 
     fun sendMessage(inputText: String, referenceId: String){
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             setLoading()
             chatDetailInteractor.sendMessage(inputText, referenceId)
             setContent { getContent() }
@@ -41,7 +41,7 @@ class ChatViewModel(private val chatDetailInteractor: ChatDetailInteractor,
 
     // The function to get the conversation as described.
     fun getConversation(referenceId: String) {
-        viewModelScope.launch {
+        viewModelScope.interactorLaunch {
             setLoading()
             val result = chatDetailInteractor.getMessages(referenceId)
             setContent { result }
@@ -51,7 +51,7 @@ class ChatViewModel(private val chatDetailInteractor: ChatDetailInteractor,
     fun subscribeToConversation(referenceId: String) {
         // Subscribe to conversation logic
         viewModelScope.interactorLaunch {
-            val channel = chatRealtimeInteractor.getFlowStream("last_message", "reference_id=eq.$referenceId")
+            val channel = chatRealtimeInteractor.getFlowStream("last_message", "reference_id=eq.$referenceId", ChatListType.DETAIL_MESSAGES)
             channel.onEach {
                 when (it) {
                     is PostgresAction.Insert -> {
@@ -65,14 +65,13 @@ class ChatViewModel(private val chatDetailInteractor: ChatDetailInteractor,
                     else -> {}
                 }
             }.launchIn(this)
-
-            chatRealtimeInteractor.subscribe()
+            chatRealtimeInteractor.subscribe(chatListType = ChatListType.DETAIL_MESSAGES)
         }
     }
 
      override suspend fun clearViewModel(){
-         viewModelScope.launch {
-             chatRealtimeInteractor.unSubscribe()
+         viewModelScope.interactorLaunch {
+             chatRealtimeInteractor.unSubscribe(chatListType = ChatListType.DETAIL_MESSAGES)
          }.join()
     }
 }

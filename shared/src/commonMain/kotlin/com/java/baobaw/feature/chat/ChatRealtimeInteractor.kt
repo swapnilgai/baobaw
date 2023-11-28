@@ -2,7 +2,6 @@ package com.java.baobaw.feature.chat
 
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.Interactor
-import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.interactor.withInteractorContext
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.realtime.PostgresAction
@@ -13,41 +12,75 @@ import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.runBlocking
 
+enum class ChatListType {
+    NOTIFICATION,
+    LIST_MESSAGES,
+    DETAIL_MESSAGES
+}
 interface ChatRealtimeInteractor: Interactor {
-    suspend fun getFlowStream(tableName: String, filterString: String?): Flow<PostgresAction>
-    suspend fun unSubscribe()
-    suspend fun subscribe()
-    suspend fun subscribeToNewMessages(): Flow<LastMessage>
-
+    suspend fun getFlowStream(tableName: String, filterString: String?, chatListType: ChatListType): Flow<PostgresAction>
+    suspend fun unSubscribe(chatListType: ChatListType)
+    suspend fun subscribe(chatListType: ChatListType)
+    suspend fun subscribeToNewMessages(chatListType: ChatListType): Flow<LastMessage>
+    suspend fun connect()
+    suspend fun disconnect()
 }
 class ChatRealtimeInteractorImpl(
     private val supabaseClient: SupabaseClient,
-    val seasonInteractor: SeasonInteractor,
+    private val seasonInteractor: SeasonInteractor,
     private val chatListInteractor: ChatListInteractor
     ) : ChatRealtimeInteractor {
-        private var realtimeChannel: RealtimeChannel? = null
-        private suspend fun getRealtimeChannelForUser(): RealtimeChannel {
-            return withInteractorContext {
-                if (realtimeChannel == null) {
-                    val userId = seasonInteractor.getCurrentUserId()
-                    val channelName = "messages:$userId"
-                    realtimeChannel = supabaseClient.realtime.createChannel(channelName)
-                }
-                realtimeChannel!!
+        private var realtimeNotificationChannel: RealtimeChannel? = null
+        private var realtimeDetailMessageChannel: RealtimeChannel? = null
+        private var realtimeListMessageChannel: RealtimeChannel? = null
+    private suspend fun getRealtimeNotificationChannel(): RealtimeChannel {
+        return withInteractorContext {
+            if (realtimeNotificationChannel == null) {
+                val userId = seasonInteractor.getCurrentUserId()
+                val channelName = "notification:$userId"
+                realtimeNotificationChannel = supabaseClient.realtime.createChannel(channelName)
             }
+            realtimeNotificationChannel!!
         }
+    }
+
+    private suspend fun getRealtimeListMessagesChannel(): RealtimeChannel {
+        return withInteractorContext {
+            if (realtimeListMessageChannel == null) {
+                val userId = seasonInteractor.getCurrentUserId()
+                val channelName = "detail_messages:$userId"
+                realtimeListMessageChannel = supabaseClient.realtime.createChannel(channelName)
+            }
+            realtimeListMessageChannel!!
+        }
+    }
+
+    private suspend fun getRealtimeDetailMessagesChannel(): RealtimeChannel {
+        return withInteractorContext {
+            if (realtimeDetailMessageChannel == null) {
+                val userId = seasonInteractor.getCurrentUserId()
+                val channelName = "list_messages:$userId"
+                realtimeDetailMessageChannel = supabaseClient.realtime.createChannel(channelName)
+            }
+            realtimeDetailMessageChannel!!
+        }
+    }
+
+    private suspend fun getRealtimeChannel(chatListType: ChatListType) : RealtimeChannel =
+         when(chatListType) {
+            ChatListType.NOTIFICATION -> getRealtimeNotificationChannel()
+            ChatListType.LIST_MESSAGES -> getRealtimeListMessagesChannel()
+            ChatListType.DETAIL_MESSAGES -> getRealtimeDetailMessagesChannel()
+    }
 
         override suspend fun getFlowStream(
             tableName: String,
-            filterString: String?
+            filterString: String?,
+            chatListType: ChatListType
         ): Flow<PostgresAction> {
-            val realtimeChannel = getRealtimeChannelForUser()
+            val realtimeChannel = getRealtimeChannel(chatListType)
             val changeFlow = realtimeChannel.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = tableName
                 filter = filterString
@@ -55,20 +88,20 @@ class ChatRealtimeInteractorImpl(
             return changeFlow
         }
 
-        override suspend fun unSubscribe() {
-            getRealtimeChannelForUser().let {
+        override suspend fun unSubscribe(chatListType: ChatListType) {
+            val realtimeChannel = getRealtimeChannel(chatListType)
+            realtimeChannel.let {
                 it.leave()
-                supabaseClient.realtime.disconnect()
                 supabaseClient.realtime.removeChannel(it)
             }
         }
 
-        override suspend fun subscribe() {
-            supabaseClient.realtime.connect()
-            getRealtimeChannelForUser().join()
+        override suspend fun subscribe(chatListType: ChatListType) {
+            val realtimeChannel = getRealtimeChannel(chatListType)
+            realtimeChannel.join()
         }
-    override suspend fun subscribeToNewMessages(): Flow<LastMessage> {
-        return getFlowStream("last_message", null)
+    override suspend fun subscribeToNewMessages(chatListType: ChatListType): Flow<LastMessage> {
+        return getFlowStream("last_message", null, chatListType)
             .flatMapConcat { action ->
                 when (action) {
                     is PostgresAction.Insert -> {
@@ -80,6 +113,12 @@ class ChatRealtimeInteractorImpl(
                     else -> emptyFlow()
                 }
             }
+    }
+    override suspend fun connect() {
+        supabaseClient.realtime.connect()
+    }
+    override suspend fun disconnect() {
+        supabaseClient.realtime.disconnect()
     }
 }
 

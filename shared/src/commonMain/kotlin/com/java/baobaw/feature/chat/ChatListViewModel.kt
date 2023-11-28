@@ -13,9 +13,9 @@ import kotlinx.coroutines.launch
 
 data class ChatListContent(
     val messages: List<LastMessage>,
-    val currentPageNumber: Long = 1,
-    val isLastPage: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val offset: Long = 0L,
+    val totalRecords: Long = 1L
 )
 
 class ChatListViewModel(
@@ -24,49 +24,50 @@ class ChatListViewModel(
 ) : BaseViewModel<ChatListContent>(ChatListContent(emptyList())) {
 
     fun init() {
-        loadMoreMessages(1)
+        loadMoreMessages()
         subscribeToNewMessages()
     }
-    fun loadMoreMessages(currentPageNumber: Long = getContent().currentPageNumber) {
+    fun loadMoreMessages() {
         val currentState = getContent()
 
         // Guard against multiple simultaneous loads and if it's the last page
-      //  if (currentState.isLoading || currentState.isLastPage) return
-
+        if (currentState.isLoading ) {
+            return
+        }
         setContent { currentState.copy(isLoading = true) }
-
+        val newOffset = if(currentState.totalRecords > currentState.offset) currentState.offset + 20L
+        else currentState.offset
         setLoading()
         viewModelScope.interactorLaunch {
-                val result = chatListInteractor.getLastMessages(currentPageNumber, 20L)
-                val newPageNumber = currentState.currentPageNumber + 1
-                val newIsLastPage = newPageNumber >= result.totalPages
+            val isLastPage = getContent().totalRecords <= getContent().messages.size
+            val result = chatListInteractor.getLastMessages(newOffset, isLastPage  = isLastPage, getContent().messages)
 
-                setContent {
-                    ChatListContent(
-                        messages = result.data,
-                        currentPageNumber = newPageNumber,
-                        isLastPage = newIsLastPage,
-                        isLoading = false
-                    )
-                }
+            setContent {
+                ChatListContent(
+                    messages = result.data,
+                    isLoading = false,
+                    offset = result.offset,
+                    totalRecords = result.totalRecords
+                )
+            }
         }
     }
 
     fun subscribeToNewMessages() {
         viewModelScope.interactorLaunch {
-            chatRealtimeInteractor.subscribeToNewMessages()
+            chatRealtimeInteractor.subscribeToNewMessages(chatListType = ChatListType.LIST_MESSAGES)
                 .onEach { newMessage ->
-                    val combinedList = chatListInteractor.updateMessagesWithNewData(getContent().messages, listOf(newMessage))
+                    val combinedList = chatListInteractor.updateMessages(newMessage)
                     setContent {
-                        getContent().copy(messages = combinedList)
+                        getContent().copy(messages = combinedList.data)
                     }
                 }.launchIn(this)
-            chatRealtimeInteractor.subscribe()
+            chatRealtimeInteractor.subscribe(chatListType = ChatListType.LIST_MESSAGES)
         }
     }
     override suspend fun clearViewModel() {
-        viewModelScope.launch {
-            chatRealtimeInteractor.unSubscribe()
+        viewModelScope.interactorLaunch {
+            chatRealtimeInteractor.unSubscribe(chatListType = ChatListType.LIST_MESSAGES)
         }.join()
     }
 
