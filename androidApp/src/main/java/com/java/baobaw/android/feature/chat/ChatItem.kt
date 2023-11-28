@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.java.baobaw.android.BaseView
 import com.java.baobaw.feature.chat.ChatMessage
-import com.java.baobaw.feature.chat.ChatViewModel
+import com.java.baobaw.feature.chat.ChatDetailViewModel
 import kotlinx.coroutines.CoroutineScope
 import androidx.compose.material.TextField
 import androidx.compose.material.Button
@@ -33,7 +33,7 @@ import androidx.compose.material.Button
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatScreen(
-    chatViewModel: ChatViewModel,
+    chatDetailViewModel: ChatDetailViewModel,
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController,
     referenceId: String
@@ -47,7 +47,7 @@ fun ChatScreen(
     fun sendMessage() {
         if (inputText.isNotBlank()) {
             // Call a function from your viewModel to send the message
-            chatViewModel.sendMessage(inputText, referenceId)
+            chatDetailViewModel.sendMessage(inputText, referenceId)
             inputText = "" // Clear the input field after sending
         }
     }
@@ -56,8 +56,8 @@ fun ChatScreen(
         chatState = state
     }
 
-    BaseView(viewModel = chatViewModel, navController = navController, scope = scope,
-        init = { chatViewModel.inti(referenceId)},
+    BaseView(viewModel = chatDetailViewModel, navController = navController, scope = scope,
+        init = { chatDetailViewModel.inti(referenceId)},
         setContentT = { state -> setChatState(state)}) {
         LazyColumn(
             reverseLayout = true, // This ensures the latest messages are at the bottom.

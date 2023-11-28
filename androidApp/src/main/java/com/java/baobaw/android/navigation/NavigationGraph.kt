@@ -66,7 +66,7 @@ fun NavigationGraph(navController: NavHostController) {
                 type = NavType.StringType }))
         { navBackStackEntry ->
             val referenceId = navBackStackEntry.arguments?.getString(AppConstants.NavigationParam.REFERENCE_ID)?: ""
-            ChatScreen(chatViewModel = get(), navController = navController, referenceId = referenceId)
+            ChatScreen(chatDetailViewModel = get(), navController = navController, referenceId = referenceId)
         }
     }
 }

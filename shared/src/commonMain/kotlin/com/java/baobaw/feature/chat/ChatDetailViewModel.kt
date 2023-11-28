@@ -5,7 +5,6 @@ import com.java.baobaw.presentationInfra.BaseViewModel
 import io.github.jan.supabase.realtime.PostgresAction
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Transient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -23,8 +22,8 @@ data class ChatMessage(
     @Transient val isHeader: Boolean = false // Transient property, defaulting to false
 )
 
-class ChatViewModel(private val chatDetailInteractor: ChatDetailInteractor,
-                    private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
+class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor,
+                          private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
 
     fun inti(referenceId: String){
         getConversation(referenceId)
