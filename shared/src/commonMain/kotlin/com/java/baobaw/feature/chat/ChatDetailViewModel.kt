@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChatMessage(
-    val id: Int,
+    val id: Long,
     val referenceId: String,
     val creatorUserId: String,
     val message: String?, // Nullable since "message" can be null
@@ -18,7 +18,8 @@ data class ChatMessage(
     val seen: Boolean,
     val isDeleted: Boolean,
     val isUserCreated: Boolean = false,
-    val isHeader: Boolean = false // Transient property, defaulting to false
+    val isHeader: Boolean = false, // Transient property, defaulting to false
+    val messageId: Long
 )
 
 class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor,
@@ -53,12 +54,22 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
             channel.onEach {
                 when (it) {
                     is PostgresAction.Insert -> {
-                        val list = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId)
-                        setContent { list }
+                        when(val result = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
+                        {
+                            is JsonChatMessageResponse.Success -> {
+                                setContent { result.listChatMessage }
+                            }
+                            else -> {}
+                        }
                     }
                     is PostgresAction.Update -> {
-                        val list = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId)
-                        setContent { list }
+                        when(val result = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
+                        {
+                            is JsonChatMessageResponse.Success -> {
+                                setContent { result.listChatMessage }
+                            }
+                            else -> {}
+                        }
                     }
                     else -> {}
                 }

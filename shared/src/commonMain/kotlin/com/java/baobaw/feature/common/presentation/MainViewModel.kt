@@ -4,14 +4,12 @@ import com.java.baobaw.feature.chat.ChatDetailInteractor
 import com.java.baobaw.feature.chat.ChatListInteractor
 import com.java.baobaw.feature.chat.ChatListType
 import com.java.baobaw.feature.chat.ChatRealtimeInteractor
-import com.java.baobaw.feature.chat.ChatRealtimeInteractorImpl
 import com.java.baobaw.feature.common.interactor.CompatibilityBatchInteractor
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.SessionStatus
 import io.github.jan.supabase.gotrue.gotrue
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -46,13 +44,11 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
 
     private fun subscribeToChat() {
         viewModelScope.interactorLaunch {
-            chatRealtimeInteractor.subscribeToNewMessages(chatListType = ChatListType.NOTIFICATION)
+            chatRealtimeInteractor.subscribeToLastMessages(chatListType = ChatListType.NOTIFICATION)
                 .onEach { newMessage ->
                     chatListInteractor.updateMessages(newMessage)
                     chatDetailInteractor.updateMessages(newMessage)
                 }.launchIn(this)
-            chatRealtimeInteractor.connect()
-            chatRealtimeInteractor.subscribe(chatListType = ChatListType.NOTIFICATION)
         }
     }
 

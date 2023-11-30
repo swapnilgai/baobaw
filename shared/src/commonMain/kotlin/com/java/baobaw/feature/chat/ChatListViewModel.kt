@@ -1,7 +1,6 @@
 package com.java.baobaw.feature.chat
 
 import com.java.baobaw.AppConstants
-import io.github.jan.supabase.realtime.PostgresAction
 
 
 import com.java.baobaw.presentationInfra.BaseViewModel
@@ -9,7 +8,6 @@ import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.util.getNavigationUrlWithoutBrackets
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 data class ChatListContent(
     val messages: List<LastMessage>,
@@ -55,14 +53,13 @@ class ChatListViewModel(
 
     fun subscribeToNewMessages() {
         viewModelScope.interactorLaunch {
-            chatRealtimeInteractor.subscribeToNewMessages(chatListType = ChatListType.LIST_MESSAGES)
+            chatRealtimeInteractor.subscribeToLastMessages(chatListType = ChatListType.LIST_MESSAGES)
                 .onEach { newMessage ->
                     val combinedList = chatListInteractor.updateMessages(newMessage)
                     setContent {
                         getContent().copy(messages = combinedList.data)
                     }
                 }.launchIn(this)
-            chatRealtimeInteractor.subscribe(chatListType = ChatListType.LIST_MESSAGES)
         }
     }
     override suspend fun clearViewModel() {

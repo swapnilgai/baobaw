@@ -5,10 +5,12 @@ import com.java.baobaw.cache.UserMessagesKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.Interactor
+import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.invalidateCache
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
+import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Count
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.async
@@ -31,6 +33,7 @@ data class LastMessageResponse(
     @SerialName("is_blocked") val isBlocked: Boolean,
     @SerialName("seen") val seen: Boolean,
     @SerialName("created_date") val createdDate: String,
+    @SerialName("message_id") val messageId: Long,
 )
 @Serializable
 data class LastMessage(
@@ -42,7 +45,8 @@ data class LastMessage(
     val message: String,
     val isDeleted: Boolean,
     val seen: Boolean,
-    val createdDate: String
+    val createdDate: String,
+    val messageId: Long
 )
 
 data class PaginatedResponse<T>(
@@ -51,14 +55,19 @@ data class PaginatedResponse<T>(
     val totalRecords: Long
 )
 
+sealed class JsonLatMessageResponse {
+    data class Success(val lastMessage: LastMessage) : JsonLatMessageResponse()
+    object Error : JsonLatMessageResponse()
+}
+
 interface ChatListInteractor : Interactor{
     suspend fun getLastMessagesTotalCount(): Long
     suspend fun getLastMessages(offset: Long, isLastPage: Boolean = false, currentMessages: List<LastMessage> = emptyList()): PaginatedResponse<LastMessage>
-    suspend fun jsonElementToLastMessage(jsonString: String): LastMessage
+    suspend fun jsonElementToLastMessage(jsonString: String): JsonLatMessageResponse
     suspend fun invalidateMessageCache()
     suspend fun updateMessages(newMessages: LastMessage): PaginatedResponse<LastMessage>
 }
-class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor): ChatListInteractor {
+class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor, private val supabaseClient: SupabaseClient): ChatListInteractor {
 
     override suspend fun getLastMessagesTotalCount(): Long {
         return withInteractorContext(cacheOption = CacheOption(key = LastMessagesTotalCount("LastMessagesTotalCount"))) {
@@ -99,7 +108,7 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
 
             val lastMessageList = listMessageResponse.toLastMessages(currentUser)
 
-            val combinedMessages = updateMessagesWithNewData(currentMessages, lastMessageList)
+            val combinedMessages = updateLastMessagesWithNewData(currentMessages, lastMessageList)
 
             PaginatedResponse(
                 data = combinedMessages,
@@ -109,9 +118,9 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
         }
     }
 
-    override suspend fun jsonElementToLastMessage(jsonString: String): LastMessage = withInteractorContext {
+    override suspend fun jsonElementToLastMessage(jsonString: String): JsonLatMessageResponse = withInteractorContext(retryOption = RetryOption(0, objectToReturn = JsonLatMessageResponse.Error)) {
         val userId = seasonInteractor.getCurrentUserId()
-        jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(userId!!)
+        JsonLatMessageResponse.Success(jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(userId!!))
     }
 
     override suspend fun invalidateMessageCache() = withInteractorContext {
@@ -143,7 +152,7 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
         }
     }
 
-    private fun updateMessagesWithNewData(
+    private fun updateLastMessagesWithNewData(
         currentMessages: List<LastMessage>,
         newMessages: List<LastMessage>
     ): List<LastMessage> {
@@ -182,7 +191,8 @@ fun LastMessageResponse.toLastMessage(currentUser: String): LastMessage {
         message = if (this.isDeleted) "Deleted Message" else this.message,
         isDeleted = this.isDeleted,
         seen = if (currentUser == this.creatorUserId) true else this.seen,
-        createdDate = this.createdDate
+        createdDate = this.createdDate,
+        messageId = this.messageId
     )
 }
 

@@ -40,15 +40,23 @@ suspend fun <T> Interactor.withInteractorContext(
         return@withContext if (cacheResult != null) {
             cacheResult
         } else {
-            var attemptIndex = 0
+            var attemptIndex = -1
             var blockResult: T
             while (true) {
+                attemptIndex++
                 try {
+                    // await any existing retry deferred
                     retryRequestDeferred?.await()
-                    retryRequestDeferred = null
 
-                    if (attemptIndex > 0) delay(retryOption.delayForRetryAttempt(attemptIndex))
+                    // Apply any delay defined by 'retryOptions'
+                    if (attemptIndex > 0) {
+                        val dealy = retryOption.delayForRetryAttempt(attemptIndex)
+                        delay(dealy)
+                    }
 
+                    // Run the block in a new coroutineScope to correctly handle exceptions thrown by coroutines started within 'block'
+                    // which would otherwise cancel the outer scope causing the catch block below to receive a JobCancellationException
+                    // in place of the actual exception that occurred.
                     blockResult = coroutineScope {
                         if (attemptIndex > 0 && retryOption.forceRefreshDuringRetry) {
                             withContext(CacheCoroutineContextElement(setCache = false)) { block() }
@@ -57,38 +65,48 @@ suspend fun <T> Interactor.withInteractorContext(
                         }
                     }
 
-                    if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(
-                            Result.success(
-                                blockResult
-                            )
-                        )
-                    ) {
-                        break
+                    // Check if we should retry based on the given 'retryOptions' and the result of the block
+                    if (
+                        attemptIndex < retryOption.retryCount
+                        && retryOption.retryCondition(Result.success(blockResult))
+                        ) {
+                        continue
                     }
-                } catch (e: Exception) {
-                    if (attemptIndex >= retryOption.retryCount || !retryOption.retryCondition(
-                            Result.failure(
-                                e
-                            )
-                        )
-                    ) {
-                        val awaitRetryOptions = interactorErrorHandling?.awaitRetryOptionOrNull(e)
-                        if (awaitRetryOptions != null && retryRequestDeferred == null) {
-                            retryRequestDeferred =
-                                async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
-                            continue
+                    cacheOption?.run {
+                        // If writing to the cache is allowed, store the result
+                        if(allowWrite){
+                            cache.put(key, blockResult as Any)
                         }
-
-                        if (retryOption.throwException) {
-                            throw when {
-                                !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
-                                e is HttpRequestException || e is RestException -> e.toInteractorException()
-                                else -> e.toInteractorException()
-                            }
-                        } else throw IllegalStateException("State is not valid") //TODO check alternative to break loop
                     }
+                    break
+                } catch (e: Exception) {
+                    // Check if we should await a retry based on the 'interactorErrorHandler'
+                    val awaitRetryOptions = interactorErrorHandling?.awaitRetryOptionOrNull(e)
+                    if (awaitRetryOptions != null){
+                        if(retryRequestDeferred == null) {
+                            retryRequestDeferred = async { interactorErrorHandling.awaitRetry(awaitRetryOptions) }
+                            retryRequestDeferred?.await()
+                            retryRequestDeferred = null
+                        }
+                        continue
+                    }
+
+                    // Check if we should retry based on the given 'retryOptions' and the exception thrown by the block
+                    if (attemptIndex < retryOption.retryCount && retryOption.retryCondition(Result.failure(e))) {
+                        continue
+                    }
+                    // we have determined that we should not attempt to retry: throw an exception
+                    if(retryOption.objectToReturn != null)
+                        return@withContext retryOption.objectToReturn
+
+                    if (retryOption.throwException) {
+                        throw when {
+                            !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
+                            e is HttpRequestException || e is RestException -> e.toInteractorException()
+                            else -> e.toInteractorException()
+                        }
+                    } else throw IllegalStateException("State is not valid") //TODO check alternative to break loop
                 }
-                attemptIndex++
             }
             cacheOption?.takeIf { it.allowWrite }?.let { cache.put(it.key, blockResult as Any) }
             blockResult
@@ -105,8 +123,8 @@ private data class InteractorCoroutineContextElement(
 private fun <T> RetryOption<T>.delayForRetryAttempt(attemptNumber: Int): Long{
     return when{
         attemptNumber <= 0 -> 0L
-        attemptNumber ==1 -> initialDelay
-        else -> (initialDelay + delayIncrementalFactor + (attemptNumber -1)).toLong()
+        attemptNumber == 1 -> initialDelay
+        else -> (initialDelay * delayIncrementalFactor * (attemptNumber -1)).toLong()
     }
         .coerceAtLeast(0L)
         .coerceAtMost(maxDelay)

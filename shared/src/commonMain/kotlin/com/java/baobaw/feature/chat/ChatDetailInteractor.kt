@@ -4,6 +4,7 @@ import com.java.baobaw.cache.MessageDetailKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.Interactor
+import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
@@ -19,7 +20,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 
 @Serializable
 data class ChatMessageResponse(
-    @SerialName("id") val id: Int,
+    @SerialName("id") val id: Long,
     @SerialName("reference_id") val referenceId: String,
     @SerialName("user_id_one") val userIdOne: String,
     @SerialName("user_id_two") val userIdTwo: String,
@@ -37,6 +38,12 @@ data class ChatMessageRequest(
     @SerialName("message") val message: String?
 )
 
+sealed class JsonChatMessageResponse {
+    data class Success(val listChatMessage: List<ChatMessage>) : JsonChatMessageResponse()
+    object Error : JsonChatMessageResponse()
+}
+
+
 interface ChatDetailInteractor : Interactor {
     suspend fun getMessages(referenceId: String, minRange: Long = 0 , maxRange: Long = 50): List<ChatMessage>
 
@@ -44,7 +51,7 @@ interface ChatDetailInteractor : Interactor {
 
     suspend fun sendMessage(inputText: String, referenceId: String): Unit
 
-    suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): List<ChatMessage>
+    suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonChatMessageResponse
 
     suspend fun updateMessages(newMessages: LastMessage): List<ChatMessage>
 }
@@ -70,9 +77,12 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         jsonString.decodeResultAs<ChatMessageResponse>().toChatMessage(userId!!)
     }
 
-    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): List<ChatMessage> =
-        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId,), skipCache = true)) {
-            updateCurrentList(jsonString.decodeResultAs<LastMessage>())
+    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonChatMessageResponse =
+        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId,), skipCache = true),
+            retryOption = RetryOption(0, objectToReturn = JsonChatMessageResponse.Error)) {
+            val currentUserId = seasonInteractor.getCurrentUserId()
+            val result = jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(currentUserId!!)
+            JsonChatMessageResponse.Success(updateCurrentList(result))
     }
 
     override suspend fun sendMessage(inputText: String, referenceId: String): Unit = withInteractorContext {
@@ -96,21 +106,30 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
             updateCurrentList(lastMessage = newMessages)
         }
 
-    private suspend fun updateCurrentList(lastMessage: LastMessage) : List<ChatMessage> = withInteractorContext {
+    private suspend fun updateCurrentList(lastMessage: LastMessage): List<ChatMessage> = withInteractorContext {
         val list = getMessages(referenceId = lastMessage.referenceId)
         val userId = seasonInteractor.getCurrentUserId()
 
-        val lastHeaderDate = list.lastOrNull { it.isHeader }?.createdTime
-        val date = lastMessage.createdDate.formatToReadableDate()
+        val existingMessageIndex = list.indexOfFirst { it.id.toLong() == lastMessage.id }
         val newMsg = lastMessage.toChatMessage(userId!!)
 
-        val updatedList = if (lastHeaderDate == null || lastHeaderDate != date.toString() ) {
-            list + createHeaderMessage(date) + newMsg
+        val updatedList = if (existingMessageIndex != -1) {
+            // Message already exists, update it
+            list.toMutableList().apply { set(existingMessageIndex, newMsg) }
         } else {
-            list + newMsg
+            // New message, check for header date
+            val lastHeaderDate = list.lastOrNull { it.isHeader }?.createdTime
+            val date = lastMessage.createdDate.toChatHeaderReadableDate()
+
+            if (lastHeaderDate == null || lastHeaderDate != date.toString()) {
+                list + createHeaderMessage(date) + newMsg
+            } else {
+                list + newMsg
+            }
         }
         updatedList
     }
+
 }
 
 fun List<ChatMessageResponse>.toChatMessagesWithHeaders(currentUserId: String): List<ChatMessage> {
@@ -122,7 +141,7 @@ fun List<ChatMessageResponse>.toChatMessagesWithHeaders(currentUserId: String): 
         val messageDate = response.createdDate.toLocalDateTime(timeZone).date
         if (messageDate != lastDate) {
             lastDate = messageDate
-            messagesWithHeaders.add(createHeaderMessage(messageDate.formatToReadableDate()))
+            messagesWithHeaders.add(createHeaderMessage(messageDate.toChatHeaderReadableDate()))
         }
         messagesWithHeaders.add(response.toChatMessage(currentUserId))
     }
@@ -135,27 +154,29 @@ fun ChatMessageResponse.toChatMessage(currentUserId: String): ChatMessage {
         referenceId = this.referenceId,
         creatorUserId = this.creatorUserId,
         message = this.message,
-        createdTime = this.createdDate.formatToReadableTime(), // Format as needed
+        createdTime = this.createdDate.toChatReadableTime(), // Format as needed
         seen = this.seen,
         isDeleted = this.isDeleted,
         isUserCreated = this.creatorUserId == currentUserId, // Set based on user context
         isHeader = false,
-        createdDate = this.createdDate.formatToReadableDate()
+        createdDate = this.createdDate.toChatHeaderReadableDate(),
+        messageId = this.id.toLong()
     )
 }
 
 private fun LastMessage.toChatMessage(currentUserId : String): ChatMessage {
     return ChatMessage(
-        id = this.id.toInt(),
+        id = this.id,
         referenceId = this.referenceId,
         creatorUserId = this.creatorUserId,
         message = this.message,
-        createdTime = this.createdDate.formatToReadableTime(),
-        createdDate = this.createdDate.formatToReadableDate(),
+        createdTime = this.createdDate.toChatReadableTime(),
+        createdDate = this.createdDate.toChatHeaderReadableDate(),
         seen = this.seen,
         isDeleted = this.isDeleted,
         isUserCreated = this.creatorUserId == currentUserId,
-        isHeader = false
+        isHeader = false,
+        messageId = this.messageId
     )
 
 }
@@ -163,7 +184,7 @@ private fun LastMessage.toChatMessage(currentUserId : String): ChatMessage {
 private fun createHeaderMessage(date: String): ChatMessage {
     // Format date as needed for header
     return ChatMessage(
-        id = 0,
+        id = -1,
         referenceId = "",
         creatorUserId = "",
         message = date,
@@ -171,7 +192,8 @@ private fun createHeaderMessage(date: String): ChatMessage {
         seen = true,
         isDeleted = false,
         isHeader = true,
-        createdDate = date
+        createdDate = date,
+        messageId = -1
     )
 }
 
@@ -181,25 +203,25 @@ fun String.toReadableDate(): String {
     return "${dateTime.dayOfMonth} ${dateTime.month} ${dateTime.year}"
 }
 
-fun String.formatToReadableDate(): String {
-    return Instant.parse(this).toLocalDateTime(TimeZone.currentSystemDefault()).date.formatToReadableDate()
+fun String.toChatHeaderReadableDate(): String {
+    return Instant.parse(this).toLocalDateTime(TimeZone.currentSystemDefault()).date.toChatHeaderReadableDate()
 }
 
-fun LocalDate.formatToReadableDate(): String {
+fun LocalDate.toChatHeaderReadableDate(): String {
     return "${this.dayOfMonth} ${this.month} ${this.year}"
 }
 
-fun Instant.formatToReadableDate(): String {
+fun Instant.toChatHeaderReadableDate(): String {
     val localDateTime = this.toLocalDateTime(TimeZone.currentSystemDefault())
     return "${localDateTime.dayOfMonth} ${localDateTime.month} ${localDateTime.year}"
 }
 
-fun Instant.formatToReadableTime(): String {
+fun Instant.toChatReadableTime(): String {
     val localDateTime = this.toLocalDateTime(TimeZone.currentSystemDefault())
     return "${localDateTime.hour}:${localDateTime.minute}"
 }
 
-fun String.formatToReadableTime(): String {
+fun String.toChatReadableTime(): String {
     val localDateTime = Instant.parse(this).toLocalDateTime(TimeZone.currentSystemDefault())
     return "${localDateTime.hour}:${localDateTime.minute}"
 }
