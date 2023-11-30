@@ -69,7 +69,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
 
         val currentUserId = seasonInteractor.getCurrentUserId()
 
-        messages.toChatMessagesWithHeaders(currentUserId!!)
+        messages.toChatMessagesWithHeaders(currentUserId!!).asReversed()
     }
 
     override suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage = withInteractorContext {

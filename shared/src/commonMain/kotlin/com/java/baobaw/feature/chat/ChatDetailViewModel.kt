@@ -25,7 +25,7 @@ data class ChatMessage(
 class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor,
                           private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
 
-    fun inti(referenceId: String){
+    fun init(referenceId: String){
         getConversation(referenceId)
         subscribeToConversation(referenceId)
     }
