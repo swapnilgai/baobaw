@@ -38,27 +38,22 @@ data class ChatMessageRequest(
     @SerialName("message") val message: String?
 )
 
-sealed class JsonChatMessageResponse {
-    data class Success(val listChatMessage: List<ChatMessage>) : JsonChatMessageResponse()
-    object Error : JsonChatMessageResponse()
-}
-
 
 interface ChatDetailInteractor : Interactor {
-    suspend fun getMessages(referenceId: String, minRange: Long = 0 , maxRange: Long = 50): List<ChatMessage>
+    suspend fun getMessages(referenceId: String, minRange: Long = 0 , maxRange: Long = 50): Map<String, List<ChatMessage>>
 
     suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage
 
     suspend fun sendMessage(inputText: String, referenceId: String): Unit
 
-    suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonChatMessageResponse
+    suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonLatMessageResponse
 
-    suspend fun updateMessages(newMessages: LastMessage): List<ChatMessage>
+    suspend fun updateMessages(newMessages: LastMessage): Map<String, List<ChatMessage>>
 }
 class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) :
     ChatDetailInteractor {
 
-    override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): List<ChatMessage>  =
+    override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): Map<String, List<ChatMessage>>  =
         withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId))) {
         // Fetch messages from the database
         val messages = supabaseService.select("messages") {
@@ -69,7 +64,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
 
         val currentUserId = seasonInteractor.getCurrentUserId()
 
-        messages.toChatMessagesWithHeaders(currentUserId!!).asReversed()
+        messages.toChatMessagesWithHeadersMap(currentUserId!!)
     }
 
     override suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage = withInteractorContext {
@@ -77,13 +72,21 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         jsonString.decodeResultAs<ChatMessageResponse>().toChatMessage(userId!!)
     }
 
-    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonChatMessageResponse =
-        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId,), skipCache = true),
-            retryOption = RetryOption(0, objectToReturn = JsonChatMessageResponse.Error)) {
+    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonLatMessageResponse =
+        withInteractorContext(retryOption = RetryOption(0, objectToReturn = JsonLatMessageResponse.Error)) {
             val currentUserId = seasonInteractor.getCurrentUserId()
             val result = jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(currentUserId!!)
-            JsonChatMessageResponse.Success(updateCurrentList(result))
-    }
+            JsonLatMessageResponse.Success(result)
+        }
+
+//    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonChatMessageResponse =
+//        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId,), skipCache = true),
+//            retryOption = RetryOption(0, objectToReturn = JsonChatMessageResponse.Error)) {
+//            val currentUserId = seasonInteractor.getCurrentUserId()
+//            val result = jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(currentUserId!!)
+//            val map = updateCurrentMap(result)
+//            JsonChatMessageResponse.Success(map)
+//    }
 
     override suspend fun sendMessage(inputText: String, referenceId: String): Unit = withInteractorContext {
         val currentUserId = seasonInteractor.getCurrentUserId()
@@ -101,51 +104,59 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         }
     }
 
-    override suspend fun updateMessages(newMessages: LastMessage): List<ChatMessage> =
-        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = newMessages.referenceId,), skipCache = true)) {
-            updateCurrentList(lastMessage = newMessages)
+    override suspend fun updateMessages(newMessages: LastMessage): Map<String, List<ChatMessage>> =
+        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = newMessages.referenceId), skipCache = true)) {
+            updateCurrentMap(lastMessage = newMessages)
         }
 
-    private suspend fun updateCurrentList(lastMessage: LastMessage): List<ChatMessage> = withInteractorContext {
-        val list = getMessages(referenceId = lastMessage.referenceId)
-        val userId = seasonInteractor.getCurrentUserId()
+    private suspend fun updateCurrentMap(lastMessage: LastMessage): Map<String, List<ChatMessage>> = withInteractorContext {
+        val messagesMap = getMessages(referenceId = lastMessage.referenceId).toMutableMap()
+        val userId = seasonInteractor.getCurrentUserId() ?: ""
 
-        val existingMessageIndex = list.indexOfFirst { it.id.toLong() == lastMessage.id }
-        val newMsg = lastMessage.toChatMessage(userId!!)
+        // Convert the last message to ChatMessage
+        val newMsg = lastMessage.toChatMessage(userId)
+        val messageDateHeader = lastMessage.createdDate.toChatHeaderReadableDate()
 
-        val updatedList = if (existingMessageIndex != -1) {
-            // Message already exists, update it
-            list.toMutableList().apply { set(existingMessageIndex, newMsg) }
-        } else {
-            // New message, check for header date
-            val lastHeaderDate = list.lastOrNull { it.isHeader }?.createdTime
-            val date = lastMessage.createdDate.toChatHeaderReadableDate()
+        // Check if the date header exists in the map
+        if (messagesMap.containsKey(messageDateHeader)) {
+            // If the date header exists, get the current list and update or add the message
+            val messagesForDate = messagesMap[messageDateHeader]!!.toMutableList()
+            val existingMessageIndex = messagesForDate.indexOfFirst { it.messageId == lastMessage.messageId }
 
-            if (lastHeaderDate == null || lastHeaderDate != date.toString()) {
-                list + createHeaderMessage(date) + newMsg
+            if (existingMessageIndex != -1) {
+                // Update existing message
+                messagesForDate[existingMessageIndex] = newMsg
             } else {
-                list + newMsg
+                // Add new message to the list
+                messagesForDate.add(0, newMsg)
             }
+
+            // Put the updated list back into the map
+            messagesMap[messageDateHeader] = messagesForDate
+        } else {
+            // If the date header does not exist, create a new entry with the new message
+            messagesMap[messageDateHeader] = listOf(newMsg)
         }
-        updatedList
+
+        return@withInteractorContext messagesMap
     }
+
 
 }
 
-fun List<ChatMessageResponse>.toChatMessagesWithHeaders(currentUserId: String): List<ChatMessage> {
+fun List<ChatMessageResponse>.toChatMessagesWithHeadersMap(currentUserId: String): Map<String, List<ChatMessage>> {
     val timeZone = TimeZone.currentSystemDefault()
-    val messagesWithHeaders = mutableListOf<ChatMessage>()
-    var lastDate: LocalDate? = null
+    val groupedByDate = mutableMapOf<String, MutableList<ChatMessage>>()
 
-    this.asReversed().forEach { response ->
+    this.forEach { response ->
         val messageDate = response.createdDate.toLocalDateTime(timeZone).date
-        if (messageDate != lastDate) {
-            lastDate = messageDate
-            messagesWithHeaders.add(createHeaderMessage(messageDate.toChatHeaderReadableDate()))
-        }
-        messagesWithHeaders.add(response.toChatMessage(currentUserId))
+        val header = messageDate.toChatHeaderReadableDate()
+
+        val chatMessages = groupedByDate.getOrPut(header) { mutableListOf() }
+        chatMessages.add(response.toChatMessage(currentUserId))
     }
-    return messagesWithHeaders
+
+    return groupedByDate
 }
 
 fun ChatMessageResponse.toChatMessage(currentUserId: String): ChatMessage {

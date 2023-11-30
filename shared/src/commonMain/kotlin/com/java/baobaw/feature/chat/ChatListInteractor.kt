@@ -143,7 +143,6 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
             updatedMessages.add(0, newMessages)
 
             // Return the updated list
-
             PaginatedResponse(
                 data = updatedMessages,
                 offset = getLastMessagesResult.offset,

@@ -23,7 +23,7 @@ data class ChatMessage(
 )
 
 class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor,
-                          private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<List<ChatMessage>>(initialContent =  emptyList()) {
+                          private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<Map<String, List<ChatMessage>>>(initialContent =  emptyMap()) {
 
     fun init(referenceId: String){
         getConversation(referenceId)
@@ -54,19 +54,21 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
             channel.onEach {
                 when (it) {
                     is PostgresAction.Insert -> {
-                        when(val result = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
+                        when(val lastMessage = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
                         {
-                            is JsonChatMessageResponse.Success -> {
-                                setContent { result.listChatMessage }
+                            is JsonLatMessageResponse.Success -> {
+                                val result = chatDetailInteractor.updateMessages(lastMessage.lastMessage)
+                                setContent { result}
                             }
                             else -> {}
                         }
                     }
                     is PostgresAction.Update -> {
-                        when(val result = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
+                        when(val lastMessage = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
                         {
-                            is JsonChatMessageResponse.Success -> {
-                                setContent { result.listChatMessage }
+                            is JsonLatMessageResponse.Success -> {
+                                val result = chatDetailInteractor.updateMessages(lastMessage.lastMessage)
+                                setContent { result}
                             }
                             else -> {}
                         }

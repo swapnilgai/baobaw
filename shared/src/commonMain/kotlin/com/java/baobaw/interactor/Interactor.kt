@@ -108,7 +108,6 @@ suspend fun <T> Interactor.withInteractorContext(
                     } else throw IllegalStateException("State is not valid") //TODO check alternative to break loop
                 }
             }
-            cacheOption?.takeIf { it.allowWrite }?.let { cache.put(it.key, blockResult as Any) }
             blockResult
         }
     }

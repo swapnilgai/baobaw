@@ -56,7 +56,7 @@ fun ChatScreen(
     navController: NavController,
     referenceId: String
 ) {
-    var chatState by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
+    var chatState by remember { mutableStateOf<Map<String, List<ChatMessage>>>(emptyMap()) }
     var inputText by remember { mutableStateOf("") }
 
     // Function to handle the sending of the message
@@ -68,7 +68,7 @@ fun ChatScreen(
         }
     }
 
-    fun setChatState(state: List<ChatMessage>) {
+    fun setChatState(state: Map<String, List<ChatMessage>>) {
         chatState = state
     }
 
@@ -95,23 +95,14 @@ fun ChatScreen(
                     .padding(innerPadding) // Apply the padding provided by Scaffold to ensure content is above the bottom bar.
                     .background(MaterialTheme.colorScheme.background)
             ) {
-//                val groupedMessages = chatState.groupBy { it.createdDate }
-//
-//                groupedMessages.forEach { (date, messages) ->
-//                    items(messages) { message ->
-//                        ChatMessageItem(message = message, isCurrentUser = message.isUserCreated)
-//                    }
-//                    stickyHeader {
-//                        DateHeader(date)
-//                    }
-//                }
-
-                items(chatState) { message ->
-                    if(!message.isHeader)
-                    ChatMessageItem(message = message, isCurrentUser = message.isUserCreated)
-                    else DateHeader(message.message!!)
+                chatState.forEach { (date, messages) ->
+                    items(messages) { message ->
+                        ChatMessageItem(message = message, isCurrentUser = message.isUserCreated)
+                    }
+                    stickyHeader {
+                        DateHeader(date)
+                    }
                 }
-
             }
         }
     }
