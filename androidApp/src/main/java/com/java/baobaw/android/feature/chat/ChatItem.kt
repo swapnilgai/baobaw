@@ -1,5 +1,11 @@
 package com.java.baobaw.android.feature.chat
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
@@ -30,23 +36,26 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import coil.compose.rememberImagePainter
 import coil.size.Scale
-import com.java.baobaw.android.R
 import java.util.Locale
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -113,44 +122,10 @@ fun ChatMessageItem(message: ChatMessage, isCurrentUser: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 0.dp),
         horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
     ) {
-
-//        if (!isCurrentUser) {
-//            // Show avatar for other users
-//            Avatar(message.creatorUserId)
-//        }
         if(!message.isHeader) MessageBubble(message, isCurrentUser)
-    }
-}
-
-@Composable
-fun Avatar(userId: String) {
-    // Placeholder for avatar, replace with actual image loading logic
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(Color.Gray, CircleShape)
-    )
-}
-
-@Composable
-fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean) {
-    val backgroundColor = if (isCurrentUser) MaterialTheme.colorScheme.primary else Color.LightGray
-    val textColor = if (isCurrentUser) Color.White else Color.Black
-
-    Surface(
-        modifier = Modifier.padding(horizontal = 8.dp),
-        shape = MaterialTheme.shapes.medium,
-        color = backgroundColor, // Instead of using colors.primary directly
-        elevation = 1.dp
-    ) {
-        Text(
-            text = message.message ?: "",
-            modifier = Modifier.padding(all = 8.dp),
-            color = textColor // Instead of using colors directly
-        )
     }
 }
 
@@ -161,7 +136,6 @@ fun DateHeader(dateString: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .background(MaterialTheme.colorScheme.primary)
     ) {
         Text(
             text = dateString.toUpperCase(Locale.ROOT),
@@ -170,7 +144,6 @@ fun DateHeader(dateString: String) {
         )
     }
 }
-
 @Composable
 fun ChatInputField(
     inputText: String,
@@ -217,7 +190,6 @@ fun ChatInputField(
         }
     }
 }
-
 
 val url  = "https://eadxajuudpypsivdhjtu.supabase.co/storage/v1/object/public/Profile/76c1c1ef-ec48-4bcb-9081-d2c52edb8661/0.png"
 @Composable
@@ -266,3 +238,55 @@ fun UserImage(imageUrl: String, modifier: Modifier = Modifier) {
             .border(1.5.dp, Color.Gray, CircleShape) // Add a border if needed
     )
 }
+
+@Composable
+fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean) {
+    var showTime by remember { mutableStateOf(false) }
+
+    val bubbleColor = if (isCurrentUser) Color(0xFF6B38FB) else Color(0xFFE7E7E8)
+    val textColor = if (isCurrentUser) Color.White else Color.Black
+    val timeTextColor = Color(0xFF9E9E9E)
+    val paddingHorizontal = 8.dp
+
+    Column(
+        horizontalAlignment = if (isCurrentUser) Alignment.End else Alignment.Start,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 1.dp)
+    ) {
+        Surface(
+            modifier = Modifier
+                .clickable { showTime = !showTime }
+                .padding(horizontal = paddingHorizontal, vertical = 2.dp)
+                .background(color = bubbleColor, shape = RoundedCornerShape(8.dp)),
+            shape = RoundedCornerShape(8.dp),
+            color = bubbleColor
+        ) {
+            Text(
+                text = message.message!!,
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showTime,
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + slideOutVertically()
+        ) {
+            Text(
+                text = message.createdTime,
+                color = timeTextColor,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(
+                    start = if (isCurrentUser) paddingHorizontal else 0.dp,
+                    end = if (isCurrentUser) 0.dp else paddingHorizontal,
+                    top = 4.dp
+                )
+            )
+        }
+    }
+}
+
+
