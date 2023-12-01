@@ -108,7 +108,7 @@ fun ChatScreen(
                     items(messages) { message ->
                         ChatMessageItem(message = message, isCurrentUser = message.isUserCreated)
                     }
-                    stickyHeader {
+                    item(date) {
                         DateHeader(date)
                     }
                 }

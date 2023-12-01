@@ -79,15 +79,6 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
             JsonLatMessageResponse.Success(result)
         }
 
-//    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonChatMessageResponse =
-//        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId,), skipCache = true),
-//            retryOption = RetryOption(0, objectToReturn = JsonChatMessageResponse.Error)) {
-//            val currentUserId = seasonInteractor.getCurrentUserId()
-//            val result = jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(currentUserId!!)
-//            val map = updateCurrentMap(result)
-//            JsonChatMessageResponse.Success(map)
-//    }
-
     override suspend fun sendMessage(inputText: String, referenceId: String): Unit = withInteractorContext {
         val currentUserId = seasonInteractor.getCurrentUserId()
         referenceId.split(":").filterNot { it == currentUserId }.firstOrNull()?.let { otherUserId ->
@@ -135,13 +126,12 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
             messagesMap[messageDateHeader] = messagesForDate
         } else {
             // If the date header does not exist, create a new entry with the new message
-            messagesMap[messageDateHeader] = listOf(newMsg)
+            val newMap: MutableMap<String, List<ChatMessage>> = mutableMapOf(messageDateHeader to listOf(newMsg))
+            newMap.putAll(messagesMap)
+            return@withInteractorContext newMap
         }
-
         return@withInteractorContext messagesMap
     }
-
-
 }
 
 fun List<ChatMessageResponse>.toChatMessagesWithHeadersMap(currentUserId: String): Map<String, List<ChatMessage>> {
@@ -190,22 +180,6 @@ private fun LastMessage.toChatMessage(currentUserId : String): ChatMessage {
         messageId = this.messageId
     )
 
-}
-
-private fun createHeaderMessage(date: String): ChatMessage {
-    // Format date as needed for header
-    return ChatMessage(
-        id = -1,
-        referenceId = "",
-        creatorUserId = "",
-        message = date,
-        createdTime = date,
-        seen = true,
-        isDeleted = false,
-        isHeader = true,
-        createdDate = date,
-        messageId = -1
-    )
 }
 
 // Extension function to convert ISO date string to a readable format
