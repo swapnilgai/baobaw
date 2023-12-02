@@ -1,5 +1,6 @@
 package com.java.baobaw.feature.chat
 
+import androidx.compose.ui.text.intl.Locale
 import com.java.baobaw.cache.MessageDetailKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
@@ -11,6 +12,7 @@ import com.java.baobaw.util.decodeResultAs
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
@@ -126,12 +128,29 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
             messagesMap[messageDateHeader] = messagesForDate
         } else {
             // If the date header does not exist, create a new entry with the new message
-            val newMap: MutableMap<String, List<ChatMessage>> = mutableMapOf(messageDateHeader to listOf(newMsg))
-            newMap.putAll(messagesMap)
-            return@withInteractorContext newMap
+            val firstDateHeader = messagesMap.keys.firstOrNull()
+            if (firstDateHeader != null) {
+                // If there are existing messages, add the new message to the top of the list
+                val messagesForDate = messagesMap[firstDateHeader]!!
+                val lastDate = messagesForDate[0].createdDate.parseDate()
+                val newDate = newMsg.createdDate.parseDate()
+                if(lastDate < newDate) {
+                    return@withInteractorContext mutableMapOf(messageDateHeader to listOf(newMsg)) + messagesMap
+                }
+            } else {
+                // If there are no existing messages, create a new entry with the new message
+                messagesMap[messageDateHeader] = listOf(newMsg)
+            }
         }
         return@withInteractorContext messagesMap
     }
+}
+fun String.parseDate(): LocalDate {
+    val parts = this.split(" ")
+    val day = parts[0].toInt()
+    val month = Month.valueOf(parts[1].uppercase())
+    val year = parts[2].toInt()
+    return LocalDate(year, month, day)
 }
 
 fun List<ChatMessageResponse>.toChatMessagesWithHeadersMap(currentUserId: String): Map<String, List<ChatMessage>> {
