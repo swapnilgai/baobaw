@@ -100,7 +100,8 @@ object Dependencies {
             "androidx.lifecycle:lifecycle-runtime-ktx:${Version.lifecycle}",
             "androidx.lifecycle:lifecycle-runtime-compose:${Version.lifecycle}",
             "androidx.lifecycle:lifecycle-viewmodel-compose:${Version.lifecycle}",
-            "androidx.lifecycle:lifecycle-livedata-ktx:${Version.lifecycle}"
+            "androidx.lifecycle:lifecycle-livedata-ktx:${Version.lifecycle}",
+            "com.google.accompanist:accompanist-insets-ui:${Version.accompanist}",
         )
 
         val iceRock = listOf(

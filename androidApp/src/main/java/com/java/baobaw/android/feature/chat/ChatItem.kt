@@ -1,12 +1,10 @@
 package com.java.baobaw.android.feature.chat
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -41,23 +39,23 @@ import kotlinx.coroutines.CoroutineScope
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
 import coil.size.Scale
+import kotlinx.coroutines.launch
 import java.util.Locale
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ChatScreen(
     chatDetailViewModel: ChatDetailViewModel,
@@ -77,39 +75,68 @@ fun ChatScreen(
         }
     }
 
+    fun onEmojiSelected(emoji: String, message: ChatMessage) {
+        val mess = message
+    }
+
     fun setChatState(state: Map<String, List<ChatMessage>>) {
         chatState = state
     }
 
-    BaseView(viewModel = chatDetailViewModel, navController = navController, scope = scope,
-        init = { chatDetailViewModel.init(referenceId) },
-        setContentT = { state -> setChatState(state) }) {
+    val bottomSheetState =
+        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    var selectedMessage by remember { mutableStateOf<ChatMessage?>(null) }
 
-        Scaffold(
-            topBar = { ChatTopBar("Swapnil", url, {}) }, // Define the top bar here.
-            bottomBar = {
-                ChatInputField(
-                    inputText = inputText,
-                    onInputTextChange = { inputText = it },
-                    onSendMessage = {
-                        sendMessage()
-                    }
-                )
+    fun showBottomSheet(message: ChatMessage) {
+        selectedMessage = message
+        scope.launch {
+            bottomSheetState.show()
+        }
+    }
+
+    EmojiPickerBottomSheet(
+        sheetState = bottomSheetState,
+        onEmojiSelected = { emoji ->
+            if (selectedMessage != null) {
+                onEmojiSelected(emoji, selectedMessage!!)
             }
-        ) { innerPadding ->
-            LazyColumn(
-                reverseLayout = true,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding) // Apply the padding provided by Scaffold to ensure content is above the bottom bar.
-                    .background(MaterialTheme.colorScheme.background)
-            ) {
-                chatState.forEach { (date, messages) ->
-                    items(messages) { message ->
-                        ChatMessageItem(message = message, isCurrentUser = message.isUserCreated)
-                    }
-                    item(date) {
-                        DateHeader(date)
+            scope.launch { bottomSheetState.hide() }
+        },
+        scope = scope
+    ){
+        BaseView(viewModel = chatDetailViewModel, navController = navController, scope = scope,
+            init = { chatDetailViewModel.init(referenceId) },
+            setContentT = { state -> setChatState(state) }) {
+
+            Scaffold(
+                topBar = { ChatTopBar("Swapnil", url, {}) }, // Define the top bar here.
+                bottomBar = {
+                    ChatInputField(
+                        inputText = inputText,
+                        onInputTextChange = { inputText = it },
+                        onSendMessage = {
+                            sendMessage()
+                        }
+                    )
+                }
+            ) { innerPadding ->
+                LazyColumn(
+                    reverseLayout = true,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding) // Apply the padding provided by Scaffold to ensure content is above the bottom bar.
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    chatState.forEach { (date, messages) ->
+                        items(messages) { message ->
+                            ChatMessageItem(
+                                message = message,
+                                isCurrentUser = message.isUserCreated,
+                                onShowBottomSheet = { msg -> showBottomSheet(msg) })
+                        }
+                        item(date) {
+                            DateHeader(date)
+                        }
                     }
                 }
             }
@@ -118,14 +145,17 @@ fun ChatScreen(
 }
 
 @Composable
-fun ChatMessageItem(message: ChatMessage, isCurrentUser: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 0.dp),
-        horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
-    ) {
-        if(!message.isHeader) MessageBubble(message, isCurrentUser)
+fun ChatMessageItem(
+    message: ChatMessage,
+    isCurrentUser: Boolean,
+    onShowBottomSheet: (ChatMessage) -> Unit
+) {
+    if (!message.isHeader) {
+        MessageBubble(
+            message = message,
+            isCurrentUser = isCurrentUser,
+            onShowBottomSheet = { onShowBottomSheet(message) }
+        )
     }
 }
 
@@ -240,7 +270,8 @@ fun UserImage(imageUrl: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean) {
+fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean, onShowBottomSheet: (ChatMessage) -> Unit
+) {
     var showTime by remember { mutableStateOf(false) }
 
     val bubbleColor = if (isCurrentUser) Color(0xFF6B38FB) else Color(0xFFE7E7E8)
@@ -256,7 +287,12 @@ fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean) {
     ) {
         Surface(
             modifier = Modifier
-                .clickable { showTime = !showTime }
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { showTime = !showTime },
+                        onLongPress = { onShowBottomSheet(message) }
+                    )
+                }
                 .padding(horizontal = paddingHorizontal, vertical = 2.dp)
                 .background(color = bubbleColor, shape = RoundedCornerShape(8.dp)),
             shape = RoundedCornerShape(8.dp),
@@ -286,6 +322,50 @@ fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean) {
                 )
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun EmojiPickerBottomSheet(
+    sheetState: ModalBottomSheetState,
+    onEmojiSelected: (String) -> Unit,
+    scope: CoroutineScope,
+    content: @Composable () -> Unit
+) {
+    val emojis = listOf("😀", "😂", "🥰", "😎", "😢", "👍", "👎", "🎉", "❤️")
+    val gridState = rememberLazyGridState()
+
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
+        sheetContent = {
+            Column(modifier = Modifier.padding(16.dp)) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 48.dp), // Adjust the minSize as per your design
+                    state = gridState,
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(emojis.size) { index -> // Use emojis.size here
+                        val emoji = emojis[index]
+                        Text(
+                            text = emoji,
+                            fontSize = 24.sp,
+                            modifier = Modifier.clickable {
+                                onEmojiSelected(emoji)
+                                scope.launch { sheetState.hide () }
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        scrimColor = Color.Black.copy(alpha = 0.32f)
+    ) {
+        content()
     }
 }
 

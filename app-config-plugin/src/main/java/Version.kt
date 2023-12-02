@@ -23,7 +23,7 @@ object Version {
     const val coil          = "2.5.0"
     const val lifecycle     = "2.5.1"
     const val navigation    = "2.5.3"
-    const val material3     = "1.0.1"
+    const val material3     = "1.1.2"
     const val kermit        = "1.2.2"
     const val mockk         = "1.13.3"
     const val mockkCommon   = "1.12.5"
@@ -40,4 +40,5 @@ object Version {
     const val mokoMedia = "0.11.0"
     const val mokoMediaFilePicker = "1.9.1"
     const val kotlinxDatetime = "0.4.1"
+    const val accompanist = "0.32.0"
 }
