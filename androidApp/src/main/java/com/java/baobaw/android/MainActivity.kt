@@ -38,6 +38,11 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         mainViewModel.cancelSubscribeToChat()
     }
+
+    override fun onStart() {
+        super.onStart()
+        mainViewModel.observeSessionStatus()
+    }
 }
 
 @Preview

@@ -6,6 +6,7 @@ import com.java.baobaw.AppConstants
 import com.java.baobaw.presentationInfra.BaseViewModel
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.util.getNavigationUrlWithoutBrackets
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -22,8 +23,10 @@ class ChatListViewModel(
 ) : BaseViewModel<ChatListContent>(ChatListContent(emptyList())) {
 
     fun init() {
-        loadMoreMessages()
-        subscribeToNewMessages()
+        viewModelScope.interactorLaunch {
+           async { loadMoreMessages() }
+           async { subscribeToNewMessages() }
+        }
     }
     fun loadMoreMessages() {
         val currentState = getContent()
@@ -53,6 +56,9 @@ class ChatListViewModel(
 
     fun subscribeToNewMessages() {
         viewModelScope.interactorLaunch {
+            setLoading()
+            val isConnected =  chatRealtimeInteractor.isConnected(ChatListType.LIST_MESSAGES)
+            if(!isConnected)
             chatRealtimeInteractor.subscribeToLastMessages(chatListType = ChatListType.LIST_MESSAGES)
                 .onEach { newMessage ->
                     val combinedList = chatListInteractor.updateMessages(newMessage)
@@ -60,6 +66,9 @@ class ChatListViewModel(
                         getContent().copy(messages = combinedList.data)
                     }
                 }.launchIn(this)
+            if(getContent().messages.isNotEmpty()){
+                setContent { getContent() }
+            }
         }
     }
     override suspend fun clearViewModel() {

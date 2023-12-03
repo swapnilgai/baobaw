@@ -22,7 +22,6 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
 ) : BaseViewModel<Unit>(initialContent = Unit) {
     init {
        // initCompatibilityBatchInBackground()
-        observeSessionStatus()
     }
     private fun loadInitialData() {
         // API calls that need to be made after authentication
@@ -44,11 +43,16 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
 
     private fun subscribeToChat() {
         viewModelScope.interactorLaunch {
+            setLoading()
+            val isConnected =  chatRealtimeInteractor.isConnected(ChatListType.NOTIFICATION)
+            if(!isConnected){
             chatRealtimeInteractor.subscribeToLastMessages(chatListType = ChatListType.NOTIFICATION)
                 .onEach { newMessage ->
                     chatListInteractor.updateMessages(newMessage)
                     chatDetailInteractor.updateMessages(newMessage)
                 }.launchIn(this)
+                setContent { getContent()  }
+        }
         }
     }
 

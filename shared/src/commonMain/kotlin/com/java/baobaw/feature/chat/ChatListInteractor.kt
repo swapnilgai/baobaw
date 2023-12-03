@@ -60,13 +60,15 @@ sealed class JsonLatMessageResponse {
     object Error : JsonLatMessageResponse()
 }
 
-interface ChatListInteractor : Interactor{
+interface ChatListInteractor : Interactor {
     suspend fun getLastMessagesTotalCount(): Long
     suspend fun getLastMessages(offset: Long, isLastPage: Boolean = false, currentMessages: List<LastMessage> = emptyList()): PaginatedResponse<LastMessage>
     suspend fun jsonElementToLastMessage(jsonString: String): JsonLatMessageResponse
     suspend fun invalidateMessageCache()
     suspend fun updateMessages(newMessages: LastMessage): PaginatedResponse<LastMessage>
 }
+
+
 class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor, private val supabaseClient: SupabaseClient): ChatListInteractor {
 
     override suspend fun getLastMessagesTotalCount(): Long {

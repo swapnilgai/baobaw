@@ -49,8 +49,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import coil.request.ImageRequest
 import coil.size.Scale
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -140,6 +143,7 @@ fun ChatScreen(
                     }
                 }
             }
+
         }
     }
 }
@@ -253,12 +257,11 @@ fun ChatTopBar(userName: String, userImageUrl: String = url, onBackClick: () -> 
 @Composable
 fun UserImage(imageUrl: String, modifier: Modifier = Modifier) {
     Image(
-        painter = rememberImagePainter(
-            data = imageUrl,
-            builder = {
+        painter = rememberAsyncImagePainter(
+            ImageRequest.Builder(LocalContext.current).data(data = imageUrl).apply(block = fun ImageRequest.Builder.() {
                 crossfade(true)
                 scale(Scale.FILL)
-            }
+            }).build()
         ),
         contentDescription = "User Profile Picture",
         contentScale = ContentScale.Crop, // Crop the image if it's not a square
@@ -270,39 +273,42 @@ fun UserImage(imageUrl: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean, onShowBottomSheet: (ChatMessage) -> Unit
+fun MessageBubble(
+    message: ChatMessage,
+    isCurrentUser: Boolean,
+    onShowBottomSheet: (ChatMessage) -> Unit
 ) {
     var showTime by remember { mutableStateOf(false) }
 
     val bubbleColor = if (isCurrentUser) Color(0xFF6B38FB) else Color(0xFFE7E7E8)
     val textColor = if (isCurrentUser) Color.White else Color.Black
     val timeTextColor = Color(0xFF9E9E9E)
-    val paddingHorizontal = 8.dp
+    val bubbleShape = RoundedCornerShape(16.dp) // Assuming rounded corners for the bubble
+    val paddingHorizontal = 16.dp // Adjusted padding
 
     Column(
         horizontalAlignment = if (isCurrentUser) Alignment.End else Alignment.Start,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 1.dp)
+            .padding(horizontal = paddingHorizontal, vertical = 2.dp)
     ) {
         Surface(
             modifier = Modifier
+                .clip(bubbleShape)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { showTime = !showTime },
                         onLongPress = { onShowBottomSheet(message) }
                     )
-                }
-                .padding(horizontal = paddingHorizontal, vertical = 2.dp)
-                .background(color = bubbleColor, shape = RoundedCornerShape(8.dp)),
-            shape = RoundedCornerShape(8.dp),
+                },
+            shape = bubbleShape,
             color = bubbleColor
         ) {
             Text(
                 text = message.message!!,
                 color = textColor,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
+                modifier = Modifier.padding(10.dp) // Adjust text padding within the bubble
             )
         }
 
@@ -315,11 +321,9 @@ fun MessageBubble(message: ChatMessage, isCurrentUser: Boolean, onShowBottomShee
                 text = message.createdTime,
                 color = timeTextColor,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(
-                    start = if (isCurrentUser) paddingHorizontal else 0.dp,
-                    end = if (isCurrentUser) 0.dp else paddingHorizontal,
-                    top = 4.dp
-                )
+                modifier = Modifier
+                    .padding(horizontal = paddingHorizontal, vertical = 4.dp)
+                    .align(if (isCurrentUser) Alignment.End else Alignment.Start)
             )
         }
     }

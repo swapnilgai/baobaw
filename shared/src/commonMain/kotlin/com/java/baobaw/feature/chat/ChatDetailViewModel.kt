@@ -3,8 +3,10 @@ package com.java.baobaw.feature.chat
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import io.github.jan.supabase.realtime.PostgresAction
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -26,8 +28,10 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
                           private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<Map<String, List<ChatMessage>>>(initialContent =  emptyMap()) {
 
     fun init(referenceId: String){
-        getConversation(referenceId)
-        subscribeToConversation(referenceId)
+        viewModelScope.interactorLaunch {
+           async {  getConversation(referenceId) }
+           async {  subscribeToConversation(referenceId) }
+        }
     }
 
     fun sendMessage(inputText: String, referenceId: String){
@@ -50,33 +54,16 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
     fun subscribeToConversation(referenceId: String) {
         // Subscribe to conversation logic
         viewModelScope.interactorLaunch {
-            val channel = chatRealtimeInteractor.getFlowStream("last_message", "reference_id=eq.$referenceId", ChatListType.DETAIL_MESSAGES)
-            channel.onEach {
-                when (it) {
-                    is PostgresAction.Insert -> {
-                        when(val lastMessage = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
-                        {
-                            is JsonLatMessageResponse.Success -> {
-                                val result = chatDetailInteractor.updateMessages(lastMessage.lastMessage)
-                                setContent { result}
-                            }
-                            else -> {}
-                        }
-                    }
-                    is PostgresAction.Update -> {
-                        when(val lastMessage = chatDetailInteractor.jsonElementToChatMessage(it.record.toString(), referenceId))
-                        {
-                            is JsonLatMessageResponse.Success -> {
-                                val result = chatDetailInteractor.updateMessages(lastMessage.lastMessage)
-                                setContent { result}
-                            }
-                            else -> {}
-                        }
-                    }
-                    else -> {}
-                }
-            }.launchIn(this)
-            chatRealtimeInteractor.subscribe(chatListType = ChatListType.DETAIL_MESSAGES)
+            setLoading()
+            val isConnected =  chatRealtimeInteractor.isConnected(ChatListType.DETAIL_MESSAGES)
+            if(!isConnected) {
+                chatRealtimeInteractor.subscribeToConversation(referenceId)
+                    .onEach { newMessage ->
+                        val result = chatDetailInteractor.updateMessages(newMessage)
+                        setContent { result }
+                    }.launchIn(this)
+            }
+            if(getContent().isNotEmpty()) setContent { getContent() }
         }
     }
 

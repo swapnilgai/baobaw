@@ -20,7 +20,7 @@ interface Interactor
 
 private var retryRequestDeferred: Deferred<Unit>? = null
 
-val cache : Cache<CacheKey, Any> = LRUCache(100)
+val cache : Cache<CacheKey, Any> = LRUCache(1000)
 suspend fun <T> Interactor.withInteractorContext(
     cacheOption: CacheOption? = null,
     retryOption: RetryOption<T> = RetryOption(0),

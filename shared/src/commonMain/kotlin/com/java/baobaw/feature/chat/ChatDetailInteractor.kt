@@ -10,6 +10,7 @@ import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -82,25 +83,33 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         }
 
     override suspend fun sendMessage(inputText: String, referenceId: String): Unit = withInteractorContext {
-        val currentUserId = seasonInteractor.getCurrentUserId()
-        referenceId.split(":").filterNot { it == currentUserId }.firstOrNull()?.let { otherUserId ->
-            // Send message to the other user (the user id is the second part of the reference id separated by "
-            val request = ChatMessageRequest(
-                creatorUserId = currentUserId!!,
-                otherUserId = otherUserId,
-                message = inputText
-            )
+            val request =  getChatMessageRequest(inputText, referenceId)
             supabaseService.rpc(
                 function = "insert_message",
                 parameters = Json.encodeToJsonElement(request)
             )
-        }
     }
 
     override suspend fun updateMessages(newMessages: LastMessage): Map<String, List<ChatMessage>> =
         withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = newMessages.referenceId), skipCache = true)) {
             updateCurrentMap(lastMessage = newMessages)
         }
+
+    fun addTempMessage(){
+
+    }
+
+    suspend fun getChatMessageRequest(inputText: String, referenceId: String): ChatMessageRequest{
+        val currentUserId = seasonInteractor.getCurrentUserId()
+        referenceId.split(":").filterNot { it == currentUserId }.first().let { otherUserId ->
+            // Send message to the other user (the user id is the second part of the reference id separated by "
+            return ChatMessageRequest(
+                creatorUserId = currentUserId!!,
+                otherUserId = otherUserId,
+                message = inputText
+            )
+        }
+    }
 
     private suspend fun updateCurrentMap(lastMessage: LastMessage): Map<String, List<ChatMessage>> = withInteractorContext {
         val messagesMap = getMessages(referenceId = lastMessage.referenceId).toMutableMap()
@@ -200,6 +209,25 @@ private fun LastMessage.toChatMessage(currentUserId : String): ChatMessage {
     )
 
 }
+
+private fun ChatMessageRequest.toChatMessage(currentUserId : String, referenceId: String ): ChatMessage {
+    return ChatMessage(
+        id = -99,
+        referenceId = referenceId,
+        creatorUserId = this.creatorUserId,
+        message = this.message,
+        createdTime =   Clock.System.now().toChatReadableTime(),
+        createdDate = Clock.System.now().toChatHeaderReadableDate(),
+        seen = false,
+        isDeleted = false,
+        isUserCreated = this.creatorUserId == currentUserId,
+        isHeader = false,
+        messageId = -99
+    )
+
+}
+
+
 
 // Extension function to convert ISO date string to a readable format
 fun String.toReadableDate(): String {

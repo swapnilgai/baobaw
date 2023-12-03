@@ -12,8 +12,7 @@ import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 
 enum class ChatListType {
@@ -22,17 +21,25 @@ enum class ChatListType {
     DETAIL_MESSAGES
 }
 interface ChatRealtimeInteractor: Interactor {
-    suspend fun getFlowStream(tableName: String, filterString: String?, chatListType: ChatListType): Flow<PostgresAction>
+    suspend fun getFlowStream(
+        tableName: String,
+        filterString: String?,
+        chatListType: ChatListType
+    ): Flow<PostgresAction>
+
     suspend fun unSubscribe(chatListType: ChatListType)
     suspend fun subscribe(chatListType: ChatListType)
     suspend fun subscribeToLastMessages(chatListType: ChatListType): Flow<LastMessage>
+    suspend fun subscribeToConversation(referenceId: String): Flow<LastMessage>
     suspend fun connect()
     suspend fun disconnect()
+    suspend fun isConnected(chatListType: ChatListType): Boolean
 }
 class ChatRealtimeInteractorImpl(
     private val supabaseClient: SupabaseClient,
     private val seasonInteractor: SeasonInteractor,
-    private val chatListInteractor: ChatListInteractor
+    private val chatListInteractor: ChatListInteractor,
+    private val chatDetailInteractor: ChatDetailInteractor
     ) : ChatRealtimeInteractor {
         private var realtimeNotificationChannel: RealtimeChannel? = null
         private var realtimeDetailMessageChannel: RealtimeChannel? = null
@@ -81,13 +88,13 @@ class ChatRealtimeInteractorImpl(
             tableName: String,
             filterString: String?,
             chatListType: ChatListType
-        ): Flow<PostgresAction> {
+        ): Flow<PostgresAction> = withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, retryCondition = { it.getOrNull() == null }, objectToReturn = emptyFlow())) {
             val realtimeChannel = getRealtimeChannel(chatListType)
             val changeFlow = realtimeChannel.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = tableName
                 filter = filterString
             }
-            return changeFlow
+            changeFlow
         }
 
         override suspend fun unSubscribe(chatListType: ChatListType) {
@@ -99,13 +106,15 @@ class ChatRealtimeInteractorImpl(
         }
 
         override suspend fun subscribe(chatListType: ChatListType) {
-            val realtimeChannel = getRealtimeChannel(chatListType)
-            realtimeChannel.join()
+             withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, objectToReturn = Unit)) {
+                val realtimeChannel = getRealtimeChannel(chatListType)
+                realtimeChannel.join()
+            }
         }
     override suspend fun subscribeToLastMessages(chatListType: ChatListType): Flow<LastMessage> {
-       return withInteractorContext(retryOption = RetryOption(retryCount = 3, maxDelay = 10000, delayIncrementalFactor =  3.0, retryCondition = { it.getOrNull() == null })) {
+       return withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, retryCondition = { it.getOrNull() == null }, objectToReturn = emptyFlow())) {
           val flowStream =  getFlowStream("last_message", null, chatListType)
-                .flatMapLatest { action ->
+                .flatMapMerge { action ->
                     when (action) {
                         is PostgresAction.Insert -> {
                             when(val response = chatListInteractor.jsonElementToLastMessage(action.record.toString())){
@@ -127,12 +136,46 @@ class ChatRealtimeInteractorImpl(
            flowStream
         }
     }
+
+    override suspend fun subscribeToConversation(referenceId: String): Flow<LastMessage> {
+        return withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, retryCondition = { it.getOrNull() == null }, objectToReturn = emptyFlow())) {
+            val flowStream =  getFlowStream("last_message", "reference_id=eq.$referenceId", ChatListType.DETAIL_MESSAGES)
+                .flatMapMerge { action ->
+                    when (action) {
+                        is PostgresAction.Insert -> {
+                            when(val response = chatDetailInteractor.jsonElementToChatMessage(action.record.toString(), referenceId)){
+                                is JsonLatMessageResponse.Success -> flowOf(response.lastMessage)
+                                else -> emptyFlow()
+                            }
+                        }
+                        is PostgresAction.Update -> {
+                            when(val response = chatDetailInteractor.jsonElementToChatMessage(action.record.toString(), referenceId)){
+                                is JsonLatMessageResponse.Success -> flowOf(response.lastMessage)
+                                else -> emptyFlow()
+                            }
+                        }
+                        else -> emptyFlow()
+                    }
+                }
+            subscribe(chatListType = ChatListType.DETAIL_MESSAGES)
+            flowStream
+        }
+    }
+
     override suspend fun connect() {
-        supabaseClient.realtime.connect()
+        withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, objectToReturn = Unit)) {
+            supabaseClient.realtime.connect()
+        }
     }
     override suspend fun disconnect() {
         supabaseClient.realtime.disconnect()
     }
+
+   override suspend fun isConnected(chatListType: ChatListType): Boolean {
+        val realtimeChannel = getRealtimeChannel(chatListType)
+        return realtimeChannel.status.value == RealtimeChannel.Status.JOINED || realtimeChannel.status.value == RealtimeChannel.Status.JOINING
+    }
+
 }
 
 
