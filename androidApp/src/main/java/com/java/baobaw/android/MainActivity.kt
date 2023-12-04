@@ -34,8 +34,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onStop() {
+        super.onStop()
         mainViewModel.cancelSubscribeToChat()
     }
 

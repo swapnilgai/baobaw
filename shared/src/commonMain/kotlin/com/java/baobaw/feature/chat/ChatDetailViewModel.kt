@@ -4,6 +4,7 @@ import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
 import io.github.jan.supabase.realtime.PostgresAction
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -21,7 +22,8 @@ data class ChatMessage(
     val isDeleted: Boolean,
     val isUserCreated: Boolean = false,
     val isHeader: Boolean = false, // Transient property, defaulting to false
-    val messageId: Long
+    val messageId: Long,
+    val sent: Boolean = true
 )
 
 class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor,
@@ -34,11 +36,13 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
         }
     }
 
-    fun sendMessage(inputText: String, referenceId: String){
+    fun sendMessage(inputText: String, referenceId: String) {
         viewModelScope.interactorLaunch {
-            setLoading()
-            chatDetailInteractor.sendMessage(inputText, referenceId)
-            setContent { getContent() }
+            val request = chatDetailInteractor.getChatMessageRequest(inputText, referenceId)
+            val newResult =  async { chatDetailInteractor.addTempMessage(request, referenceId) }
+            async { chatDetailInteractor.sendMessage(request) }
+            val result = newResult.await()
+            setContent { result }
         }
     }
 

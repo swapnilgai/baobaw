@@ -1,6 +1,5 @@
 package com.java.baobaw.feature.chat
 
-import androidx.compose.ui.text.intl.Locale
 import com.java.baobaw.cache.MessageDetailKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
@@ -43,63 +42,95 @@ data class ChatMessageRequest(
 
 
 interface ChatDetailInteractor : Interactor {
+
     suspend fun getMessages(referenceId: String, minRange: Long = 0 , maxRange: Long = 50): Map<String, List<ChatMessage>>
-
     suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage
-
-    suspend fun sendMessage(inputText: String, referenceId: String): Unit
-
+    suspend fun sendMessage(chatMessageRequest: ChatMessageRequest): Unit
     suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonLatMessageResponse
-
     suspend fun updateMessages(newMessages: LastMessage): Map<String, List<ChatMessage>>
+    suspend fun addTempMessage(chatMessageRequest: ChatMessageRequest, referenceId: String) : Map<String, List<ChatMessage>>
+    suspend fun getChatMessageRequest(inputText: String, referenceId: String): ChatMessageRequest
 }
 class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) :
     ChatDetailInteractor {
 
-    override suspend fun getMessages(referenceId: String, minRange: Long, maxRange: Long): Map<String, List<ChatMessage>>  =
+    override suspend fun getMessages(
+        referenceId: String,
+        minRange: Long,
+        maxRange: Long
+    ): Map<String, List<ChatMessage>> =
         withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId))) {
-        // Fetch messages from the database
-        val messages = supabaseService.select("messages") {
-            eq("reference_id", referenceId)
-            order("created_date", Order.DESCENDING)
-            range(minRange, maxRange)
-        }.decodeResultAs<List<ChatMessageResponse>>()
+            // Fetch messages from the database
+            val messages = supabaseService.select("messages") {
+                eq("reference_id", referenceId)
+                order("created_date", Order.DESCENDING)
+                range(minRange, maxRange)
+            }.decodeResultAs<List<ChatMessageResponse>>()
 
-        val currentUserId = seasonInteractor.getCurrentUserId()
-
-        messages.toChatMessagesWithHeadersMap(currentUserId!!)
-    }
-
-    override suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage = withInteractorContext {
-        val userId = seasonInteractor.getCurrentUserId()
-        jsonString.decodeResultAs<ChatMessageResponse>().toChatMessage(userId!!)
-    }
-
-    override suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonLatMessageResponse =
-        withInteractorContext(retryOption = RetryOption(0, objectToReturn = JsonLatMessageResponse.Error)) {
             val currentUserId = seasonInteractor.getCurrentUserId()
-            val result = jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(currentUserId!!)
+
+            messages.toChatMessagesWithHeadersMap(currentUserId!!)
+        }
+
+    override suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage =
+        withInteractorContext {
+            val userId = seasonInteractor.getCurrentUserId()
+            jsonString.decodeResultAs<ChatMessageResponse>().toChatMessage(userId!!)
+        }
+
+    override suspend fun jsonElementToChatMessage(
+        jsonString: String,
+        referenceId: String
+    ): JsonLatMessageResponse =
+        withInteractorContext(
+            retryOption = RetryOption(
+                0,
+                objectToReturn = JsonLatMessageResponse.Error
+            )
+        ) {
+            val currentUserId = seasonInteractor.getCurrentUserId()
+            val result =
+                jsonString.decodeResultAs<LastMessageResponse>().toLastMessage(currentUserId!!)
             JsonLatMessageResponse.Success(result)
         }
 
-    override suspend fun sendMessage(inputText: String, referenceId: String): Unit = withInteractorContext {
-            val request =  getChatMessageRequest(inputText, referenceId)
+    override suspend fun sendMessage(chatMessageRequest: ChatMessageRequest): Unit =
+        withInteractorContext {
             supabaseService.rpc(
                 function = "insert_message",
-                parameters = Json.encodeToJsonElement(request)
+                parameters = Json.encodeToJsonElement(chatMessageRequest)
             )
-    }
+        }
 
     override suspend fun updateMessages(newMessages: LastMessage): Map<String, List<ChatMessage>> =
-        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = newMessages.referenceId), skipCache = true)) {
+        withInteractorContext(
+            cacheOption = CacheOption(
+                key = MessageDetailKey(referenceId = newMessages.referenceId),
+                skipCache = true
+            )
+        ) {
             updateCurrentMap(lastMessage = newMessages)
         }
 
-    fun addTempMessage(){
+    override suspend fun addTempMessage(
+        chatMessageRequest: ChatMessageRequest,
+        referenceId: String
+    ): Map<String, List<ChatMessage>> =
+        withInteractorContext(
+            cacheOption = CacheOption(
+                key = MessageDetailKey(referenceId = referenceId),
+                skipCache = true
+            )
+        ) {
+            val currentUserId = seasonInteractor.getCurrentUserId()!!
+            val lastMessage = chatMessageRequest.toLastMessage(currentUserId, referenceId)
+            updateCurrentMap(lastMessage, false)
+        }
 
-    }
-
-    suspend fun getChatMessageRequest(inputText: String, referenceId: String): ChatMessageRequest{
+    override suspend fun getChatMessageRequest(
+        inputText: String,
+        referenceId: String
+    ): ChatMessageRequest {
         val currentUserId = seasonInteractor.getCurrentUserId()
         referenceId.split(":").filterNot { it == currentUserId }.first().let { otherUserId ->
             // Send message to the other user (the user id is the second part of the reference id separated by "
@@ -111,12 +142,12 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         }
     }
 
-    private suspend fun updateCurrentMap(lastMessage: LastMessage): Map<String, List<ChatMessage>> = withInteractorContext {
+    private suspend fun updateCurrentMap(lastMessage: LastMessage, sent: Boolean = true): Map<String, List<ChatMessage>> = withInteractorContext {
         val messagesMap = getMessages(referenceId = lastMessage.referenceId).toMutableMap()
         val userId = seasonInteractor.getCurrentUserId() ?: ""
 
         // Convert the last message to ChatMessage
-        val newMsg = lastMessage.toChatMessage(userId)
+        val newMsg = lastMessage.toChatMessage(userId, sent)
         val messageDateHeader = lastMessage.createdDate.toChatHeaderReadableDate()
 
         // Check if the date header exists in the map
@@ -129,10 +160,23 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
                 // Update existing message
                 messagesForDate[existingMessageIndex] = newMsg
             } else {
-                // Add new message to the list
-                messagesForDate.add(0, newMsg)
-            }
+                // Filter messages with negative messageId
+                val negativeIdMessages = messagesForDate.filter { it.messageId < 0 }
 
+                // Check if any of these messages match the lastMessage's data
+                val matchingMessage = negativeIdMessages.firstOrNull {
+                    it.message == lastMessage.message && it.creatorUserId == lastMessage.creatorUserId && !it.sent
+                }
+
+                if (matchingMessage != null) {
+                    // Update the matching message
+                    val indexToUpdate = messagesForDate.indexOf(matchingMessage)
+                    messagesForDate[indexToUpdate] = newMsg
+                } else {
+                    // Add new message to the list
+                    messagesForDate.add(0, newMsg)
+                }
+            }
             // Put the updated list back into the map
             messagesMap[messageDateHeader] = messagesForDate
         } else {
@@ -154,6 +198,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         return@withInteractorContext messagesMap
     }
 }
+
 fun String.parseDate(): LocalDate {
     val parts = this.split(" ")
     val day = parts[0].toInt()
@@ -189,11 +234,12 @@ fun ChatMessageResponse.toChatMessage(currentUserId: String): ChatMessage {
         isUserCreated = this.creatorUserId == currentUserId, // Set based on user context
         isHeader = false,
         createdDate = this.createdDate.toChatHeaderReadableDate(),
-        messageId = this.id.toLong()
+        messageId = this.id.toLong(),
+        sent = true
     )
 }
 
-private fun LastMessage.toChatMessage(currentUserId : String): ChatMessage {
+private fun LastMessage.toChatMessage(currentUserId : String, sent: Boolean): ChatMessage {
     return ChatMessage(
         id = this.id,
         referenceId = this.referenceId,
@@ -205,7 +251,8 @@ private fun LastMessage.toChatMessage(currentUserId : String): ChatMessage {
         isDeleted = this.isDeleted,
         isUserCreated = this.creatorUserId == currentUserId,
         isHeader = false,
-        messageId = this.messageId
+        messageId = this.messageId,
+        sent = sent
     )
 
 }
@@ -224,8 +271,24 @@ private fun ChatMessageRequest.toChatMessage(currentUserId : String, referenceId
         isHeader = false,
         messageId = -99
     )
-
 }
+
+private fun ChatMessageRequest.toLastMessage(currentUserId : String, referenceId: String ): LastMessage {
+    return LastMessage(
+        id = -99,
+        referenceId = referenceId,
+        creatorUserId = this.creatorUserId,
+        message = this.message!!,
+        createdDate = Clock.System.now().toString(),
+        seen = false,
+        isDeleted = false,
+        messageId = -99,
+        imageUrl = "",
+        name = "",
+    )
+}
+
+
 
 
 

@@ -283,8 +283,8 @@ fun MessageBubble(
     val bubbleColor = if (isCurrentUser) Color(0xFF6B38FB) else Color(0xFFE7E7E8)
     val textColor = if (isCurrentUser) Color.White else Color.Black
     val timeTextColor = Color(0xFF9E9E9E)
-    val bubbleShape = RoundedCornerShape(16.dp) // Assuming rounded corners for the bubble
-    val paddingHorizontal = 16.dp // Adjusted padding
+    val bubbleShape = RoundedCornerShape(16.dp)
+    val paddingHorizontal = 16.dp
 
     Column(
         horizontalAlignment = if (isCurrentUser) Alignment.End else Alignment.Start,
@@ -305,10 +305,10 @@ fun MessageBubble(
             color = bubbleColor
         ) {
             Text(
-                text = message.message!!,
+                text = message.message ?: "",
                 color = textColor,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(10.dp) // Adjust text padding within the bubble
+                modifier = Modifier.padding(10.dp)
             )
         }
 
@@ -324,6 +324,17 @@ fun MessageBubble(
                 modifier = Modifier
                     .padding(horizontal = paddingHorizontal, vertical = 4.dp)
                     .align(if (isCurrentUser) Alignment.End else Alignment.Start)
+            )
+        }
+
+        // Loading indicator for unsent messages
+        if (!message.sent) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(if (isCurrentUser) Alignment.End else Alignment.Start)
+                    .size(20.dp)
+                    .padding(bottom = 4.dp),
+                strokeWidth = 2.dp
             )
         }
     }
