@@ -9,6 +9,11 @@ import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -42,7 +47,8 @@ data class ChatMessageRequest(
 
 
 interface ChatDetailInteractor : Interactor {
-
+    fun setReferenceId(referenceId: String)
+    fun getMessagesFlow(referenceId: String): Flow<Map<String, List<ChatMessage>>>
     suspend fun getMessages(referenceId: String, minRange: Long = 0 , maxRange: Long = 50): Map<String, List<ChatMessage>>
     suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage
     suspend fun sendMessage(chatMessageRequest: ChatMessageRequest): Unit
@@ -51,8 +57,16 @@ interface ChatDetailInteractor : Interactor {
     suspend fun addTempMessage(chatMessageRequest: ChatMessageRequest, referenceId: String) : Map<String, List<ChatMessage>>
     suspend fun getChatMessageRequest(inputText: String, referenceId: String): ChatMessageRequest
 }
-class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) :
-    ChatDetailInteractor {
+class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) : ChatDetailInteractor {
+
+    private lateinit var referenceId: String
+    private val _messages = MutableStateFlow<Map<String, List<ChatMessage>>>(emptyMap())
+    private val message = _messages.drop(1)
+    override fun setReferenceId(referenceId: String) {
+        this.referenceId = referenceId
+    }
+    override fun getMessagesFlow(referenceId: String): Flow<Map<String, List<ChatMessage>>> = message
+
 
     override suspend fun getMessages(
         referenceId: String,
@@ -109,7 +123,11 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
                 skipCache = true
             )
         ) {
-            updateCurrentMap(lastMessage = newMessages)
+            val result = updateCurrentMap(lastMessage = newMessages)
+            if(referenceId == newMessages.referenceId) {
+                _messages.value = result
+            }
+            result
         }
 
     override suspend fun addTempMessage(

@@ -17,8 +17,7 @@ import kotlinx.coroutines.flow.flowOf
 
 enum class ChatListType {
     NOTIFICATION,
-    LIST_MESSAGES,
-    DETAIL_MESSAGES
+    LIST_MESSAGES
 }
 interface ChatRealtimeInteractor: Interactor {
     suspend fun getFlowStream(
@@ -30,7 +29,6 @@ interface ChatRealtimeInteractor: Interactor {
     suspend fun unSubscribe(chatListType: ChatListType)
     suspend fun subscribe(chatListType: ChatListType)
     suspend fun subscribeToLastMessages(chatListType: ChatListType): Flow<LastMessage>
-    suspend fun subscribeToConversation(referenceId: String): Flow<LastMessage>
     suspend fun connect()
     suspend fun disconnect()
     suspend fun isConnected(chatListType: ChatListType): Boolean
@@ -38,9 +36,7 @@ interface ChatRealtimeInteractor: Interactor {
 class ChatRealtimeInteractorImpl(
     private val supabaseClient: SupabaseClient,
     private val seasonInteractor: SeasonInteractor,
-    private val chatListInteractor: ChatListInteractor,
-    private val chatDetailInteractor: ChatDetailInteractor
-    ) : ChatRealtimeInteractor {
+    private val chatListInteractor: ChatListInteractor) : ChatRealtimeInteractor {
         private var realtimeNotificationChannel: RealtimeChannel? = null
         private var realtimeDetailMessageChannel: RealtimeChannel? = null
         private var realtimeListMessageChannel: RealtimeChannel? = null
@@ -66,22 +62,10 @@ class ChatRealtimeInteractorImpl(
         }
     }
 
-    private suspend fun getRealtimeDetailMessagesChannel(): RealtimeChannel {
-        return withInteractorContext {
-            if (realtimeDetailMessageChannel == null) {
-                val userId = seasonInteractor.getCurrentUserId()
-                val channelName = "list_messages:$userId"
-                realtimeDetailMessageChannel = supabaseClient.realtime.createChannel(channelName)
-            }
-            realtimeDetailMessageChannel!!
-        }
-    }
-
     private suspend fun getRealtimeChannel(chatListType: ChatListType) : RealtimeChannel =
          when(chatListType) {
             ChatListType.NOTIFICATION -> getRealtimeNotificationChannel()
             ChatListType.LIST_MESSAGES -> getRealtimeListMessagesChannel()
-            ChatListType.DETAIL_MESSAGES -> getRealtimeDetailMessagesChannel()
     }
 
         override suspend fun getFlowStream(
@@ -137,31 +121,6 @@ class ChatRealtimeInteractorImpl(
         }
     }
 
-    override suspend fun subscribeToConversation(referenceId: String): Flow<LastMessage> {
-        return withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, retryCondition = { it.getOrNull() == null }, objectToReturn = emptyFlow())) {
-            val flowStream =  getFlowStream("last_message", "reference_id=eq.$referenceId", ChatListType.DETAIL_MESSAGES)
-                .flatMapMerge { action ->
-                    when (action) {
-                        is PostgresAction.Insert -> {
-                            when(val response = chatDetailInteractor.jsonElementToChatMessage(action.record.toString(), referenceId)){
-                                is JsonLatMessageResponse.Success -> flowOf(response.lastMessage)
-                                else -> emptyFlow()
-                            }
-                        }
-                        is PostgresAction.Update -> {
-                            when(val response = chatDetailInteractor.jsonElementToChatMessage(action.record.toString(), referenceId)){
-                                is JsonLatMessageResponse.Success -> flowOf(response.lastMessage)
-                                else -> emptyFlow()
-                            }
-                        }
-                        else -> emptyFlow()
-                    }
-                }
-            subscribe(chatListType = ChatListType.DETAIL_MESSAGES)
-            flowStream
-        }
-    }
-
     override suspend fun connect() {
         withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, objectToReturn = Unit)) {
             supabaseClient.realtime.connect()
@@ -175,7 +134,6 @@ class ChatRealtimeInteractorImpl(
         val realtimeChannel = getRealtimeChannel(chatListType)
         return realtimeChannel.status.value == RealtimeChannel.Status.JOINED || realtimeChannel.status.value == RealtimeChannel.Status.JOINING
     }
-
 }
 
 

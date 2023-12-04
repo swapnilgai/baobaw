@@ -26,11 +26,11 @@ data class ChatMessage(
     val sent: Boolean = true
 )
 
-class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor,
-                          private val chatRealtimeInteractor: ChatRealtimeInteractor): BaseViewModel<Map<String, List<ChatMessage>>>(initialContent =  emptyMap()) {
+class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor): BaseViewModel<Map<String, List<ChatMessage>>>(initialContent =  emptyMap()) {
 
     fun init(referenceId: String){
         viewModelScope.interactorLaunch {
+            chatDetailInteractor.setReferenceId(referenceId)
            async {  getConversation(referenceId) }
            async {  subscribeToConversation(referenceId) }
         }
@@ -58,22 +58,16 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
     fun subscribeToConversation(referenceId: String) {
         // Subscribe to conversation logic
         viewModelScope.interactorLaunch {
-            setLoading()
-            val isConnected =  chatRealtimeInteractor.isConnected(ChatListType.DETAIL_MESSAGES)
-            if(!isConnected) {
-                chatRealtimeInteractor.subscribeToConversation(referenceId)
-                    .onEach { newMessage ->
-                        val result = chatDetailInteractor.updateMessages(newMessage)
-                        setContent { result }
+            chatDetailInteractor.getMessagesFlow(referenceId)
+                    .onEach { result ->
+                       if(result.isNotEmpty()) setContent { result }
                     }.launchIn(this)
             }
-            if(getContent().isNotEmpty()) setContent { getContent() }
-        }
     }
 
      override suspend fun clearViewModel(){
-         viewModelScope.interactorLaunch {
-             chatRealtimeInteractor.unSubscribe(chatListType = ChatListType.DETAIL_MESSAGES)
-         }.join()
+//         viewModelScope.interactorLaunch {
+//             //chatRealtimeInteractor.unSubscribe(chatListType = ChatListType.DETAIL_MESSAGES)
+//         }.join()
     }
 }
