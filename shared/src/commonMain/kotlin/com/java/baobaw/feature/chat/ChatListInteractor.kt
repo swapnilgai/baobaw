@@ -14,6 +14,9 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Count
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
@@ -61,6 +64,7 @@ sealed class JsonLatMessageResponse {
 }
 
 interface ChatListInteractor : Interactor {
+    fun getLastMessagesFlow(): Flow<PaginatedResponse<LastMessage>>
     suspend fun getLastMessagesTotalCount(): Long
     suspend fun getLastMessages(offset: Long, isLastPage: Boolean = false, currentMessages: List<LastMessage> = emptyList()): PaginatedResponse<LastMessage>
     suspend fun jsonElementToLastMessage(jsonString: String): JsonLatMessageResponse
@@ -69,8 +73,10 @@ interface ChatListInteractor : Interactor {
 }
 
 
-class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor, private val supabaseClient: SupabaseClient): ChatListInteractor {
-
+class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor): ChatListInteractor {
+    private val _last_messages = MutableStateFlow<PaginatedResponse<LastMessage>>(PaginatedResponse(emptyList(), 0, 0))
+    private val last_messages = _last_messages.drop(1)
+    override fun getLastMessagesFlow(): Flow<PaginatedResponse<LastMessage>> = last_messages
     override suspend fun getLastMessagesTotalCount(): Long {
         return withInteractorContext(cacheOption = CacheOption(key = LastMessagesTotalCount("LastMessagesTotalCount"))) {
             seasonInteractor.getCurrentUserId()?.let {currentUser ->
@@ -145,11 +151,13 @@ class ChatListInteractorImpl(private val supabaseService: SupabaseService, priva
             updatedMessages.add(0, newMessages)
 
             // Return the updated list
-            PaginatedResponse(
+            val result = PaginatedResponse(
                 data = updatedMessages,
                 offset = getLastMessagesResult.offset,
                 totalRecords = getLastMessagesResult.totalRecords
             )
+            _last_messages.value = result
+            result
         }
     }
 

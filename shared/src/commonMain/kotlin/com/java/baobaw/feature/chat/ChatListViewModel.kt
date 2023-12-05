@@ -18,8 +18,7 @@ data class ChatListContent(
 )
 
 class ChatListViewModel(
-    private val chatListInteractor: ChatListInteractor,
-    private val chatRealtimeInteractor: ChatRealtimeInteractor
+    private val chatListInteractor: ChatListInteractor
 ) : BaseViewModel<ChatListContent>(ChatListContent(emptyList())) {
 
     fun init() {
@@ -55,26 +54,15 @@ class ChatListViewModel(
     }
 
     fun subscribeToNewMessages() {
+        // Subscribe to conversation logic
         viewModelScope.interactorLaunch {
-            setLoading()
-            val isConnected =  chatRealtimeInteractor.isConnected(ChatListType.LIST_MESSAGES)
-            if(!isConnected)
-            chatRealtimeInteractor.subscribeToLastMessages(chatListType = ChatListType.LIST_MESSAGES)
-                .onEach { newMessage ->
-                    val combinedList = chatListInteractor.updateMessages(newMessage)
+            chatListInteractor.getLastMessagesFlow()
+                .onEach { result ->
                     setContent {
-                        getContent().copy(messages = combinedList.data)
+                        getContent().copy(messages = result.data)
                     }
                 }.launchIn(this)
-            if(getContent().messages.isNotEmpty()){
-                setContent { getContent() }
-            }
         }
-    }
-    override suspend fun clearViewModel() {
-        viewModelScope.interactorLaunch {
-            chatRealtimeInteractor.unSubscribe(chatListType = ChatListType.LIST_MESSAGES)
-        }.join()
     }
 
     fun navigateToChatDetail(referenceId: String) {

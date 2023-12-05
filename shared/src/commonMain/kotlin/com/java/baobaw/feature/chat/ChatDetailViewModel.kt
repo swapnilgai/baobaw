@@ -31,8 +31,8 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
     fun init(referenceId: String){
         viewModelScope.interactorLaunch {
             chatDetailInteractor.setReferenceId(referenceId)
-           async {  getConversation(referenceId) }
-           async {  subscribeToConversation(referenceId) }
+            async {  getConversation(referenceId) }
+            async {  subscribeToConversation(referenceId) }
         }
     }
 
@@ -63,11 +63,5 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
                        if(result.isNotEmpty()) setContent { result }
                     }.launchIn(this)
             }
-    }
-
-     override suspend fun clearViewModel(){
-//         viewModelScope.interactorLaunch {
-//             //chatRealtimeInteractor.unSubscribe(chatListType = ChatListType.DETAIL_MESSAGES)
-//         }.join()
     }
 }

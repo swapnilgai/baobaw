@@ -13,7 +13,7 @@ import org.koin.dsl.module
 val chatModule = module {
     single<ChatDetailInteractor> { ChatDetailInteractorImpl(get(), get()) }
     single<ChatRealtimeInteractor> { ChatRealtimeInteractorImpl(get(), get(), get()) }
-    single<ChatListInteractor> { ChatListInteractorImpl(get(), get(), get()) }
+    single<ChatListInteractor> { ChatListInteractorImpl(get(), get()) }
     single<ChatDetailViewModel> { ChatDetailViewModel(get()) }
-    single<ChatListViewModel> { ChatListViewModel(get(), get()) }
+    single<ChatListViewModel> { ChatListViewModel(get()) }
 }
