@@ -59,7 +59,7 @@ interface ChatDetailInteractor : Interactor {
 }
 class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) : ChatDetailInteractor {
 
-    private lateinit var referenceId: String
+    private var referenceId: String = ""
     private val _messages = MutableStateFlow<Map<String, List<ChatMessage>>>(emptyMap())
     private val message = _messages.drop(1)
     override fun setReferenceId(referenceId: String) {
