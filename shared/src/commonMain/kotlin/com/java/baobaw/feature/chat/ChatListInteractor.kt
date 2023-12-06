@@ -10,7 +10,6 @@ import com.java.baobaw.interactor.invalidateCache
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
-import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Count
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.async
@@ -71,7 +70,6 @@ interface ChatListInteractor : Interactor {
     suspend fun invalidateMessageCache()
     suspend fun updateMessages(newMessages: LastMessage): PaginatedResponse<LastMessage>
 }
-
 
 class ChatListInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor): ChatListInteractor {
     private val _last_messages = MutableStateFlow<PaginatedResponse<LastMessage>>(PaginatedResponse(emptyList(), 0, 0))

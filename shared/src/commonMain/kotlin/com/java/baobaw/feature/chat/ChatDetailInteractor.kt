@@ -10,7 +10,6 @@ import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
-import dev.icerock.moko.resources.StringResource
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +44,6 @@ data class ChatMessageRequest(
     @SerialName("other_user_id") val otherUserId: String,
     @SerialName("message") val message: String?
 )
-
 
 interface ChatDetailInteractor : Interactor {
     fun setReferenceId(referenceId: String)
@@ -176,7 +174,6 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
             message = inputText
         )
     }
-
 
     private suspend fun updateCurrentMap(lastMessage: LastMessage, sent: Boolean = true): Map<String, List<ChatMessage>> = withInteractorContext {
         val messagesMap = getMessages(referenceId = lastMessage.referenceId).toMutableMap()
@@ -323,10 +320,6 @@ private fun ChatMessageRequest.toLastMessage(currentUserId : String, referenceId
         name = "",
     )
 }
-
-
-
-
 
 // Extension function to convert ISO date string to a readable format
 fun String.toReadableDate(): String {

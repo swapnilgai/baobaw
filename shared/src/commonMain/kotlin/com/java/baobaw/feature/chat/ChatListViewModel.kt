@@ -1,8 +1,6 @@
 package com.java.baobaw.feature.chat
 
 import com.java.baobaw.AppConstants
-
-
 import com.java.baobaw.presentationInfra.BaseViewModel
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.util.getNavigationUrlWithoutBrackets
