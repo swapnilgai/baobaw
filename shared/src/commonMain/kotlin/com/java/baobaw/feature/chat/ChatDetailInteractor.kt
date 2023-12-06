@@ -1,18 +1,19 @@
 package com.java.baobaw.feature.chat
 
+import com.java.baobaw.SharedRes
 import com.java.baobaw.cache.MessageDetailKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
+import com.java.baobaw.interactor.InteracroeException
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
+import dev.icerock.moko.resources.StringResource
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -110,6 +111,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
 
     override suspend fun sendMessage(chatMessageRequest: ChatMessageRequest): Unit =
         withInteractorContext {
+            if(chatMessageRequest.message?.isNotEmpty() == true)
             supabaseService.rpc(
                 function = "insert_message",
                 parameters = Json.encodeToJsonElement(chatMessageRequest)
@@ -150,15 +152,31 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
         referenceId: String
     ): ChatMessageRequest {
         val currentUserId = seasonInteractor.getCurrentUserId()
-        referenceId.split(":").filterNot { it == currentUserId }.first().let { otherUserId ->
-            // Send message to the other user (the user id is the second part of the reference id separated by "
-            return ChatMessageRequest(
-                creatorUserId = currentUserId!!,
-                otherUserId = otherUserId,
-                message = inputText
-            )
+
+        // Check if referenceId can be split into two parts
+        val parts = referenceId.split(":")
+        if (parts.size != 2) {
+            throw InteracroeException.Generic(SharedRes.strings.token_has_expired_or_is_invalid)
+            //TODO write exception message
         }
+
+        // Extract the other user's ID, ensuring it's not the current user's ID
+        val otherUserId = parts.firstOrNull { it != currentUserId }
+
+        // Throw an exception if otherUserId is null or empty
+        if (otherUserId.isNullOrEmpty()) {
+            throw InteracroeException.Generic(SharedRes.strings.token_has_expired_or_is_invalid)
+            //TODO write exception message
+        }
+
+        // Send message to the other user
+        return ChatMessageRequest(
+            creatorUserId = currentUserId!!,
+            otherUserId = otherUserId,
+            message = inputText
+        )
     }
+
 
     private suspend fun updateCurrentMap(lastMessage: LastMessage, sent: Boolean = true): Map<String, List<ChatMessage>> = withInteractorContext {
         val messagesMap = getMessages(referenceId = lastMessage.referenceId).toMutableMap()
