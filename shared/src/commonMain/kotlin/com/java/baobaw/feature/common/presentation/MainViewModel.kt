@@ -27,6 +27,7 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
         // Example: Fetch user profile, messages, etc.
     }
 
+
     fun observeSessionStatus() {
         viewModelScope.launch {
             supabaseClient.gotrue.sessionStatus.collect {
@@ -43,15 +44,14 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
     private fun subscribeToChat() {
         viewModelScope.interactorLaunch {
             setLoading()
-            val isConnected =  chatRealtimeInteractor.isConnected()
-            if(!isConnected){
+            val isConnected = chatRealtimeInteractor.isConnected()
+//            if(!isConnected){
             chatRealtimeInteractor.subscribeToLastMessages()
                 .onEach { newMessage ->
                     chatListInteractor.updateMessages(newMessage)
                     chatDetailInteractor.updateMessages(newMessage)
                 }.launchIn(this)
                 setContent { getContent()  }
-        }
         }
     }
 
@@ -61,9 +61,13 @@ class MainViewModel(private val compatibilityBatchInteractor: CompatibilityBatch
         }
     }
     fun cancelSubscribeToChat() {
+
+    }
+
+    override suspend fun clearViewModel() {
         viewModelScope.launch {
             chatRealtimeInteractor.unSubscribe()
             chatRealtimeInteractor.disconnect()
-        }
+        }.join()
     }
 }

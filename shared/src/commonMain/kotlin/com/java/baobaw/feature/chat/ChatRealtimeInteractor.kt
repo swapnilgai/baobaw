@@ -10,10 +10,13 @@ import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 interface ChatRealtimeInteractor: Interactor {
     suspend fun getFlowStream(
@@ -75,7 +78,7 @@ class ChatRealtimeInteractorImpl(
         }
     override suspend fun subscribeToLastMessages(): Flow<LastMessage> {
        return withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, retryCondition = { it.getOrNull() == null }, objectToReturn = emptyFlow())) {
-          val flowStream =  getFlowStream("last_message", null)
+           val flowStream =  getFlowStream("last_message", null)
                 .flatMapMerge { action ->
                     when (action) {
                         is PostgresAction.Insert -> {
@@ -99,11 +102,15 @@ class ChatRealtimeInteractorImpl(
         }
     }
 
+    val TIMEOUT_DURATION = 5000L // 30 seconds
     override suspend fun connect() {
-        withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor =  2.0, objectToReturn = Unit)) {
-            supabaseClient.realtime.connect()
+        withInteractorContext(retryOption = RetryOption(retryCount = 5, maxDelay = 10000, delayIncrementalFactor = 8.0, objectToReturn = Unit)) {
+            withTimeoutOrNull(TIMEOUT_DURATION) {
+                supabaseClient.realtime.connect()
+            }
         }
     }
+
     override suspend fun disconnect() {
         supabaseClient.realtime.disconnect()
     }
