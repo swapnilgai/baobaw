@@ -1,11 +1,5 @@
-package com.java.baobaw.feature.chat_detail
+package com.java.baobaw.feature.chat
 
-import com.java.baobaw.feature.chat.ChatDetailInteractorImpl
-import com.java.baobaw.feature.chat.ChatMessage
-import com.java.baobaw.feature.chat.ChatMessageRequest
-import com.java.baobaw.feature.chat.ChatMessageResponse
-import com.java.baobaw.feature.chat.toChatHeaderReadableDate
-import com.java.baobaw.feature.chat.toChatReadableTime
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.InteracroeException
 import com.java.baobaw.networkInfra.SupabaseService
