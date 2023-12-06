@@ -16,6 +16,7 @@ import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
 import io.github.jan.supabase.postgrest.query.Count
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.drop
@@ -104,24 +105,26 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
 
    override suspend fun getNextPage(isInitialPage: Boolean): Map<String, List<ChatMessage>> =
        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId), skipCache = true)) {
-           val currentPage = getCurrentPage(PageMessageDetailKey(referenceId))
+           val currentPage =  getCurrentPage(PageMessageDetailKey(referenceId))
+           val currentContentAwait = async { getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = false) }
+           val totalCountAwiat = async { getMessagesTotalCount(referenceId) }
+ 
+           val currentContent =  currentContentAwait.await()
+           val totalCount = totalCountAwiat.await()
+
            if(isInitialPage){
-               return@withInteractorContext getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = false)
+               updateCurrentPage(PageMessageDetailKey(referenceId), offset = currentPage.offset + currentContent.values.sumOf { it.size }.toLong(), totalRecords = totalCount)
+               return@withInteractorContext currentContent
            }
-           val currentContent = if(currentPage.offset != 0L && currentPage.totalRecords != 0L)
-               getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = false)
-           else emptyMap()
-        val totalCount = getMessagesTotalCount(referenceId)
         val skipCache = currentPage.offset < totalCount
 
         val message = getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = skipCache)
 
-       updateCurrentPage(PageMessageDetailKey(referenceId), offset = currentPage.offset + message.values.sumOf { it.size }.toLong(), totalRecords = totalCount)
+        updateCurrentPage(PageMessageDetailKey(referenceId), offset = currentPage.offset + message.values.sumOf { it.size }.toLong(), totalRecords = totalCount)
 
-       val result =  mergeMaps(currentContent, message)
+        mergeMaps(currentContent, message)
 
-           result
-   }
+       }
     fun <K, V> mergeMaps(map1: Map<K, List<V>>, map2: Map<K, List<V>>): Map<K, List<V>> {
         val mergedMap = map1.toMutableMap()
 

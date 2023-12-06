@@ -52,6 +52,7 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
     // The function to get the conversation as described.
     fun getConversation(isInitial: Boolean = false) {
         if(isLoading) return
+        if(isInitial) setLoading()
         viewModelScope.interactorLaunch {
             isLoading = true
             val endReached = chatDetailInteractor.endReached()
