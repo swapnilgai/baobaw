@@ -1,7 +1,11 @@
 package com.java.baobaw.feature.chat
 
 import com.java.baobaw.SharedRes
+import com.java.baobaw.cache.CacheKey
+import com.java.baobaw.cache.LastMessagesTotalCount
+import com.java.baobaw.cache.MessageDetailCount
 import com.java.baobaw.cache.MessageDetailKey
+import com.java.baobaw.cache.PageMessageDetailKey
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.InteracroeException
@@ -10,6 +14,7 @@ import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.withInteractorContext
 import com.java.baobaw.networkInfra.SupabaseService
 import com.java.baobaw.util.decodeResultAs
+import io.github.jan.supabase.postgrest.query.Count
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,16 +50,24 @@ data class ChatMessageRequest(
     @SerialName("message") val message: String?
 )
 
+data class CurrentPage(
+    val offset: Long,
+    val totalRecords: Long
+)
+
 interface ChatDetailInteractor : Interactor {
     fun setReferenceId(referenceId: String)
     fun getMessagesFlow(referenceId: String): Flow<Map<String, List<ChatMessage>>>
-    suspend fun getMessages(referenceId: String, minRange: Long = 0 , maxRange: Long = 50): Map<String, List<ChatMessage>>
+    suspend fun getMessages(referenceId: String, skipCache: Boolean = true, offset: Long = 0): Map<String, List<ChatMessage>>
     suspend fun jsonElementToChatMessage(jsonString: String): ChatMessage
     suspend fun sendMessage(chatMessageRequest: ChatMessageRequest): Unit
     suspend fun jsonElementToChatMessage(jsonString: String, referenceId: String): JsonLatMessageResponse
     suspend fun updateMessages(newMessages: LastMessage): Map<String, List<ChatMessage>>
     suspend fun addTempMessage(chatMessageRequest: ChatMessageRequest, referenceId: String) : Map<String, List<ChatMessage>>
     suspend fun getChatMessageRequest(inputText: String, referenceId: String): ChatMessageRequest
+    suspend fun getMessagesTotalCount(referenceId: String): Long
+    suspend fun getNextPage(isInitialPage: Boolean): Map<String, List<ChatMessage>>
+    suspend fun endReached(): Boolean
 }
 class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, private val seasonInteractor: SeasonInteractor) : ChatDetailInteractor {
 
@@ -66,18 +79,78 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
     }
     override fun getMessagesFlow(referenceId: String): Flow<Map<String, List<ChatMessage>>> = message
 
+    private suspend fun getCurrentPage(cacheKey: CacheKey) = withInteractorContext(cacheOption = CacheOption(key = cacheKey)) {
+        return@withInteractorContext CurrentPage(offset = 0, totalRecords = 0)
+    }
+    private suspend fun updateCurrentPage(cacheKey: CacheKey, offset: Long, totalRecords: Long) = withInteractorContext(cacheOption = CacheOption(key = cacheKey, skipCache = true)) {
+        return@withInteractorContext CurrentPage(offset = offset, totalRecords = totalRecords)
+    }
+
+    override suspend fun endReached(): Boolean {
+        val currentPage = getCurrentPage(PageMessageDetailKey(referenceId))
+        val totalCount = getMessagesTotalCount(referenceId)
+        return currentPage.offset >= totalCount
+    }
+
+    override suspend fun getMessagesTotalCount(referenceId: String): Long {
+        return withInteractorContext(cacheOption = CacheOption(key = MessageDetailCount(referenceId))) {
+            seasonInteractor.getCurrentUserId()?.let {currentUser ->
+                supabaseService.select("messages", count = Count.EXACT, head = true) {
+                    eq("reference_id", referenceId)
+                }.count()?:0
+            }?: 0
+        }
+    }
+
+   override suspend fun getNextPage(isInitialPage: Boolean): Map<String, List<ChatMessage>> =
+       withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId), skipCache = true)) {
+           val currentPage = getCurrentPage(PageMessageDetailKey(referenceId))
+           if(isInitialPage){
+               return@withInteractorContext getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = false)
+           }
+           val currentContent = if(currentPage.offset != 0L && currentPage.totalRecords != 0L)
+               getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = false)
+           else emptyMap()
+        val totalCount = getMessagesTotalCount(referenceId)
+        val skipCache = currentPage.offset < totalCount
+
+        val message = getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = skipCache)
+
+       updateCurrentPage(PageMessageDetailKey(referenceId), offset = currentPage.offset + message.values.sumOf { it.size }.toLong(), totalRecords = totalCount)
+
+       val result =  mergeMaps(currentContent, message)
+
+           result
+   }
+    fun <K, V> mergeMaps(map1: Map<K, List<V>>, map2: Map<K, List<V>>): Map<K, List<V>> {
+        val mergedMap = map1.toMutableMap()
+
+        for ((key, value) in map2) {
+            if (mergedMap.containsKey(key)) {
+                // Combine the lists if the key exists in both maps
+                val existingList = mergedMap[key]!!
+                mergedMap[key] = existingList + value
+            } else {
+                // Add the new key-value pair from map2 if the key does not exist in map1
+                mergedMap[key] = value
+            }
+        }
+
+        return mergedMap
+    }
+
 
     override suspend fun getMessages(
         referenceId: String,
-        minRange: Long,
-        maxRange: Long
+        skipCache: Boolean,
+        offset: Long
     ): Map<String, List<ChatMessage>> =
-        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId))) {
+        withInteractorContext(cacheOption = CacheOption(key = MessageDetailKey(referenceId = referenceId), skipCache = skipCache)) {
             // Fetch messages from the database
             val messages = supabaseService.select("messages") {
                 eq("reference_id", referenceId)
                 order("created_date", Order.DESCENDING)
-                range(minRange, maxRange)
+                range(offset, offset + 20)
             }.decodeResultAs<List<ChatMessageResponse>>()
 
             val currentUserId = seasonInteractor.getCurrentUserId()
@@ -127,6 +200,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
             if(referenceId == newMessages.referenceId) {
                 _messages.value = result
             }
+            incrementMessageCount(referenceId)
             result
         }
 
@@ -140,8 +214,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
                 skipCache = true
             )
         ) {
-            val currentUserId = seasonInteractor.getCurrentUserId()!!
-            val lastMessage = chatMessageRequest.toLastMessage(currentUserId, referenceId)
+            val lastMessage = chatMessageRequest.toLastMessage(referenceId)
             updateCurrentMap(lastMessage, false)
         }
 
@@ -176,7 +249,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
     }
 
     private suspend fun updateCurrentMap(lastMessage: LastMessage, sent: Boolean = true): Map<String, List<ChatMessage>> = withInteractorContext {
-        val messagesMap = getMessages(referenceId = lastMessage.referenceId).toMutableMap()
+        val messagesMap = getMessages(referenceId = lastMessage.referenceId, skipCache = false).toMutableMap()
         val userId = seasonInteractor.getCurrentUserId() ?: ""
 
         // Convert the last message to ChatMessage
@@ -229,6 +302,13 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
             }
         }
         return@withInteractorContext messagesMap
+    }
+
+    suspend fun incrementMessageCount(referenceId: String) {
+         withInteractorContext(cacheOption = CacheOption(key = MessageDetailCount(referenceId), skipCache = true)) {
+            val result = if(!endReached()) getMessagesTotalCount(referenceId) + 1 else getMessagesTotalCount(referenceId)
+             result
+        }
     }
 }
 
@@ -306,16 +386,17 @@ private fun ChatMessageRequest.toChatMessage(currentUserId : String, referenceId
     )
 }
 
-private fun ChatMessageRequest.toLastMessage(currentUserId : String, referenceId: String ): LastMessage {
+private fun ChatMessageRequest.toLastMessage(referenceId: String): LastMessage {
+    val id = NegativeNumberGenerator.getNext()
     return LastMessage(
-        id = -99,
+        id = id,
         referenceId = referenceId,
         creatorUserId = this.creatorUserId,
         message = this.message!!,
         createdDate = Clock.System.now().toString(),
         seen = false,
         isDeleted = false,
-        messageId = -99,
+        messageId = id,
         imageUrl = "",
         name = "",
     )
@@ -348,4 +429,13 @@ fun Instant.toChatReadableTime(): String {
 fun String.toChatReadableTime(): String {
     val localDateTime = Instant.parse(this).toLocalDateTime(TimeZone.currentSystemDefault())
     return "${localDateTime.hour}:${localDateTime.minute}"
+}
+
+object NegativeNumberGenerator {
+    private var currentNumber = 0L
+
+    fun getNext(): Long {
+        currentNumber--
+        return currentNumber
+    }
 }

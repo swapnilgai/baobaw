@@ -2,9 +2,14 @@ package com.java.baobaw.feature.chat
 
 import com.java.baobaw.interactor.interactorLaunch
 import com.java.baobaw.presentationInfra.BaseViewModel
+import com.java.baobaw.util.DefaultPaginator
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -24,11 +29,12 @@ data class ChatMessage(
 )
 
 class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor): BaseViewModel<Map<String, List<ChatMessage>>>(initialContent =  emptyMap()) {
+    private var isLoading = false
 
     fun init(referenceId: String){
         viewModelScope.interactorLaunch {
             chatDetailInteractor.setReferenceId(referenceId)
-            async {  getConversation(referenceId) }
+            async {  getConversation(isInitial = true) }
             async {  subscribeToConversation(referenceId) }
         }
     }
@@ -44,11 +50,17 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
     }
 
     // The function to get the conversation as described.
-    fun getConversation(referenceId: String) {
+    fun getConversation(isInitial: Boolean = false) {
+        if(isLoading) return
         viewModelScope.interactorLaunch {
-            setLoading()
-            val result = chatDetailInteractor.getMessages(referenceId)
-            setContent { result }
+            isLoading = true
+            val endReached = chatDetailInteractor.endReached()
+            if(!endReached || isInitial) {
+                setLoading()
+                val result = chatDetailInteractor.getNextPage(isInitial)
+                setContent { result }
+            }
+            isLoading = false
         }
     }
 
@@ -60,5 +72,10 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
                        if(result.isNotEmpty()) setContent { result }
                     }.launchIn(this)
             }
+    }
+
+    override suspend fun clearViewModel() {
+        super.clearViewModel()
+        isLoading = false
     }
 }

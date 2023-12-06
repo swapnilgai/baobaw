@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -68,7 +69,9 @@ fun ChatScreen(
 ) {
     var chatState by remember { mutableStateOf<Map<String, List<ChatMessage>>>(emptyMap()) }
     var inputText by remember { mutableStateOf("") }
-
+    val isLoadingMore = remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val chatStateSize = remember { mutableStateOf(99) }
     // Function to handle the sending of the message
     fun sendMessage() {
         if (inputText.isNotBlank()) {
@@ -83,6 +86,8 @@ fun ChatScreen(
     }
 
     fun setChatState(state: Map<String, List<ChatMessage>>) {
+        val count = state.values.sumOf { it.size }
+        chatStateSize.value = if(count > 0) count else chatStateSize.value
         chatState = state
     }
 
@@ -94,6 +99,41 @@ fun ChatScreen(
         selectedMessage = message
         scope.launch {
             bottomSheetState.show()
+        }
+    }
+
+    fun loadMoreMessages() {
+        if (!isLoadingMore.value) {
+            isLoadingMore.value = true
+            scope.launch {
+                chatDetailViewModel.getConversation()
+                    isLoadingMore.value = false
+            }
+        }
+    }
+
+//    LaunchedEffect(listState) {
+//        snapshotFlow { listState.firstVisibleItemIndex }
+//            .collect { firstVisibleItemIndex ->
+//                if (firstVisibleItemIndex == 0 && !isLoadingMore.value) {
+//                    isLoadingMore.value = true
+//                    chatDetailViewModel.getConversation()
+//                    isLoadingMore.value = false
+//                }
+//            }
+//    }
+
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            // Calculate the index of the last visible item
+            listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        }.collect { lastVisibleItemIndex ->
+            if (lastVisibleItemIndex >= chatStateSize.value - 1 && !isLoadingMore.value) {
+                isLoadingMore.value = true
+                chatDetailViewModel.getConversation()
+                isLoadingMore.value = false
+            }
         }
     }
 
@@ -124,6 +164,7 @@ fun ChatScreen(
                 }
             ) { innerPadding ->
                 LazyColumn(
+                    state = listState,
                     reverseLayout = true,
                     modifier = Modifier
                         .fillMaxSize()

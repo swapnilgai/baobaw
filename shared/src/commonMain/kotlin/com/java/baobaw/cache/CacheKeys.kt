@@ -15,4 +15,9 @@ data class UserMessagesKey(val key: String = "UserMessagesKey"): CacheKey
 
 data class MessageDetailKey(val referenceId: String): CacheKey
 
+data class PageMessageDetailKey(val referenceId: String): CacheKey
+
+
+data class MessageDetailCount(val referenceId: String): CacheKey
+
 
