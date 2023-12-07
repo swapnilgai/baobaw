@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
-import com.java.baobaw.feature.chat.ChatDetailContent
+import com.java.baobaw.feature.chat.PagedResponse
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -67,7 +67,7 @@ fun ChatScreen(
     navController: NavController,
     referenceId: String
 ) {
-    var chatState by remember { mutableStateOf<ChatDetailContent>(ChatDetailContent()) }
+    var chatState by remember { mutableStateOf<PagedResponse>(PagedResponse()) }
     var inputText by remember { mutableStateOf("") }
     val isLoadingMore = remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -85,7 +85,7 @@ fun ChatScreen(
         val mess = message
     }
 
-    fun setChatState(state: ChatDetailContent) {
+    fun setChatState(state: PagedResponse) {
         chatStateSize.value = if(state.totalLoadedRecords > 0) state.totalLoadedRecords  else chatStateSize.value
         chatState = state
     }
@@ -116,7 +116,7 @@ fun ChatScreen(
             // Calculate the index of the last visible item
             listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
         }.collect { lastVisibleItemIndex ->
-            if (lastVisibleItemIndex >= chatStateSize.value - 5 && !isLoadingMore.value) {
+            if (lastVisibleItemIndex >= chatStateSize.value - 12 && !isLoadingMore.value) {
                 loadMoreMessages()
             }
         }

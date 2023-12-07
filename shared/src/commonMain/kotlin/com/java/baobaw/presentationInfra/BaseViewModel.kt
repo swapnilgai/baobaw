@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -80,8 +81,8 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         _state.value = UiEvent.CustomLoading
     }
     fun clear(){
-        _state.tryEmit(UiEvent.Cancled)
         viewModelScope.cancel()
+        _state.tryEmit(UiEvent.Cancled)
     }
 
     open suspend fun clearViewModel(){}
@@ -94,7 +95,6 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
                 newValue ->  if(_state.value != newValue) _state.tryEmit(newValue)
         }
     }
-
     fun setError(title: StringResource = SharedRes.strings.error, message: StringResource){
         UiEvent.Error(title = title, message = message).let {
             _state.tryEmit(it)

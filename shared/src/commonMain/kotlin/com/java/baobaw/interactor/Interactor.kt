@@ -6,6 +6,7 @@ import com.java.baobaw.cache.CacheKey
 import com.java.baobaw.cache.LRUCache
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -102,10 +103,12 @@ suspend fun <T> Interactor.withInteractorContext(
                     if (retryOption.throwException) {
                         throw when {
                             !isFirstInteractorCall -> e // nested withInteractorContext call: throw the raw exception
-                            e is HttpRequestException || e is RestException -> e.toInteractorException()
+                            e is RestException -> e.toInteractorException()
+                            e is CancellationException || e is HttpRequestException -> e
                             else -> e.toInteractorException()
                         }
                     }
+
                 }
             }
             blockResult
