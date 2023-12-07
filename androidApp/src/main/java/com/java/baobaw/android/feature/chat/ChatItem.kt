@@ -53,9 +53,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
+import com.java.baobaw.feature.chat.ChatDetailContent
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -67,7 +67,7 @@ fun ChatScreen(
     navController: NavController,
     referenceId: String
 ) {
-    var chatState by remember { mutableStateOf<Map<String, List<ChatMessage>>>(emptyMap()) }
+    var chatState by remember { mutableStateOf<ChatDetailContent>(ChatDetailContent()) }
     var inputText by remember { mutableStateOf("") }
     val isLoadingMore = remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -85,9 +85,8 @@ fun ChatScreen(
         val mess = message
     }
 
-    fun setChatState(state: Map<String, List<ChatMessage>>) {
-        val count = state.values.sumOf { it.size }
-        chatStateSize.value = if(count > 0) count else chatStateSize.value
+    fun setChatState(state: ChatDetailContent) {
+        chatStateSize.value = if(state.totalLoadedRecords > 0) state.totalLoadedRecords  else chatStateSize.value
         chatState = state
     }
 
@@ -107,32 +106,18 @@ fun ChatScreen(
             isLoadingMore.value = true
             scope.launch {
                 chatDetailViewModel.getConversation()
-                    isLoadingMore.value = false
+                isLoadingMore.value = false
             }
         }
     }
-
-//    LaunchedEffect(listState) {
-//        snapshotFlow { listState.firstVisibleItemIndex }
-//            .collect { firstVisibleItemIndex ->
-//                if (firstVisibleItemIndex == 0 && !isLoadingMore.value) {
-//                    isLoadingMore.value = true
-//                    chatDetailViewModel.getConversation()
-//                    isLoadingMore.value = false
-//                }
-//            }
-//    }
-
 
     LaunchedEffect(listState) {
         snapshotFlow {
             // Calculate the index of the last visible item
             listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
         }.collect { lastVisibleItemIndex ->
-            if (lastVisibleItemIndex >= chatStateSize.value - 1 && !isLoadingMore.value) {
-                isLoadingMore.value = true
-                chatDetailViewModel.getConversation()
-                isLoadingMore.value = false
+            if (lastVisibleItemIndex >= chatStateSize.value - 5 && !isLoadingMore.value) {
+                loadMoreMessages()
             }
         }
     }
@@ -149,6 +134,7 @@ fun ChatScreen(
     ){
         BaseView(viewModel = chatDetailViewModel, navController = navController, scope = scope,
             init = { chatDetailViewModel.init(referenceId) },
+            customLoadingView = { CircularProgressIndicator() },
             setContentT = { state -> setChatState(state) }) {
 
             Scaffold(
@@ -171,7 +157,18 @@ fun ChatScreen(
                         .padding(innerPadding) // Apply the padding provided by Scaffold to ensure content is above the bottom bar.
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    chatState.forEach { (date, messages) ->
+
+                    if (isLoadingMore.value) {
+                        item {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                                    .padding(top = 16.dp)
+                            )
+                        }
+                    }
+                    chatState.data.forEach { (date, messages) ->
                         items(messages) { message ->
                             ChatMessageItem(
                                 message = message,
@@ -189,6 +186,15 @@ fun ChatScreen(
     }
 }
 
+@Composable
+fun  CircularProgressIndicator() {
+    CircularProgressIndicator(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .padding(top = 64.dp)
+    )
+}
 @Composable
 fun ChatMessageItem(
     message: ChatMessage,

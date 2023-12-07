@@ -108,7 +108,7 @@ class ChatDetailInteractorImpl(private val supabaseService: SupabaseService, pri
            val currentPage =  getCurrentPage(PageMessageDetailKey(referenceId))
            val currentContentAwait = async { getMessages(referenceId = referenceId, offset = currentPage.offset, skipCache = false) }
            val totalCountAwiat = async { getMessagesTotalCount(referenceId) }
- 
+
            val currentContent =  currentContentAwait.await()
            val totalCount = totalCountAwiat.await()
 

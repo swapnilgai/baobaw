@@ -41,6 +41,7 @@ fun <ContentT>BaseView(
     setContentT: (ContentT) -> Unit,
     scope: CoroutineScope,
     init: () -> Unit = {},
+    customLoadingView: @Composable () -> Unit? = {},
     content: @Composable () -> Unit) {
 
     content.invoke()
@@ -76,7 +77,10 @@ fun <ContentT>BaseView(
             )
         }
         is UiEvent.Loading -> {
-             LoadingView(onDismiss = { viewModel.onDismiss() })
+            LoadingView(onDismiss = { viewModel.onDismiss() })
+        }
+        is UiEvent.CustomLoading -> {
+            customLoadingView()
         }
         is UiEvent.Navigation -> {
                 navigateToScreen(navController, (viewState.value as UiEvent.Navigation).route)

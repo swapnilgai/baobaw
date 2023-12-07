@@ -74,6 +74,11 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         if(_state.value != UiEvent.Loading)
         _state.value = UiEvent.Loading
     }
+
+    fun setCustomLoading(){
+        if(_state.value != UiEvent.CustomLoading)
+        _state.value = UiEvent.CustomLoading
+    }
     fun clear(){
         _state.tryEmit(UiEvent.Cancled)
         viewModelScope.cancel()

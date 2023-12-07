@@ -28,7 +28,8 @@ data class ChatMessage(
     val sent: Boolean = true
 )
 
-class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor): BaseViewModel<Map<String, List<ChatMessage>>>(initialContent =  emptyMap()) {
+data class ChatDetailContent(val data: Map<String, List<ChatMessage>> = emptyMap(), val totalLoadedRecords : Int =0)
+class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor): BaseViewModel<ChatDetailContent>(initialContent =  ChatDetailContent()) {
     private var isLoading = false
 
     fun init(referenceId: String){
@@ -45,21 +46,22 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
             val newResult =  async { chatDetailInteractor.addTempMessage(request, referenceId) }
             async { chatDetailInteractor.sendMessage(request) }
             val result = newResult.await()
-            setContent { result }
+            setContent { getContent().copy(data = result) }
         }
     }
 
     // The function to get the conversation as described.
     fun getConversation(isInitial: Boolean = false) {
         if(isLoading) return
-        if(isInitial) setLoading()
+        if(isInitial) setCustomLoading()
         viewModelScope.interactorLaunch {
             isLoading = true
             val endReached = chatDetailInteractor.endReached()
             if(!endReached || isInitial) {
-                setLoading()
+                setCustomLoading()
                 val result = chatDetailInteractor.getNextPage(isInitial)
-                setContent { result }
+                val count = result.values.sumOf { it.size }
+                setContent { getContent().copy(data = result, totalLoadedRecords = count) }
             }
             isLoading = false
         }
@@ -70,7 +72,9 @@ class ChatDetailViewModel(private val chatDetailInteractor: ChatDetailInteractor
         viewModelScope.interactorLaunch {
             chatDetailInteractor.getMessagesFlow(referenceId)
                     .onEach { result ->
-                       if(result.isNotEmpty()) setContent { result }
+                       if(result.isNotEmpty()){
+                           setContent { getContent().copy(data = result) }
+                       }
                     }.launchIn(this)
             }
     }

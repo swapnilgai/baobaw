@@ -105,7 +105,7 @@ suspend fun <T> Interactor.withInteractorContext(
                             e is HttpRequestException || e is RestException -> e.toInteractorException()
                             else -> e.toInteractorException()
                         }
-                    } else throw IllegalStateException("State is not valid") //TODO check alternative to break loop
+                    }
                 }
             }
             blockResult
