@@ -59,7 +59,7 @@ fun PermissionsScreen(permissionViewModel: PermissionViewModel,
         viewState = state
     }
 
-    BaseView(viewModel = permissionViewModel, navController = navController, setContentT = {state -> setContent(state)}) {
+    BaseView(viewModel = permissionViewModel, navController = navController, scope = scope, setContentT = {state -> setContent(state)}) {
         val permissionsControllerFactory: PermissionsControllerFactory = rememberPermissionsControllerFactory()
         val controller: PermissionsController = remember(permissionsControllerFactory) { permissionsControllerFactory.createPermissionsController() }
 

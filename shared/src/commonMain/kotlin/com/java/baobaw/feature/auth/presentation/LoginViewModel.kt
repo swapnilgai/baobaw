@@ -40,4 +40,10 @@ class LoginViewModel(private val authInteractor: AuthInteractor, private val sea
             navigate(AppConstants.RoutIds.PERMISSIONS_SCREEN)
         }
     }
+
+    fun onChatClicked(){
+        viewModelScope.interactorLaunch {
+            navigate(AppConstants.RoutIds.CHAT_LIST_SCREEN)
+        }
+    }
 }

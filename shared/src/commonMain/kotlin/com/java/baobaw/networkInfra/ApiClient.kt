@@ -4,6 +4,7 @@ import com.java.baobaw.model.ProjectEnvironment
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.GoTrue
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.defaultRequest
@@ -51,6 +52,7 @@ class ApiClient(projectEnvironment: ProjectEnvironment) {
         install(GoTrue)
         install(Postgrest)
         install(Storage)
+        install(Realtime)
         //install other modules
     }
 }

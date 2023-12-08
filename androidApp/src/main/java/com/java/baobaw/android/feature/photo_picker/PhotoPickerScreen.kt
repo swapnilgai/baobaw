@@ -59,7 +59,7 @@ fun PhotoPickerScreen(imageSelectionViewModel: ImageSelectionViewModel,
         viewState = state
     }
 
-    BaseView(viewModel = imageSelectionViewModel, navController = navController, setContentT = {state -> setContent(state)}) {
+    BaseView(viewModel = imageSelectionViewModel, navController = navController, scope = scope, setContentT = {state -> setContent(state)}) {
 
         val permissionsControllerFactory: PermissionsControllerFactory = rememberPermissionsControllerFactory()
         val controller: PermissionsController = remember(permissionsControllerFactory) { permissionsControllerFactory.createPermissionsController() }

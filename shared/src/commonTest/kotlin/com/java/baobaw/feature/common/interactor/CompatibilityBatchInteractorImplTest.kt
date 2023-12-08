@@ -3,6 +3,7 @@ import com.java.baobaw.feature.common.interactor.CompatibilityBatchInteractorImp
 import com.java.baobaw.feature.common.interactor.SeasonInteractor
 import com.java.baobaw.networkInfra.SupabaseService
 import io.github.jan.supabase.postgrest.result.PostgrestResult
+import io.github.jan.supabase.realtime.RealtimeChannel
 import io.ktor.http.Headers
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -76,5 +77,4 @@ class CompatibilityBatchInteractorImplTest {
 
         assertEquals(3, attempts)
     }
-
 }

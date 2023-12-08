@@ -11,9 +11,9 @@ val allowCache = CacheCoroutineContextElement(setCache = true)
 
 fun CoroutineScope.interactorLaunch(
     context: CoroutineContext = EmptyCoroutineContext,
-   start: CoroutineStart = CoroutineStart.DEFAULT,
-   forceRefresh: Boolean = false,
-   block: suspend CoroutineScope.() -> Unit
+    start: CoroutineStart = CoroutineStart.DEFAULT,
+    forceRefresh: Boolean = false,
+    block: suspend CoroutineScope.() -> Unit
 ) : Job {
     return if(forceRefresh)
         launch(context, start, block)

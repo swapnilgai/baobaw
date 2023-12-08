@@ -37,7 +37,7 @@ fun LoginScreen(loginViewModel: LoginViewModel,
                 navController: NavController,
                 scope: CoroutineScope = rememberCoroutineScope()){
 
-    BaseView(viewModel = loginViewModel, navController = navController, setContentT = {}) {
+    BaseView(viewModel = loginViewModel, navController = navController, scope = scope, setContentT = {}) {
         Column(
             Modifier
                 .padding(24.dp)
@@ -79,6 +79,10 @@ fun LoginScreen(loginViewModel: LoginViewModel,
             Spacer(modifier = Modifier.padding(16.dp))
 
             ClickableText(text = AnnotatedString("Permissions"), onClick = {scope.launch { loginViewModel.onPermissionsClicked() }})
+
+            Spacer(modifier = Modifier.padding(16.dp))
+
+            ClickableText(text = AnnotatedString("Chat"), onClick = {scope.launch { loginViewModel.onChatClicked() }})
         }
     }
 }

@@ -30,7 +30,11 @@ class ImageUploadInteractorImplTest {
 
     @BeforeTest
     fun setUp() {
-        interactor = ImageUploadInteractorImpl(mockSupabaseService, mockSeasonInteractor, mockBitmapProcessor)
+        interactor = ImageUploadInteractorImpl(
+            mockSupabaseService,
+            mockSeasonInteractor,
+            mockBitmapProcessor
+        )
     }
 
     @Test
@@ -52,10 +56,30 @@ class ImageUploadInteractorImplTest {
 
         coEvery { mockBitmapProcessor.toCompressByteArray(bitmap) } returns bucketArr
         coEvery { mockSeasonInteractor.getCurrentUserId() } returns currentUser
-        coEvery { mockSupabaseService.bucketUpload(bucket, imagePath, bucketArr, true) } returns expectedUrl
+        coEvery {
+            mockSupabaseService.bucketUpload(
+                bucket,
+                imagePath,
+                bucketArr,
+                true
+            )
+        } returns expectedUrl
         coEvery { mockSupabaseService.bucketPublicUrl(bucket, imagePath) } returns expectedUrl
-        coEvery { mockSupabaseService.rpc(AppConstants.Queries.IS_IMAGE_APPROPRIATE, json) } returns postgrestResult
-        coEvery { mockSupabaseService.tableUpdate(any(), any(), any(), any(), any()) } returns postgrestResult
+        coEvery {
+            mockSupabaseService.rpc(
+                AppConstants.Queries.IS_IMAGE_APPROPRIATE,
+                json
+            )
+        } returns postgrestResult
+        coEvery {
+            mockSupabaseService.tableUpdate(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns postgrestResult
 
         val result = interactor.imageUpload(bitmap, index)
 
@@ -96,10 +120,30 @@ class ImageUploadInteractorImplTest {
 
         coEvery { mockBitmapProcessor.toCompressByteArray(bitmap) } returns bucketArr
         coEvery { mockSeasonInteractor.getCurrentUserId() } returns currentUser
-        coEvery { mockSupabaseService.bucketUpload(bucket, imagePath, bucketArr, true) } returns expectedUrl
+        coEvery {
+            mockSupabaseService.bucketUpload(
+                bucket,
+                imagePath,
+                bucketArr,
+                true
+            )
+        } returns expectedUrl
         coEvery { mockSupabaseService.bucketPublicUrl(bucket, imagePath) } returns expectedUrl
-        coEvery { mockSupabaseService.rpc(AppConstants.Queries.IS_IMAGE_APPROPRIATE, json) } returns postgrestResult
-        coEvery { mockSupabaseService.tableUpdate(any(), any(), any(), any(), any()) } returns postgrestResult
+        coEvery {
+            mockSupabaseService.rpc(
+                AppConstants.Queries.IS_IMAGE_APPROPRIATE,
+                json
+            )
+        } returns postgrestResult
+        coEvery {
+            mockSupabaseService.tableUpdate(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns postgrestResult
         // Act
         interactor.imageUpload(bitmap, index)
 
@@ -114,8 +158,19 @@ class ImageUploadInteractorImplTest {
         val index = 0
         coEvery { mockBitmapProcessor.toCompressByteArray(bitmap) } returns ByteArray(10)
         coEvery { mockSeasonInteractor.getCurrentUserId() } returns "user123"
-        coEvery { mockSupabaseService.bucketUpload(any(), any(), any()) } returns "http://example.com/image.png"
-        coEvery { mockSupabaseService.bucketPublicUrl(any(), any()) } returns "http://example.com/image.png"
+        coEvery {
+            mockSupabaseService.bucketUpload(
+                any(),
+                any(),
+                any()
+            )
+        } returns "http://example.com/image.png"
+        coEvery {
+            mockSupabaseService.bucketPublicUrl(
+                any(),
+                any()
+            )
+        } returns "http://example.com/image.png"
         coEvery { mockSupabaseService.rpc(any(), any()) } throws RuntimeException("Network error")
 
         // Act & Assert
@@ -123,8 +178,6 @@ class ImageUploadInteractorImplTest {
             interactor.imageUpload(bitmap, index)
         }
     }
-
-
     @Test
     fun testInvalidUserId() = runTest {
         // Arrange
@@ -138,27 +191,4 @@ class ImageUploadInteractorImplTest {
         assertTrue(result.isEmpty())
         coVerify(exactly = 0) { mockSupabaseService.bucketUpload(any(), any(), any()) }
     }
-//
-//
-//    @Test
-//    fun testSuccessfulImageDeletion() = runTest {
-//        // Arrange
-//        val index = 0
-//        coEvery { mockSeasonInteractor.getCurrentUserId() } returns "user123"
-//        coEvery { mockSupabaseService.bucketDelete(any()) } just Runs
-//
-//        // Act
-//        interactor.deleteImage(index)
-//
-//        // Assert
-//        coVerify { mockSupabaseService.bucketDelete(any()) }
-//    }
-//
-//    @Test
-//    fun testFailureInImageDeletion() = runTest {
-//        // Arrange
-//        val index = 0
-//        coEvery { mockSeasonInteractor.getCurrentUserId() } returns "user123"
-//        coEvery { mockSupabaseService.bucketDelete(any()) } throws RuntimeException()
-//    }
 }

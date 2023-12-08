@@ -27,14 +27,14 @@ object Dependencies {
     object Shared {
 
         val commonMain = listOf(
-            "org.jetbrains.kotlinx:kotlinx-serialization-core:${Version.serialization}",
+            "org.jetbrains.kotlinx:kotlinx-serialization-json:${Version.serialization}",
             "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Version.coroutines}",
             "io.ktor:ktor-client-core:${Version.ktor}",
             "io.ktor:ktor-client-content-negotiation:${Version.ktor}",
-            "io.ktor:ktor-serialization-kotlinx-json:${Version.ktor}",
             "io.ktor:ktor-client-logging:${Version.ktor}",
              koin,
             "co.touchlab:kermit:${Version.kermit}",
+            //"org.jetbrains.kotlinx:kotlinx-datetime:${Version.kotlinxDatetime}"
         )
 
         val commonTest = listOf(
@@ -100,7 +100,8 @@ object Dependencies {
             "androidx.lifecycle:lifecycle-runtime-ktx:${Version.lifecycle}",
             "androidx.lifecycle:lifecycle-runtime-compose:${Version.lifecycle}",
             "androidx.lifecycle:lifecycle-viewmodel-compose:${Version.lifecycle}",
-            "androidx.lifecycle:lifecycle-livedata-ktx:${Version.lifecycle}"
+            "androidx.lifecycle:lifecycle-livedata-ktx:${Version.lifecycle}",
+            "com.google.accompanist:accompanist-insets-ui:${Version.accompanist}",
         )
 
         val iceRock = listOf(

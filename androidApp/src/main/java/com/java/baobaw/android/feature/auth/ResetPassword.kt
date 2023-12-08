@@ -44,7 +44,7 @@ fun ResetPasswordScreen(resetPasswordViewModel: ResetPasswordViewModel,
         verifyUserState = state
     }
 
-    BaseView(viewModel = resetPasswordViewModel, navController = navController, setContentT = { state -> setContent(state)}) {
+    BaseView(viewModel = resetPasswordViewModel, navController = navController,scope = scope, setContentT = { state -> setContent(state)}) {
         Column(
             Modifier
                 .padding(24.dp)

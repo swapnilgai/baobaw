@@ -59,7 +59,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient, val season
 //                this.password = password
 //            }
             supabaseClient.gotrue.signUpWith(Email) {
-                this.email = "swa@yahoo.com"
+                this.email = "swa3@yahoo.com"
                 this.password = password
             }?.let { result ->
                 AuthContent(
@@ -102,7 +102,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient, val season
     override suspend fun signIn(phoneNumber: String, password: String) {
         withInteractorContext {
             supabaseClient.gotrue.loginWith(Email) {
-                this.email = "swa@yahoo.com"
+                this.email = "swa3@yahoo.com"
                 this.password = password
             }
 //            supabaseClient.gotrue.loginWith(Phone) {

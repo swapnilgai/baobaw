@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +24,7 @@ import org.koin.core.component.inject
 
 abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent {
 
-    private val mainDispatcher: com.java.baobaw.executor.MainDispatcher by inject()
+    private val mainDispatcher: MainDispatcher by inject()
     private var currentState: ContentT = initialContent
 
     //TODO find common folder for strings.xml
@@ -74,23 +75,27 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         if(_state.value != UiEvent.Loading)
         _state.value = UiEvent.Loading
     }
+
+    fun setCustomLoading(){
+        if(_state.value != UiEvent.CustomLoading)
+        _state.value = UiEvent.CustomLoading
+    }
     fun clear(){
-        if(_state.value!=UiEvent.Cancled) {
-            viewModelScope.cancel()
-            _state.tryEmit(UiEvent.Cancled)
-        }
+        viewModelScope.cancel()
+        _state.tryEmit(UiEvent.Cancled)
     }
 
+    open suspend fun clearViewModel(){}
     fun onStart(){
-        if(!viewModelScope.isActive) viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
+        if(!viewModelScope.isActive)
+            viewModelScope = CoroutineScope( SupervisorJob() + mainDispatcher.dispatcher + coroutineExceptionHandler )
     }
     fun navigate(route: String){
         UiEvent.Navigation(route).let {
                 newValue ->  if(_state.value != newValue) _state.tryEmit(newValue)
         }
     }
-
-    fun setError(title: StringResource = com.java.baobaw.SharedRes.strings.error, message: StringResource){
+    fun setError(title: StringResource = SharedRes.strings.error, message: StringResource){
         UiEvent.Error(title = title, message = message).let {
             _state.tryEmit(it)
         }
@@ -111,9 +116,9 @@ abstract class BaseViewModel<ContentT>(initialContent : ContentT): KoinComponent
         return when (error) {
             is IOException -> {   // check if network is avaialble
                 AwaitRetryOptions(
-                    title = com.java.baobaw.SharedRes.strings.error,
-                    message = com.java.baobaw.SharedRes.strings.error,
-                    description = com.java.baobaw.SharedRes.strings.error
+                    title = SharedRes.strings.error,
+                    message = SharedRes.strings.error,
+                    description = SharedRes.strings.error
                 )
             }
             else -> null
