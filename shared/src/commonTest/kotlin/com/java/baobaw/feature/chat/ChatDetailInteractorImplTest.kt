@@ -19,9 +19,19 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ChatDetailInteractorImplTest {
+
+//    private lateinit var supabaseService: SupabaseService
+//    private lateinit var seasonInteractor: SeasonInteractor
+//    private lateinit var chatInteractor: ChatDetailInteractorImpl
+//    private lateinit var postgrestResultPast: PostgrestResult
+//    private val json = Json { encodeDefaults = true }
+//    private lateinit var fakeMessagesPast : List<ChatMessageResponse>
+//    private lateinit var fakeMessagesCurrent : List<ChatMessageResponse>
+//    private lateinit var postgrestResultCurrent: PostgrestResult
 
     private lateinit var supabaseService: SupabaseService
     private lateinit var seasonInteractor: SeasonInteractor
@@ -94,28 +104,43 @@ class ChatDetailInteractorImplTest {
         )
     }
 
+
     @Test
     fun `getMessages fetches messages correctly`() = runTest {
+        val dateRef = Instant.DISTANT_PAST.toChatHeaderReadableDate()
+        val pagedResponse = PagedResponse(
+            data = mapOf(dateRef to fakeMessagesPast.map { it.toChatMessage("currentUser") }),
+            totalLoadedRecords = fakeMessagesPast.size,
+            isEnded = false
+        )
 
-        coEvery { supabaseService.select(any(), any(), any(), any(), any(), any()) } returns postgrestResultPast
+        coEvery { supabaseService.select(any(), any(), any(), any(), any(), any()) } returns PostgrestResult(
+            body = Json.encodeToJsonElement(pagedResponse),
+            headers = Headers.Empty,
+            postgrest = mockk(relaxed = true)
+        )
 
         val result = chatInteractor.getMessages("ref123")
-        val dateRef = Instant.DISTANT_PAST.toChatHeaderReadableDate()
-        assertEquals(1, result.size)
-        assertEquals("Hello from user1", result[dateRef]?.first()?.message)
+        assertEquals(1, result.data.size)
+        assertEquals("Hello from user1", result.data[dateRef]?.first()?.message)
+        assertEquals(fakeMessagesPast.size, result.totalLoadedRecords)
+        assertFalse(result.isEnded)
     }
-
     @Test
-    fun `getMessages with invalid referenceId returns empty map`() = runTest {
+    fun `getMessages with invalid referenceId returns empty data`() = runTest {
+        // Mocking the return value to an empty PagedResponse
         coEvery { supabaseService.select(any(), any(), any(), any(), any(), any()) } returns PostgrestResult(
-            body = Json.encodeToJsonElement(emptyList<ChatMessageResponse>()),
+            body = Json.encodeToJsonElement(PagedResponse()),
             headers = Headers.Empty,
             postgrest = mockk(relaxed = true)
         )
 
         val result = chatInteractor.getMessages("invalidRef")
-        assertTrue(result.isEmpty())
+        assertTrue(result.data.isEmpty())
+        assertEquals(0, result.totalLoadedRecords)
+        assertTrue(result.isEnded)
     }
+
 
     @Test
     fun `sendMessage calls RPC with correct parameters`() = runTest {
@@ -152,28 +177,11 @@ class ChatDetailInteractorImplTest {
 
     @Test
     fun `jsonElementToChatMessage converts correctly`() = runBlocking {
-        val jsonString = "someJsonStringRepresentingChatMessage"
-        // Mock the behavior of `decodeResultAs` to return a specific ChatMessageResponse
-        coEvery { seasonInteractor.getCurrentUserId() } returns "currentUser"
+        val jsonString = json.encodeToString(ChatMessageResponse.serializer(), fakeMessagesPast[0])
 
-        val fakeMessagesJsonElement = json.encodeToString(ChatMessageResponse.serializer(), fakeMessagesPast[0])
+        val expectedChatMessage = fakeMessagesPast[0].toChatMessage("currentUser")
 
-        val expectedChatMessage = ChatMessage(
-            id = 1,
-            referenceId = "ref123",
-            creatorUserId = "user1",
-            message = "Hello from user1",
-            createdTime = fakeMessagesPast[0].createdDate.toChatReadableTime(),
-            seen = true,
-            isDeleted = false,
-            isUserCreated = false,
-            isHeader = false,
-            createdDate = fakeMessagesPast[0].createdDate.toChatHeaderReadableDate(),
-            messageId = 1,
-            sent = true
-        )
-
-        val chatMessage = chatInteractor.jsonElementToChatMessage(fakeMessagesJsonElement)
+        val chatMessage = chatInteractor.jsonElementToChatMessage(jsonString)
         assertEquals(expectedChatMessage, chatMessage)
     }
 
@@ -210,38 +218,38 @@ class ChatDetailInteractorImplTest {
     fun `addTempMessage adds temporary message correctly`() = runBlocking {
         val request = ChatMessageRequest("user1", "user2", "Temporary message")
         val referenceId = fakeMessagesCurrent[0].createdDate.toChatHeaderReadableDate()
+        val tempChatMessage = request.toChatMessage("user1", referenceId)
+        val pagedResponse = PagedResponse(mapOf(referenceId to listOf(tempChatMessage)), 1, false)
+
         coEvery { supabaseService.select(any(), any(), any(), any(), any(), any()) } returns postgrestResultCurrent
 
-        val updatedMap = chatInteractor.addTempMessage(request, referenceId)
-        // Assertions to check if the temporary message is added correctly
-        assertTrue(updatedMap.containsKey(referenceId))
-        assertTrue(updatedMap[referenceId]?.any { it.message == request.message } ?: false)
+        val updatedPagedResponse = chatInteractor.addTempMessage(request, referenceId)
+        assertTrue(updatedPagedResponse.data[referenceId]!!.contains(tempChatMessage))
     }
 
     @Test
     fun `addTempMessage should add message when new date wanted to add`() = runBlocking {
         val request = ChatMessageRequest("user1", "user2", "Temporary message")
         val referenceId = Clock.System.now().toChatHeaderReadableDate()
+        val tempChatMessage = request.toChatMessage("user1", referenceId)
+        val pagedResponse = PagedResponse(mapOf(referenceId to listOf(tempChatMessage)), 1, false)
+
         coEvery { supabaseService.select(any(), any(), any(), any(), any(), any()) } returns postgrestResultPast
 
-        val updatedMap = chatInteractor.addTempMessage(request, referenceId)
-        // Assertions to check if the temporary message is added correctly
-        assertTrue(updatedMap.containsKey(referenceId))
-        assertTrue(updatedMap[referenceId]?.any { it.message == request.message } ?: false)
+        val updatedPagedResponse = chatInteractor.addTempMessage(request, referenceId)
+        assertTrue(updatedPagedResponse.data[referenceId]?.contains(tempChatMessage) ?: false)
     }
 
     @Test
     fun `addTempMessage handles exceptions correctly`() = runTest {
-        // Arrange
         val request = ChatMessageRequest("user1", "user2", "Temporary message")
         val referenceId = "testRefId"
 
-        // Mock an exception thrown by a method in the SupabaseService
         coEvery { supabaseService.select(any(), any(), any(), any(), any(), any()) }throws RuntimeException("Test exception")
 
-        // Act & Assert
         assertFailsWith<InteracroeException.Generic> {
             chatInteractor.addTempMessage(request, referenceId)
         }
     }
 }
+

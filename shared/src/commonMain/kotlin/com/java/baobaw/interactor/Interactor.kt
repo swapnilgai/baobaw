@@ -21,7 +21,7 @@ interface Interactor
 
 private var retryRequestDeferred: Deferred<Unit>? = null
 
-val cache : Cache<CacheKey, Any> = LRUCache(1000)
+private val cache : Cache<CacheKey, Any> = LRUCache(1000)
 suspend fun <T> Interactor.withInteractorContext(
     cacheOption: CacheOption? = null,
     retryOption: RetryOption<T> = RetryOption(0),
@@ -139,4 +139,13 @@ suspend fun Interactor.invalidateCache(cacheKey: CacheKey) {
         }
     }
     cache.remove(cacheKey)
+}
+
+suspend fun Interactor.clearAll() {
+    if(coroutineContext[InteractorCoroutineContextElement] == null){
+        if(BuildKonfig.environment == "debug"){
+            throw IllegalStateException("invalidateCache should be called from within an interactor")
+        }
+    }
+    cache.clearAll()
 }

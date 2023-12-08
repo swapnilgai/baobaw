@@ -47,6 +47,7 @@ data class ChatMessageRequest(
     @SerialName("message") val message: String?
 )
 
+@Serializable
 data class PagedResponse(val data: Map<String, List<ChatMessage>> = emptyMap(), val totalLoadedRecords : Int = 0, val isEnded : Boolean = false)
 
 interface ChatDetailInteractor : Interactor {
@@ -360,7 +361,7 @@ private fun LastMessage.toChatMessage(currentUserId : String, sent: Boolean): Ch
 
 }
 
-private fun ChatMessageRequest.toChatMessage(currentUserId : String, referenceId: String ): ChatMessage {
+fun ChatMessageRequest.toChatMessage(currentUserId : String, referenceId: String ): ChatMessage {
     return ChatMessage(
         id = -99,
         referenceId = referenceId,
