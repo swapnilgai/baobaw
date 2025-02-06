@@ -1,6 +1,5 @@
 package com.java.baobaw.interactor
 
-import com.java.baobaw.cache.CacheKey
 import com.java.baobaw.cache.LRUCache
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
@@ -13,15 +12,16 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
+import com.java.baobaw.cache.CacheOptions
 
 interface Interactor
 
 private var retryRequestDeferred: Deferred<Unit>? = null
 
-private val cache =
-    LRUCache<CacheKey, Any>(100)
+private val cache = LRUCache.create(maxSize = 3)
+
 suspend fun <T> Interactor.withInteractorContext(
-    cacheOption: CacheOption ?= null,
+    cacheOption:  com.java.baobaw.cache.CacheOptions? = null,
     retryOption: RetryOption<T> = RetryOption(0),
     block: suspend CoroutineScope.() -> T
 ) : T {
@@ -33,7 +33,7 @@ suspend fun <T> Interactor.withInteractorContext(
 
     return withContext(context) {
         val cacheResult : T? = if (isCachellowed && cacheOption != null) {
-            cache.get(cacheOption.key) as T?
+            cache.get(cacheOption.key, cacheOption.secondaryKey) as T?
         } else {
             null
         }
@@ -70,8 +70,8 @@ suspend fun <T> Interactor.withInteractorContext(
                         continue
                     }
                     cacheOption?.run {
-                        if(allowWrite){
-                            cache.put(key, blockResult as Any)
+                        if(allowOverwrite){
+                            cache.set(key, secondaryKey, expirationPolicy, Clock.currentMillis(), blockResult as Any)
                         }
                     }
 

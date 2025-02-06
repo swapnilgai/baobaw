@@ -5,7 +5,6 @@ import com.java.baobaw.cache.AuthSessionCacheKey
 import com.java.baobaw.cache.UserExistCacheKey
 import com.java.baobaw.feature.auth.model.SignUpData
 import com.java.baobaw.feature.auth.presentation.AuthContent
-import com.java.baobaw.interactor.CacheOption
 import com.java.baobaw.interactor.Interactor
 import com.java.baobaw.interactor.RetryOption
 import com.java.baobaw.interactor.withInteractorContext
@@ -23,6 +22,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import com.java.baobaw.cache.CacheOptions
 
 interface AuthInteractor: Interactor {
     suspend fun signUp(signUpData: SignUpData): Email.Result?
@@ -92,7 +92,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun getCurrentSession() : UserSession? {
-        return withInteractorContext(cacheOption = CacheOption(key = AuthSessionCacheKey())) {
+        return withInteractorContext(cacheOption = CacheOptions(key = AuthSessionCacheKey())) {
             supabaseClient.gotrue.currentSessionOrNull()
         }
     }
@@ -113,7 +113,7 @@ class AuthInteractorImple(private val supabaseClient: SupabaseClient): AuthInter
     }
 
     override suspend fun phoneExists(phoneNumber: String): Boolean? {
-        return withInteractorContext(cacheOption = CacheOption(key = UserExistCacheKey(phoneNumber))) {
+        return withInteractorContext(cacheOption = CacheOptions(key = UserExistCacheKey(phoneNumber))) {
             val result =  supabaseClient.postgrest.rpc(com.java.baobaw.AppConstants.Queries.userExistWithPhone, phoneNumber.numberOnly().toPhoneExist()).body
             (result as JsonElement).jsonPrimitive.content.toBoolean()
         }
