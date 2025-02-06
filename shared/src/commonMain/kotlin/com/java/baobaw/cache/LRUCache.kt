@@ -1,20 +1,23 @@
 package com.java.baobaw.cache
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
 interface CacheKey
 
 data class StringCacheKey(val stringKey: String) : CacheKey
 
 class LRUCache private constructor(private val maxSize: Int) {
+    private val mutex = Mutex()
     private val cache: MutableMap<CacheKey, Any> = LinkedHashMap()
 
-    @Suppress("UNCHECKED_CAST")
-    fun set(
+    suspend fun set(
         key: CacheKey,
         secondaryKey: CacheKey? = null,
         expirationPolicy: CacheExpirationPolicy,
         requestTimestamp: Long,
         value: Any?
-    ) {
+    ) = mutex.withLock {
         if (secondaryKey == null) {
             if (value == null) {
                 cache.remove(key)
@@ -38,19 +41,22 @@ class LRUCache private constructor(private val maxSize: Int) {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T> get(key: CacheKey, secondaryKey: CacheKey? = null): T? {
+    suspend fun <T> get(key: CacheKey, secondaryKey: CacheKey? = null): T? = mutex.withLock {
         val entry = if (secondaryKey == null) {
             cache[key] as? CacheEntry
         } else {
             (cache[key] as? MutableMap<CacheKey, CacheEntry>)?.get(secondaryKey)
         }
-        return if (entry?.isExpired == false) entry.data as T else null
+        return@withLock if (entry?.isExpired == false) entry.data as T else null
     }
 
-    fun remove(key: CacheKey): Any? = cache.remove(key)
+    suspend fun remove(key: CacheKey): Any? = mutex.withLock {
+        cache.remove(key)
+    }
 
-    fun clear() = cache.clear()
+    suspend fun clear() = mutex.withLock {
+            cache.clear()
+    }
 
     private fun enforceSizeLimit() {
         if (cache.size >= maxSize) {
