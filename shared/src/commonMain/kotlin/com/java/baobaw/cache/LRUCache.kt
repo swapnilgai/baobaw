@@ -55,7 +55,7 @@ class LRUCache private constructor(private val maxSize: Int) {
     }
 
     suspend fun clear() = mutex.withLock {
-            cache.clear()
+        cache.clear()
     }
 
     private fun enforceSizeLimit() {
